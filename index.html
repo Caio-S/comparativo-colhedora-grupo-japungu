@@ -177,6 +177,9 @@ CRV Goiás foi consolidada em PFCMO Goiás, CRV Minas Gerais em PFCMO Minas Gera
 <h2><span class="idx">4</span>Custo por ano de uso da máquina</h2>
 <p class="desc">A pergunta de fundo: quanto uma colhedora custa no 1º, 2º, 3º ano de vida — e como isso se comporta em cada unidade. Agora com a data real de aquisição de cada máquina (cadastro de frota), a análise cobre toda a frota, não só as compradas recentemente.</p>
 <p class="desc" id="idade-desc-dyn" style="margin-top:-8px"></p>
+<p class="sub-h">Idade média da frota por safra e unidade</p>
+<p class="desc" style="margin-top:-8px">Média do ano de uso das colhedoras ativas em cada safra, por unidade. Mostra o envelhecimento (ou a renovação) da frota de cada empresa ao longo do período.</p>
+<svg id="chart-idade-media" class="rc-chart" viewBox="0 0 960 400"></svg>
 <p class="sub-h">R$/t por ano de uso e unidade</p>
 <div class="table-wrap"><table class="tbl" id="table-idade-rt"><thead></thead><tbody></tbody></table></div>
 <p class="sub-h">Custo médio por máquina em cada ano de uso</p>
@@ -957,6 +960,29 @@ function renderIdade(recs, years){
     rows += "<tr class='amostra'><td class='l'>Máquinas na amostra</td>"+amostra+"</tr>";
     tbody.innerHTML = rows;
   }
+  // Idade média da frota por safra e unidade (média do ano_de_uso das colhedoras ativas)
+  var ageBUY = {};
+  U.forEach(function(u){ ageBUY[u] = {}; years.forEach(function(y){ ageBUY[u][y] = {soma:0, n:0}; }); });
+  var ageSeen = {};
+  recs.forEach(function(r){
+    if(r.ano_de_uso==null || r.ano_de_uso<1) return;
+    if(!ageBUY[r.unit] || ageBUY[r.unit][r.ano]===undefined) return;
+    var k = r.unit+"|"+r.ano+"|"+r.frota;
+    if(ageSeen[k]) return;
+    ageSeen[k] = true;
+    ageBUY[r.unit][r.ano].soma += r.ano_de_uso;
+    ageBUY[r.unit][r.ano].n += 1;
+  });
+  C.lineChart(q("#chart-idade-media"), {
+    title:"Idade média da frota por safra e unidade", yLabel:"Anos de uso (média)",
+    xs: years.map(String), endLabels:true,
+    series: U.map(function(u){ return {name:u, color:COLORS[u], values: years.map(function(y){ var c=ageBUY[u][y]; return c.n>0?c.soma/c.n:0; })}; })
+      .concat([{name:"Média do grupo", color:GRAY, dash:true, values: years.map(function(y){
+        var s=0,n=0; U.forEach(function(u){ var c=ageBUY[u][y]; s+=c.soma; n+=c.n; }); return n>0?s/n:0;
+      })}]),
+    axisFmt: function(v){ return E.fmtDec(v,1); }, valueFmt: function(v){ return E.fmtDec(v,1); }
+  });
+
   fillTable("table-idade-rt", function(c){return c.rt;}, function(v){return E.fmtDec(v,2);}, "MÉDIA DO GRUPO");
   fillTable("table-idade-custo", function(c){return c.avgcusto;}, function(v){return E.fmtMoneyMil(v);}, "MÉDIA DO GRUPO");
 
