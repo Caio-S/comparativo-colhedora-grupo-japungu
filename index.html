@@ -463,22 +463,24 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 </article>
 
 
-<article class="slide legacy" id="marca" data-title="John Deere x Case">
-<section>
-<h2><span class="idx">4</span>John Deere x Case — comparação por marca</h2>
-<p class="desc" id="marca-desc-dyn">O grupo opera colhedoras John Deere e Case. Comparar as duas frotas diretamente induz a erro, porque as Case são majoritariamente mais novas — a comparação correta é na mesma idade.</p>
-<p class="sub-h">R$/t por marca, no mesmo ano de uso</p>
-<div class="table-wrap"><table class="tbl">
-<thead><tr><th class="l">Ano de uso</th><th class="n">John Deere — máquinas</th><th class="n">John Deere — R$/t</th><th class="n">Case — máquinas</th><th class="n">Case — R$/t</th><th class="n">Diferença</th></tr></thead>
-<tbody id="table9-body"></tbody>
-</table></div>
-<p class="sub-h">Composição da frota por unidade</p>
-<div class="table-wrap"><table class="tbl">
-<thead><tr><th class="l">Unidade</th><th class="n">John Deere</th><th class="n">Case</th><th class="n">Total</th></tr></thead>
-<tbody id="table10-body"></tbody>
-</table></div>
-<svg id="chart-marca" class="rc-chart" viewBox="0 0 1180 430"></svg>
-</section>
+<article class="slide slide-dark" id="marca" data-title="John Deere x Case">
+<div class="s-head">
+<div>
+<div class="s-eyebrow">04 &middot; John Deere x Case</div>
+<h2 class="s-title" style="border:0;color:#fff;padding:0">As duas marcas, na mesma idade</h2>
+<p class="s-sub" id="marca-desc-dyn"></p>
+</div>
+<div class="s-right">
+<div class="s-chips">
+<div class="s-chip"><div class="v" id="marca-chip-jd">&ndash;</div><div class="k">Colhedoras John Deere</div></div>
+<div class="s-chip"><div class="v" id="marca-chip-cs">&ndash;</div><div class="k">Colhedoras Case</div></div>
+<div class="s-chip"><div class="v" id="marca-chip-amostra">&ndash;</div><div class="k" id="marca-chip-amostra-k">Idades compar&aacute;veis</div></div>
+</div>
+</div>
+</div>
+<div class="s-legend" id="marca-legend"></div>
+<div class="s-card s-troca" id="marca-card"></div>
+<div class="s-insight" id="marca-insight">carregando&hellip;</div>
 </article>
 
 
@@ -1114,10 +1116,11 @@ function miniCombo(svg, o){
     gl.setAttribute("y1",y); gl.setAttribute("y2",y);
     gl.setAttribute("stroke", i===0?"#B9C0CE":"#E7EAF0"); svg.appendChild(gl);
     txt(svg, padL-6, y+3.5*k, o.axisFmtL(o.maxL*f), {"text-anchor":"end","font-size":String(9.5*k),fill:"#8A92A4"});
-    txt(svg, W-padR+6, y+3.5*k, o.axisFmtR(o.maxR*f), {"text-anchor":"start","font-size":String(9.5*k),fill:o.lineColor});
+    if(o.line && o.line.length)
+      txt(svg, W-padR+6, y+3.5*k, o.axisFmtR(o.maxR*f), {"text-anchor":"start","font-size":String(9.5*k),fill:o.lineColor});
   }
   txt(svg, padL-6, padT-7*k, o.unitL||"", {"text-anchor":"end","font-size":String(8.5*k),fill:"#A6AEBC"});
-  txt(svg, W-padR+6, padT-7*k, o.unitR||"", {"text-anchor":"start","font-size":String(8.5*k),fill:o.lineColor});
+  if(o.unitR) txt(svg, W-padR+6, padT-7*k, o.unitR, {"text-anchor":"start","font-size":String(8.5*k),fill:o.lineColor});
 
   // barras
   var g=ns("g");
@@ -1157,7 +1160,9 @@ function miniCombo(svg, o){
   svg.appendChild(vg);
 
   // linha R$/t
+  var temLinha = !!(o.line && o.line.length);
   var lg=ns("g"); lg.setAttribute("style","animation:rcFade .6s ease .55s both");
+  if(temLinha){
   var pts=o.line.map(function(v,i){ return [cx(i), yR(v)]; });
   var d=pts.map(function(p,i){ return (i===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1); }).join(" ");
   var halo=ns("path"); halo.setAttribute("d",d); halo.setAttribute("fill","none");
@@ -1175,6 +1180,7 @@ function miniCombo(svg, o){
       {"text-anchor":"middle","font-size":String(lfs),"font-weight":"700",fill:o.lineColor,
        stroke:"#fff","stroke-width":String(3*k),"paint-order":"stroke"});
   });
+  }
   svg.appendChild(lg);
 
   // linha de referência horizontal (ex.: custo de uma máquina nova no ciclo ótimo)
@@ -2456,91 +2462,145 @@ function q(sel){ return document.querySelector(sel); }
 function esc(s){ return E.esc(s); }
 function setHTML(id, html){ var el=document.getElementById(id); if(el) el.innerHTML = html; }
 function setText(id, t){ var el=document.getElementById(id); if(el) el.textContent = t; }
+var SVGNS = "http://www.w3.org/2000/svg";
+var RT_COLOR = "#C0392B";
 
 // ============================================================
 // Marca: table9 (marca x ano de uso), table10 (composicao), chart7
 // ============================================================
+// ============================================================
+// John Deere x Case — só faz sentido comparar na mesma idade,
+// porque as Case do grupo são majoritariamente mais novas.
+// ============================================================
 function renderMarca(recs, years){
+  var card = document.getElementById("marca-card");
+  if(!card) return;
   var idade = S.idadeAggregate(recs);
-  var ages = S.activeAgeBuckets(idade, 2).filter(function(a){ return a<=5; });
-  if(!ages.length) ages=[1];
-  var marcas = Object.keys(idade.byMarca);
-  var jd = "JOHN DEERE", cs = "CASE";
+  var JD = "JOHN DEERE", CS = "CASE";
+  var CSCOR = "#C9A227";
 
-  var rows = ages.map(function(a){
-    var jdCell = idade.byMarca[jd] && idade.byMarca[jd][a];
-    var csCell = idade.byMarca[cs] && idade.byMarca[cs][a];
-    var jdN = jdCell ? jdCell.frotas.size : 0;
-    var jdRt = jdCell && jdCell.tonelada>0 ? jdCell.custo/jdCell.tonelada : NaN;
-    var csN = csCell ? csCell.frotas.size : 0;
-    var csRt = csCell && csCell.tonelada>0 ? csCell.custo/csCell.tonelada : NaN;
-    var diff = (isFinite(csRt)&&isFinite(jdRt)) ? csRt-jdRt : NaN;
-    var diffTxt = isFinite(diff) ? (diff>0?"+":"")+E.fmtDec(diff,2) : "–";
-    return "<tr><td class='l'>"+a+"º ano de uso</td><td class='n'>"+(jdN||"–")+"</td><td class='n'>"+(isFinite(jdRt)?E.fmtDec(jdRt,2):"–")+
-      "</td><td class='n'>"+(csN||"–")+"</td><td class='n'>"+(isFinite(csRt)?E.fmtDec(csRt,2):"–")+"</td><td class='n'>"+diffTxt+"</td></tr>";
-  }).join("");
-  setHTML("table9-body", rows);
+  function cel(m, a){ return idade.byMarca[m] && idade.byMarca[m][a]; }
+  function rt(c){ return (c && c.tonelada > 0) ? c.custo/c.tonelada : NaN; }
+  function nMaq(c){ return c ? c.frotas.size : 0; }
 
-  // table10: fleet composition among frotas active (any record) within the period, by unit_master... use 'unit' (attribution) present in recs
+  // só as idades em que as DUAS marcas têm máquina: fora disso não há comparação
+  var ages = [];
+  for(var a = 1; a <= idade.maxBuckets; a++){
+    if(cel(JD, a) && cel(CS, a) && isFinite(rt(cel(JD, a))) && isFinite(rt(cel(CS, a)))) ages.push(a);
+  }
+
+  // composição da frota por unidade, no período
   var byUnit = {}; U.forEach(function(u){ byUnit[u] = {}; });
-  var seen = new Set();
+  var visto = {};
   recs.forEach(function(r){
-    var key = r.unit+"|"+r.frota;
-    if(seen.has(key)) return; seen.add(key);
-    if(!byUnit[r.unit]) return;
+    var k = r.unit+"|"+r.frota;
+    if(visto[k] || !byUnit[r.unit]) return;
+    visto[k] = true;
     var m = r.marca || "OUTRA";
-    byUnit[r.unit][m] = (byUnit[r.unit][m]||0)+1;
+    byUnit[r.unit][m] = (byUnit[r.unit][m] || 0) + 1;
   });
-  var t10 = U.map(function(u){
-    var jdc = byUnit[u]["JOHN DEERE"]||0, csc = byUnit[u]["CASE"]||0;
-    return "<tr><td class='l'>"+esc(u)+"</td><td class='n'>"+jdc+"</td><td class='n'>"+csc+"</td><td class='n strong'>"+(jdc+csc)+"</td></tr>";
-  }).join("");
-  setHTML("table10-body", t10);
+  var totJD = U.reduce(function(s,u){ return s + (byUnit[u][JD]||0); }, 0);
+  var totCS = U.reduce(function(s,u){ return s + (byUnit[u][CS]||0); }, 0);
 
-  var totalJD = U.reduce(function(a,u){return a+(byUnit[u]["JOHN DEERE"]||0);},0);
-  var totalCS = U.reduce(function(a,u){return a+(byUnit[u]["CASE"]||0);},0);
-  setHTML("marca-desc-dyn", "O grupo opera "+totalJD+" colhedoras John Deere e "+totalCS+" Case no período selecionado. Comparar as duas frotas diretamente induz a erro, porque as Case são majoritariamente mais novas — a comparação correta é na mesma idade.");
+  setText("marca-chip-jd", String(totJD));
+  setText("marca-chip-cs", String(totCS));
+  setText("marca-chip-amostra", ages.length ? (ages[0]+"º a "+ages[ages.length-1]+"º ano") : "nenhuma");
+  setText("marca-chip-amostra-k", ages.length ? "Idades com as duas marcas" : "Sem idade comparável");
 
-  // chart7: 2 panels
-  var svg = q("#chart-marca");
-  svg.innerHTML="";
-  var W=1180,H=430; svg.setAttribute("viewBox","0 0 "+W+" "+H);
-  var leftG = document.createElementNS("http://www.w3.org/2000/svg","svg");
-  leftG.setAttribute("x",0); leftG.setAttribute("y",0); leftG.setAttribute("width",W*0.52); leftG.setAttribute("height",H); leftG.setAttribute("viewBox","0 0 600 "+H);
-  svg.appendChild(leftG);
-  var rightG = document.createElementNS("http://www.w3.org/2000/svg","svg");
-  rightG.setAttribute("x",W*0.54); rightG.setAttribute("y",0); rightG.setAttribute("width",W*0.46); rightG.setAttribute("height",H); rightG.setAttribute("viewBox","0 0 520 "+H);
-  svg.appendChild(rightG);
+  setHTML("marca-desc-dyn",
+    "O grupo opera <b>"+totJD+"</b> John Deere e <b>"+totCS+"</b> Case no período. Comparar as duas frotas inteiras "+
+    "induz a erro, porque as Case são bem mais novas — só vale confrontar máquinas da mesma idade.");
 
-  var commonAges = ages.filter(function(a){ var j=idade.byMarca[jd]&&idade.byMarca[jd][a]; var c=idade.byMarca[cs]&&idade.byMarca[cs][a]; return j&&c; });
-  if(!commonAges.length) commonAges = ages.slice(0,2);
-  C.groupedBarChart(leftG, {
-    title:"Comparação justa: mesma idade", yLabel:"R$/t Oficina",
-    labels: commonAges.map(function(a){return a+"º ano de uso";}),
-    series: [
-      {name:"JOHN DEERE", color:E.NAVY, values: commonAges.map(function(a){ var c=idade.byMarca[jd][a]; return c&&c.tonelada>0?c.custo/c.tonelada:0; })},
-      {name:"CASE", color:"#C9A227", values: commonAges.map(function(a){ var c=idade.byMarca[cs][a]; return c&&c.tonelada>0?c.custo/c.tonelada:0; })}
-    ],
-    axisFmt: function(v){return E.fmtDec(v,1);}, valueFmt: function(v){return E.fmtDec(v,2);}, showValues:true
+  card.className = "s-card s-troca";
+  card.innerHTML = "";
+  var svg = document.createElementNS(SVGNS, "svg");
+  card.appendChild(svg);
+  var wrap = document.createElement("div");
+  wrap.className = "troca-tab";
+  card.appendChild(wrap);
+
+  // tabela: composição da frota por unidade
+  wrap.innerHTML = "<table class='tbl grid-tbl tem-total'><thead><tr><th class='l'>Composição da frota</th>"+
+    U.map(function(u){ return "<th class='n'>"+esc(u)+"</th>"; }).join("")+"<th class='n'>Total</th></tr></thead><tbody>"+
+    "<tr><td class='l' style=\"box-shadow:inset 4px 0 0 "+E.NAVY+"\">John Deere</td>"+
+      U.map(function(u){ return "<td class='n'>"+(byUnit[u][JD]||0)+"</td>"; }).join("")+
+      "<td class='n strong'>"+totJD+"</td></tr>"+
+    "<tr><td class='l' style=\"box-shadow:inset 4px 0 0 "+CSCOR+"\">Case</td>"+
+      U.map(function(u){ return "<td class='n'>"+(byUnit[u][CS]||0)+"</td>"; }).join("")+
+      "<td class='n strong'>"+totCS+"</td></tr>"+
+    "<tr class='tot'><td class='l strong'>TOTAL</td>"+
+      U.map(function(u){ return "<td class='n strong'>"+((byUnit[u][JD]||0)+(byUnit[u][CS]||0))+"</td>"; }).join("")+
+      "<td class='n strong'>"+(totJD+totCS)+"</td></tr></tbody></table>";
+  card.style.setProperty("--c1", "190px");
+  card.style.setProperty("--cN", "90px");
+
+  if(!ages.length){
+    svg.innerHTML = "";
+    setHTML("marca-legend", "<span class='lg'>Sem idade em que as duas marcas tenham máquina no período selecionado.</span>");
+    setHTML("marca-insight", "No período escolhido não há nenhum ano de uso com John Deere <u>e</u> Case ao mesmo tempo, "+
+      "então qualquer comparação entre as marcas seria entre máquinas de idades diferentes — e diria mais sobre idade que sobre marca.");
+    return;
+  }
+
+  var jdRt = ages.map(function(a){ return rt(cel(JD, a)); });
+  var csRt = ages.map(function(a){ return rt(cel(CS, a)); });
+  var csN  = ages.map(function(a){ return nMaq(cel(CS, a)); });
+  var jdN  = ages.map(function(a){ return nMaq(cel(JD, a)); });
+
+  var b = svg.getBoundingClientRect();
+  var H = Math.max(220, Math.round(b.height));
+  C.miniCombo(svg, {
+    W: Math.max(700, Math.round(b.width)), H: H,
+    escala: Math.max(1.1, Math.min(1.7, H/290)),
+    unit: "R$/t na mesma idade — John Deere x Case", color: E.NAVY, lineColor: RT_COLOR,
+    barColors: ages.map(function(){ return E.NAVY; }),
+    bars2: csRt.map(function(v){ return isFinite(v) ? v : 0; }),
+    color2: CSCOR,
+    headRight: "só idades com as duas marcas",
+    unitL: "R$/t", unitR: "",
+    labels: ages.map(function(a){ return a+"º"; }),
+    bars: jdRt.map(function(v){ return isFinite(v) ? v : 0; }),
+    barFmt: function(v){ return E.fmtDec(v,2); },
+    line: null,
+    notes: ages.map(function(a, i){
+      return {text: jdN[i]+" x "+csN[i], color: csN[i] < 5 ? "#C0392B" : E.NAVY};
+    }),
+    maxL: C.niceAxis(Math.max.apply(null, jdRt.concat(csRt).filter(function(v){ return isFinite(v); }))*1.35, 2) || 1,
+    maxR: 1,
+    axisFmtL: function(v){ return E.fmtDec(v, v%1===0?0:1); },
+    axisFmtR: function(v){ return ""; }
   });
-  leftG.setAttribute("viewBox","0 0 960 380");
 
-  var fleetRt = {}; var fleetN = {};
-  recs.forEach(function(r){
-    var m = r.marca||"OUTRA";
-    if(!fleetRt[m]) fleetRt[m] = {custo:0, tonelada:0, frotas:new Set()};
-    fleetRt[m].custo += r.custo; fleetRt[m].tonelada += r.tonelada; fleetRt[m].frotas.add(r.frota);
-  });
-  var order2 = ["CASE","JOHN DEERE"].filter(function(m){return fleetRt[m];});
-  C.singleBarChart(rightG, {
-    title:"Frota total (idades diferentes)", yLabel:"R$/t Oficina",
-    categories: order2, colors: order2.map(function(m){return m==="CASE"?"#C9A227":E.NAVY;}),
-    values: order2.map(function(m){ var f=fleetRt[m]; return f.tonelada>0?f.custo/f.tonelada:0; }),
-    subLabels: order2.map(function(m){ return fleetRt[m].frotas.size+" máquinas"; }),
-    axisFmt: function(v){return E.fmtDec(v,0);}, valueFmt: function(v){return E.fmtDec(v,2);}
-  });
-  rightG.setAttribute("viewBox","0 0 960 380");
+  setHTML("marca-legend",
+    "<span class='lg'>"+C.marcadorBarras([E.NAVY])+"<b>John Deere</b> — R$/t naquele ano de uso</span>"+
+    "<span class='lg'>"+C.marcadorBarras([CSCOR])+"<b>Case</b> — R$/t no mesmo ano de uso</span>"+
+    "<span class='lg'>"+C.marcadorPilula("42 x 9", E.NAVY)+"Máquinas na amostra (JD x Case)"+
+      " — <b style='color:#C0392B'>vermelho</b> quando a Case tem menos de 5</span>");
+
+  // leitura: quem ganha, e o quanto a amostra permite afirmar
+  var favCase = 0, favJD = 0;
+  ages.forEach(function(a,i){ if(csRt[i] < jdRt[i]) favCase++; else favJD++; });
+  var iFino = -1;
+  csN.forEach(function(n,i){ if(iFino<0 && n < 5) iFino = i; });
+
+  var msg = "Na mesma idade, a Case sai mais barata em <strong>"+favCase+"</strong> das <strong>"+ages.length+
+    "</strong> faixas comparáveis e mais cara em <strong>"+favJD+"</strong>. "+
+    "No <strong>"+ages[0]+"º ano</strong> são <strong>R$ "+E.fmtDec(csRt[0],2)+"/t</strong> da Case contra <strong>R$ "+
+    E.fmtDec(jdRt[0],2)+"/t</strong> da John Deere";
+  if(ages.length > 1){
+    var u = ages.length-1;
+    msg += "; no <strong>"+ages[u]+"º</strong>, <strong>R$ "+E.fmtDec(csRt[u],2)+"</strong> contra <strong>R$ "+
+      E.fmtDec(jdRt[u],2)+"</strong>";
+  }
+  msg += ". ";
+  if(iFino >= 0){
+    msg += "<span style='opacity:.85'>Cuidado com a leitura: a partir do <strong>"+ages[iFino]+"º ano</strong> a Case tem apenas <strong>"+
+      csN[iFino]+"</strong> máquina"+(csN[iFino]>1?"s":"")+" na amostra, contra "+jdN[iFino]+" John Deere. "+
+      "Uma única máquina fora da curva move o número inteiro — nessas faixas o gráfico indica tendência, não prova.</span>";
+  }
+  setHTML("marca-insight", msg);
 }
+
 
 // ============================================================
 // Ranking de maquinas: table11 (cumulative top15), table12/13 (efficiency)
