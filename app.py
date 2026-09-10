@@ -57,6 +57,8 @@ PESAGEM_WINDOW_START = 2020
 
 app = Flask(__name__)
 
+_BOOT_ID = f"{os.getpid()}-{datetime.now().isoformat()}"
+print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Processo iniciado, boot_id={_BOOT_ID}")
 _cache = {"html": None, "updated_at": None, "error": None, "refreshing": False}
 _lock = threading.Lock()
 
@@ -267,7 +269,7 @@ def refresh_once():
             _cache["html"] = new_html
             _cache["updated_at"] = datetime.now()
             _cache["error"] = None
-        print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Dados atualizados: {len(records)} registros.")
+        print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Dados atualizados: {len(records)} registros. boot_id={_BOOT_ID}")
     except Exception as e:
         with _lock:
             _cache["error"] = str(e)
@@ -303,9 +305,9 @@ def index():
         # concluir que o servico estava travado e reiniciar o container no meio do
         # carregamento -- resetando o cache bem quando estava quase pronto.
         if error:
-            body = f"<meta http-equiv='refresh' content='15'><p>Erro ao carregar dados do banco, tentando de novo: {error}</p>"
+            body = f"<meta http-equiv='refresh' content='15'><p>Erro ao carregar dados do banco, tentando de novo: {error}</p><p><small>{_BOOT_ID}</small></p>"
         else:
-            body = "<meta http-equiv='refresh' content='15'><p>Carregando dados do banco pela primeira vez, isso pode levar alguns minutos...</p>"
+            body = f"<meta http-equiv='refresh' content='15'><p>Carregando dados do banco pela primeira vez, isso pode levar alguns minutos...</p><p><small>{_BOOT_ID}</small></p>"
         return _no_cache(Response(body, mimetype="text/html; charset=utf-8"))
     return _no_cache(Response(html, mimetype="text/html; charset=utf-8"))
 
@@ -314,9 +316,11 @@ def index():
 def health():
     with _lock:
         data = {
+            "boot_id": _BOOT_ID,
             "updated_at": str(_cache["updated_at"]) if _cache["updated_at"] else None,
             "error": _cache["error"],
             "refreshing": _cache["refreshing"],
+            "html_is_none": _cache["html"] is None,
         }
     return _no_cache(jsonify(data))
 
