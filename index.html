@@ -179,7 +179,7 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 
 <nav class="toc">
 <a href="#capa">Capa</a><a href="#panorama">1 · Panorama do grupo</a><a href="#producao">2 · Produção</a><a href="#producao-graf">2 · Por unidade</a>
-<a href="#idade">3 · Custo por ano de uso</a><a href="#idade-unidade">3 · Por unidade</a><a href="#idade-tabelas">3 · Detalhe</a><a href="#idade-frota">3 · Envelhecimento</a><a href="#marca">4 · John Deere x Case</a>
+<a href="#idade">3 · Custo por ano de uso</a><a href="#idade-unidade">3 · Por unidade</a><a href="#idade-tabelas">3 · Detalhe</a><a href="#idade-frota">3 · Idade média da frota</a><a href="#idade-troca">3 · Ponto de troca</a><a href="#marca">4 · John Deere x Case</a>
 <a href="#maquinas">5 · Ranking de máquinas</a><a href="#detalhe">6 · Detalhe por unidade</a><a href="#metodologia">7 · Metodologia</a>
 </nav>
 
@@ -342,12 +342,12 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 </article>
 
 
-<article class="slide slide-dark" id="idade-frota" data-title="Envelhecimento da frota">
+<article class="slide slide-dark" id="idade-frota" data-title="Idade média da frota">
 <div class="s-head">
 <div>
-<div class="s-eyebrow">03 &middot; Envelhecimento da frota</div>
+<div class="s-eyebrow">03 &middot; Idade m&eacute;dia da frota</div>
 <h2 class="s-title" style="border:0;color:#fff;padding:0">Em que ponto da curva cada unidade est&aacute;</h2>
-<p class="s-sub">Idade m&eacute;dia das colhedoras que colheram em cada safra. Cruzando com a curva de custo das p&aacute;ginas anteriores, mostra quanto cada unidade ainda vai gastar se n&atilde;o renovar.</p>
+<p class="s-sub">Coluna: quantas colhedoras cortaram cana na safra. Linha: idade m&eacute;dia dessas m&aacute;quinas. Cruzando com a curva de custo das p&aacute;ginas anteriores, mostra quanto cada unidade ainda vai gastar se n&atilde;o renovar.</p>
 </div>
 <div class="s-right">
 <div class="s-chips">
@@ -360,6 +360,32 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <div class="s-legend" id="idade-frota-legend"></div>
 <div class="s-card" id="idade-frota-card"></div>
 <div class="s-insight" id="idade-frota-insight">carregando&hellip;</div>
+</article>
+
+
+<article class="slide slide-dark" id="idade-troca" data-title="Ponto de troca da colhedora">
+<div class="s-head">
+<div>
+<div class="s-eyebrow">03 &middot; Ponto de troca</div>
+<h2 class="s-title" style="border:0;color:#fff;padding:0">Quando trocar a colhedora compensa</h2>
+<p class="s-sub">Cada coluna &eacute; o que a m&aacute;quina cobra de oficina por tonelada naquele ano de uso. A linha tracejada &eacute; o custo por tonelada de uma colhedora nova, com o investimento diluído no seu melhor ciclo. Coluna acima da linha: manter ficou mais caro que trocar.</p>
+</div>
+<div class="s-right">
+<div class="s-toggle" id="troca-preco">
+<button type="button" data-preco="2000000">R$ 2,0 mi</button>
+<button type="button" data-preco="2500000" class="on">R$ 2,5 mi</button>
+<button type="button" data-preco="3000000">R$ 3,0 mi</button>
+</div>
+<div class="s-chips">
+<div class="s-chip"><div class="v" id="troca-chip-ano">&ndash;</div><div class="k">Ponto de troca sugerido</div></div>
+<div class="s-chip"><div class="v" id="troca-chip-ref">&ndash;</div><div class="k" id="troca-chip-ref-k">Custo da m&aacute;quina nova</div></div>
+<div class="s-chip"><div class="v" id="troca-chip-perda">&ndash;</div><div class="k" id="troca-chip-perda-k">Perda por manter</div></div>
+</div>
+</div>
+</div>
+<div class="s-legend" id="idade-troca-legend"></div>
+<div class="s-card" id="idade-troca-card"></div>
+<div class="s-insight" id="idade-troca-insight">carregando&hellip;</div>
 </article>
 
 
@@ -1059,6 +1085,20 @@ function miniCombo(svg, o){
   });
   svg.appendChild(lg);
 
+  // linha de referência horizontal (ex.: custo de uma máquina nova no ciclo ótimo)
+  if(o.ref && isFinite(o.ref.value) && o.ref.value>0 && o.ref.value<=o.maxL){
+    var ry = yL(o.ref.value);
+    var rl = ns("line"); rl.setAttribute("x1",padL); rl.setAttribute("x2",W-padR);
+    rl.setAttribute("y1",ry); rl.setAttribute("y2",ry); rl.setAttribute("stroke",o.ref.color);
+    rl.setAttribute("stroke-width",String(2.2*k)); rl.setAttribute("stroke-dasharray",(7*k)+","+(5*k));
+    svg.appendChild(rl);
+    if(o.ref.label){
+      var rt = txt(svg, padL+8*k, ry-7*k, o.ref.label,
+        {"font-size":String(11*k),"font-weight":"700",fill:o.ref.color,
+         stroke:"#fff","stroke-width":String(3.4*k),"paint-order":"stroke"});
+    }
+  }
+
   // rótulos de ano + pílula de idade
   o.labels.forEach(function(lab,i){
     txt(svg, cx(i), base+15*k, lab, {"text-anchor":"middle","font-size":String(10*k),fill:"#5A6072"});
@@ -1476,7 +1516,7 @@ function corCusto(v, base){
   return m < 1.6 ? "#2E7D46" : (m < 2.6 ? "#C9A227" : "#C0392B");
 }
 
-function renderIdade(recs, years){
+function renderIdade(recs, years, unitAgg){
   var idade = S.idadeAggregate(recs);
   var ages = S.activeAgeBuckets(idade, 3); // só faixas com amostra mínima de 3 máquinas
   if(!ages.length) ages = [1];
@@ -1595,8 +1635,11 @@ function renderIdade(recs, years){
     "Leia da esquerda para a direita: o custo por máquina sobe e o R$/t acompanha. "+
     "A linha de cada unidade mostra em que ponto da curva ela opera — e quanto ainda vai subir se a frota não for renovada.");
 
-  // ---------- 3d: envelhecimento da frota ao longo das safras ----------
-  renderIdadeFrota(recs, years);
+  // ---------- 3d: idade média da frota ao longo das safras ----------
+  renderIdadeFrota(recs, years, unitAgg);
+
+  // ---------- 3e: ponto de troca da colhedora ----------
+  renderPontoTroca(idade, ages);
 }
 
 // 3b — um painel por unidade: coluna = custo médio por máquina, linha = R$/t, pílula = amostra
@@ -1661,31 +1704,55 @@ function renderIdadeUnidade(idade, ages, lbls){
   }
 }
 
-// 3d — idade média da frota por safra e unidade
-function renderIdadeFrota(recs, years){
+// 3d — coluna = colhedoras que cortaram cana na safra, linha = idade média dessas máquinas
+function renderIdadeFrota(recs, years, unitAgg){
   var card = document.getElementById("idade-frota-card");
   if(!card) return;
   var idadeF = E.idadeFrotaAgg(recs, years);
-  card.className = "s-card";
+  var cw = Math.round(card.getBoundingClientRect().width);
+  card.className = "s-card s-grid" + (cw < 1180 ? " two" : "");
   card.innerHTML = "";
-  var svg = document.createElementNS(SVGNS, "svg");
-  card.appendChild(svg);
-  var b = svg.getBoundingClientRect();
-  var H = Math.max(280, Math.round(b.height));
-  C.lineChart(svg, {
-    title: "Idade média das colhedoras que colheram em cada safra",
-    yLabel: "Anos de uso", height: H,
-    xs: years.map(String), endLabels: true,
-    series: U.map(function(u){ return {name:u, color:COLORS[u], values: years.map(function(y){
-        var v = idadeF.avg(idadeF.byUnit[u][y]); return isFinite(v)?v:0; })}; })
-      .concat([{name:"Média do grupo", color:GRAY, dash:true, values: years.map(function(y){
-        var v = idadeF.avg(idadeF.grupo[y]); return isFinite(v)?v:0; })}]),
-    axisFmt: function(v){ return E.fmtDec(v,1); }, valueFmt: function(v){ return E.fmtDec(v,1); }
+  var svgs = U.map(function(){ var s=document.createElementNS(SVGNS,"svg"); card.appendChild(s); return s; });
+
+  var maxN=0, maxI=0;
+  U.forEach(function(u){ years.forEach(function(y){
+    var n = unitAgg[u][y].cnt;
+    var v = idadeF.avg(idadeF.byUnit[u][y]);
+    if(n > maxN) maxN = n;
+    if(isFinite(v) && v > maxI) maxI = v;
+  }); });
+  var maxL = C.niceAxis(maxN*1.42, 2) || 1, maxR = C.niceAxis(maxI*1.12, 2) || 1;
+  var lbls = years.map(function(y){ return years.length>7 ? ("'"+String(y).slice(2)) : String(y); });
+
+  U.forEach(function(u, k){
+    var b = svgs[k].getBoundingClientRect();
+    var idades = years.map(function(y){ var v=idadeF.avg(idadeF.byUnit[u][y]); return isFinite(v)?v:0; });
+    var ateY = years[years.length-1];
+    var vAte = idadeF.avg(idadeF.byUnit[u][ateY]);
+    C.miniCombo(svgs[k], {
+      W: Math.max(200, Math.round(b.width)), H: Math.max(150, Math.round(b.height)),
+      unit: u, color: COLORS[u], lineColor: RT_COLOR,
+      headRight: isFinite(vAte) ? (E.fmtDec(vAte,1)+" anos em "+ateY) : "",
+      unitL: "colhedoras", unitR: "anos de uso",
+      labels: lbls,
+      bars: years.map(function(y){ return unitAgg[u][y].cnt; }),
+      barFmt: function(v){ return E.fmtInt(v); },
+      line: idades, lineFmt: function(v){ return E.fmtDec(v,1); },
+      notes: years.map(function(){ return null; }),
+      maxL: maxL, maxR: maxR,
+      axisFmtL: function(v){ return E.fmtInt(v); },
+      axisFmtR: function(v){ return E.fmtDec(v, v%1===0?0:1); }
+    });
   });
-  svg.setAttribute("preserveAspectRatio","xMidYMid meet");
+
+  setHTML("idade-frota-legend",
+    "<span class='lg'>"+C.marcadorBarras(U.map(function(u){ return COLORS[u]; }))+
+      "Coluna: colhedoras que cortaram cana na safra <b>(eixo esq.)</b></span>"+
+    "<span class='lg'>"+C.marcadorLinha(RT_COLOR)+"Linha: idade média dessas máquinas <b>(anos, eixo dir.)</b></span>"+
+    "<span class='lg'>Mesma escala nos 4 painéis</span>");
 
   var ateY = years[years.length-1];
-  var linhas = U.map(function(u){ return {u:u, v: idadeF.avg(idadeF.byUnit[u][ateY])}; })
+  var linhas = U.map(function(u){ return {u:u, v: idadeF.avg(idadeF.byUnit[u][ateY]), n: unitAgg[u][ateY].cnt}; })
                 .filter(function(x){ return isFinite(x.v); });
   linhas.sort(function(a,b){ return a.v-b.v; });
   var g = idadeF.avg(idadeF.grupo[ateY]);
@@ -1696,19 +1763,127 @@ function renderIdadeFrota(recs, years){
     setText("idadef-chip-nova",  E.fmtDec(nova.v,1)+" anos");
     setText("idadef-chip-velha", E.fmtDec(velha.v,1)+" anos");
     setHTML("idade-frota-insight",
-      "Em <strong>"+ateY+"</strong> a frota mais velha é a da <strong>"+esc(velha.u)+"</strong> ("+E.fmtDec(velha.v,1)+
-      " anos) e a mais nova, a da <strong>"+esc(nova.u)+"</strong> ("+E.fmtDec(nova.v,1)+" anos). "+
+      "Em <strong>"+ateY+"</strong> a frota mais velha é a da <strong>"+esc(velha.u)+"</strong> — <strong>"+
+      velha.n+" colhedoras</strong> com <strong>"+E.fmtDec(velha.v,1)+" anos</strong> de média; a mais nova é a da <strong>"+
+      esc(nova.u)+"</strong>, <strong>"+nova.n+" colhedoras</strong> com <strong>"+E.fmtDec(nova.v,1)+" anos</strong>. "+
       "Cruzando com a curva das páginas anteriores: cada ano que a frota avança empurra a unidade para a faixa seguinte de custo.");
   }
-  setHTML("idade-frota-legend",
-    "<span class='lg'>"+C.marcadorLinha(COLORS[U[0]])+"Uma linha por unidade</span>"+
-    "<span class='lg'>"+C.marcadorLinha(GRAY)+"Tracejado: média do grupo</span>"+
-    "<span class='lg'>Só entram colhedoras que colheram na safra</span>");
+}
+
+// 3e — ponto de troca: até quando manter a colhedora sai mais barato que comprar nova
+var PRECO_NOVA = 2500000;
+
+function renderPontoTroca(idade, ages){
+  var card = document.getElementById("idade-troca-card");
+  if(!card) return;
+
+  // custo por tonelada de MANTER a máquina em cada ano de uso (só oficina)
+  var manter = ages.map(function(a){
+    var c = idade.grupo[a];
+    return (c && c.avgprod>0 && isFinite(c.avgcusto)) ? c.avgcusto/c.avgprod : NaN;
+  });
+  var prod = ages.map(function(a){ var c=idade.grupo[a]; return isFinite(c.avgprod)?c.avgprod:0; });
+
+  // custo por tonelada de uma máquina NOVA mantida n anos: (preço + oficina acumulada) / tonelada acumulada
+  var acumC = PRECO_NOVA, acumT = 0, ciclo = [];
+  ages.forEach(function(a, i){
+    var c = idade.grupo[a];
+    if(isFinite(c.avgcusto)) acumC += c.avgcusto;
+    acumT += prod[i];
+    ciclo.push(acumT>0 ? acumC/acumT : NaN);
+  });
+  // melhor ciclo = onde esse custo total por tonelada é mínimo
+  var iCiclo = 0;
+  ciclo.forEach(function(v,i){ if(isFinite(v) && (!isFinite(ciclo[iCiclo]) || v < ciclo[iCiclo])) iCiclo = i; });
+  var ref = ciclo[iCiclo];
+
+  // ponto de troca = primeiro ano em que manter custa mais que a referência da nova
+  var iTroca = -1;
+  manter.forEach(function(v,i){ if(iTroca<0 && isFinite(v) && isFinite(ref) && v > ref) iTroca = i; });
+
+  var cores = manter.map(function(v){
+    if(!isFinite(v) || !isFinite(ref)) return "#9AA1AE";
+    return v > ref ? "#C0392B" : (v > ref*0.75 ? "#C9A227" : "#2E7D46");
+  });
+
+  card.className = "s-card";
+  card.innerHTML = "";
+  var svg = document.createElementNS(SVGNS, "svg");
+  card.appendChild(svg);
+  var b = svg.getBoundingClientRect();
+  var maxBar = Math.max.apply(null, manter.filter(isFinite).concat([ref]));
+  C.miniCombo(svg, {
+    W: Math.max(700, Math.round(b.width)), H: Math.max(300, Math.round(b.height)),
+    escala: 1.75,
+    unit: "Custo de manter x custo de trocar", color: E.NAVY, lineColor: RT_COLOR,
+    barColors: cores,
+    headRight: "colhedora nova a "+E.fmtMoneyMi(PRECO_NOVA),
+    unitL: "R$/t", unitR: "mil t no ano",
+    labels: ages.map(function(a){ return a+"º"; }),
+    bars: manter.map(function(v){ return isFinite(v)?v:0; }),
+    barFmt: function(v){ return E.fmtDec(v,2); },
+    line: prod.map(function(v){ return v/1000; }),
+    lineFmt: function(v){ return E.fmtInt(v); },
+    notes: ages.map(function(a){ return {text: String(idade.grupo[a].n), color: E.NAVY}; }),
+    maxL: C.niceAxis(maxBar*1.35, 2) || 1,
+    maxR: C.niceAxis(Math.max.apply(null, prod)/1000*1.12, 2) || 1,
+    axisFmtL: function(v){ return E.fmtDec(v, v%1===0?0:1); },
+    axisFmtR: function(v){ return E.fmtInt(v); },
+    ref: isFinite(ref) ? {value: ref, color:"#12224A",
+      label:"Máquina nova no melhor ciclo ("+ages[iCiclo]+" anos): R$ "+E.fmtDec(ref,2)+"/t"} : null
+  });
+
+  setHTML("idade-troca-legend",
+    "<span class='lg'>"+C.marcadorBarras(["#2E7D46","#C9A227","#C0392B"])+
+      "Coluna: custo de oficina por tonelada ao manter a m&aacute;quina <b>(R$/t)</b> — verde folgado, ouro perto do limite, vermelho acima</span>"+
+    "<span class='lg'>"+C.marcadorLinha(RT_COLOR)+"Linha: tonelada colhida no ano <b>(mil t, eixo dir.)</b></span>"+
+    "<span class='lg'>"+C.marcadorPilula("51", E.NAVY)+"Máquinas na amostra</span>");
+
+  setText("troca-chip-ano", iTroca>=0 ? (ages[iTroca]+"º ano") : "não atingido");
+  setText("troca-chip-ref", isFinite(ref) ? ("R$ "+E.fmtDec(ref,2)+"/t") : "–");
+  setText("troca-chip-ref-k", "Nova a "+E.fmtMoneyMi(PRECO_NOVA)+", ciclo de "+ages[iCiclo]+" anos");
+
+  var msg;
+  if(isFinite(ref) && iTroca >= 0){
+    var excedente = manter[iTroca] - ref;
+    var perdaAno = excedente * prod[iTroca];
+    setText("troca-chip-perda", E.fmtMoneyMil(perdaAno));
+    setText("troca-chip-perda-k", "Por máquina/ano a partir do "+ages[iTroca]+"º");
+    msg = "Uma colhedora nova a <strong>"+E.fmtMoneyMi(PRECO_NOVA)+"</strong>, com a oficina que ela consome, "+
+      "sai por <strong>R$ "+E.fmtDec(ref,2)+" por tonelada</strong> quando o investimento é diluído em "+
+      "<strong>"+ages[iCiclo]+" anos</strong> — esse é o melhor ciclo possível. "+
+      "Manter a máquina atual custa menos que isso at&eacute; o <strong>"+ages[Math.max(0,iTroca-1)]+"º ano</strong>. "+
+      "A partir do <strong>"+ages[iTroca]+"º ano de uso</strong> a oficina sozinha já cobra <strong>R$ "+
+      E.fmtDec(manter[iTroca],2)+"/t</strong>, acima do custo de operar uma máquina nova: é o <strong>ponto de troca</strong>. "+
+      "Cada colhedora mantida além dele desperdiça cerca de <strong>"+E.fmtMoneyMil(perdaAno)+" por safra</strong> "+
+      "("+E.fmtDec(excedente,2)+" R$/t sobre "+E.fmtInt(prod[iTroca]/1000)+" mil t). "+
+      "<span style='opacity:.8'>O modelo não considera o valor de revenda da máquina usada — com ele, a troca compensaria ainda antes.</span>";
+  } else {
+    setText("troca-chip-perda", "–");
+    msg = "Com a colhedora nova a <strong>"+E.fmtMoneyMi(PRECO_NOVA)+"</strong>, nenhum ano de uso da amostra chega a custar mais "+
+      "que operar uma máquina nova (<strong>R$ "+E.fmtDec(ref,2)+"/t</strong> no melhor ciclo). "+
+      "Pelo critério de custo, a frota atual ainda não atingiu o ponto de troca.";
+  }
+  setHTML("idade-troca-insight", msg);
+}
+
+function initTrocaUI(){
+  var box = document.getElementById("troca-preco");
+  if(!box) return;
+  box.addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest("button[data-preco]") : null;
+    if(!b) return;
+    PRECO_NOVA = parseInt(b.getAttribute("data-preco"), 10);
+    Array.prototype.forEach.call(box.querySelectorAll("button"), function(x){ x.classList.toggle("on", x===b); });
+    if(window.replayIdade) window.replayIdade();
+  });
 }
 
 window.ReportSections.renderIdade = renderIdade;
 window.ReportSections.renderIdadeUnidade = renderIdadeUnidade;
 window.ReportSections.renderIdadeFrota = renderIdadeFrota;
+window.ReportSections.renderPontoTroca = renderPontoTroca;
+window.ReportSections.initTrocaUI = initTrocaUI;
 window.ReportSections.ajustarTabelas = ajustarTabelas;
 window.ReportEngine.fmtInt2 = function(v){ return isFinite(v)?E.fmtInt(v):"–"; };
 })();
@@ -2075,7 +2250,7 @@ window.replayProducao = function(){
 };
 window.replayProducaoTabelas = function(){ S.ajustarTabelasProducao(); };
 // a página 3 mede o cartão em pixel real: precisa refazer ao reentrar e ao redimensionar
-window.replayIdade = function(){ if(LAST) S.renderIdade(LAST.recs, LAST.years); };
+window.replayIdade = function(){ if(LAST) S.renderIdade(LAST.recs, LAST.years, LAST.unitAgg); };
 
 function initPanoramaUI(){
   var box = document.getElementById("pan-modo");
@@ -2114,7 +2289,7 @@ function renderAll(de, ate){
   S.renderKPIs(recs, years, unitAgg, grupoAgg);
   renderPanorama(years, unitAgg, grupoAgg, recs);
   S.renderProducao(recs, years, unitAgg, grupoAgg);
-  S.renderIdade(recs, years);
+  S.renderIdade(recs, years, unitAgg);
   S.renderMarca(recs, years);
   S.renderRankings(recs, years);
   S.renderDetalhe(recs, years, unitAgg);
@@ -2138,6 +2313,7 @@ function initFilter(){
   de.addEventListener("change", onChange);
   ate.addEventListener("change", onChange);
   initPanoramaUI();
+  S.initTrocaUI();
   var exc = E.EXCLUIDOS;
   setText("metodo-minton", E.fmtInt(exc.minTon));
   setText("metodo-excluidos", E.fmtInt(exc.registros));
