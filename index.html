@@ -439,10 +439,14 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <div>
 <div class="s-eyebrow">03 &middot; Detalhamento por produto</div>
 <h2 class="s-title" style="border:0;color:#fff;padding:0">Onde o dinheiro &eacute; gasto</h2>
-<p class="s-sub" id="prod-sub">Clique numa linha para abrir o n&iacute;vel seguinte: ordem de produ&ccedil;&atilde;o &rarr; grupo de produto &rarr; sistema da colhedora &rarr; frota.</p>
+<p class="s-sub" id="prod-sub">Clique numa linha para abrir o n&iacute;vel seguinte: ordem de produ&ccedil;&atilde;o &rarr; grupo de produto &rarr; sistema da colhedora &rarr; frota. As colunas podem ser as safras ou o <b>ano de uso da m&aacute;quina</b>, para ver o que cada idade consome.</p>
 </div>
 <div class="s-right">
 <select class="s-sel js-unidade" aria-label="Empresa analisada"></select>
+<div class="s-toggle" id="prod-eixo">
+<button type="button" data-eixo="safra" class="on">Por safra</button>
+<button type="button" data-eixo="idade">Por ano de uso</button>
+</div>
 <div class="s-toggle" id="prod-medida">
 <button type="button" data-medida="rs" class="on">R$</button>
 <button type="button" data-medida="rst">R$/t</button>
@@ -2199,6 +2203,8 @@ function initCompraUI(){
 // ============================================================
 var PROD_TRILHA = [];      // valores já escolhidos, um por nível
 var PROD_MEDIDA = "rs";    // "rs" | "rst"
+var PROD_EIXO   = "safra"; // "safra" (colunas por ano) | "idade" (por ano de uso da máquina)
+var IDADE_TETO  = 10;      // acima disso as idades entram numa coluna só
 
 function prodNiveis(){
   var D = window.PROD_DIM;
@@ -2218,13 +2224,35 @@ function renderProdutos(recs, years){
 
   // escopo: mesmas frotas/safras que o resto do relatório, respeitando o filtro de empresa
   var anos = {}; years.forEach(function(y){ anos[y] = true; });
-  var frotaOk = {}, tonAno = {}, tonTotal = 0;
-  years.forEach(function(y){ tonAno[y] = 0; });
+  var frotaOk = {}, tonCol = {}, tonTotal = 0, idadeDe = {}, idadesVistas = {};
+  var porIdade = (PROD_EIXO === "idade");
+
+  function chaveIdade(a){
+    if(!(a >= 1)) return "?";
+    return a > IDADE_TETO ? (IDADE_TETO+1) : a;
+  }
   recs.forEach(function(r){
     if(IDADE_UNIDADE !== "GRUPO" && r.unit !== IDADE_UNIDADE) return;
+    if(!anos[r.ano]) return;
     frotaOk[r.frota] = true;
-    if(tonAno[r.ano] !== undefined){ tonAno[r.ano] += r.tonelada; tonTotal += r.tonelada; }
+    var col = porIdade ? chaveIdade(r.ano_de_uso) : r.ano;
+    idadeDe[r.frota+"|"+r.ano] = chaveIdade(r.ano_de_uso);
+    if(porIdade) idadesVistas[col] = true;
+    tonCol[col] = (tonCol[col] || 0) + r.tonelada;
+    tonTotal += r.tonelada;
   });
+
+  // colunas: safras do período, ou as idades presentes no escopo
+  var cols, rotCol;
+  if(porIdade){
+    cols = Object.keys(idadesVistas).map(Number).sort(function(a,b){ return a-b; });
+    rotCol = function(c){ return c === "?" || !(c>=1) ? "s/ idade"
+                        : (c > IDADE_TETO ? (IDADE_TETO+1)+"º+" : c+"º"); };
+  } else {
+    cols = years.slice();
+    rotCol = function(c){ return String(c); };
+  }
+  function colDe(r){ return porIdade ? (idadeDe[r[1]+"|"+r[0]] || "?") : r[0]; }
 
   var linhas = window.PROD_ROWS.filter(function(r){
     if(!anos[r[0]] || !frotaOk[r[1]]) return false;
@@ -2238,7 +2266,8 @@ function renderProdutos(recs, years){
     var k = nivel.key(r);
     if(!mapa[k]) mapa[k] = {k:k, tot:0, lanc:0, anos:{}};
     mapa[k].tot += r[5]; mapa[k].lanc += r[6];
-    mapa[k].anos[r[0]] = (mapa[k].anos[r[0]] || 0) + r[5];
+    var cx = colDe(r);
+    mapa[k].anos[cx] = (mapa[k].anos[cx] || 0) + r[5];
     totalGeral += r[5];
   });
   var itens = Object.keys(mapa).map(function(k){ return mapa[k]; })
@@ -2260,7 +2289,7 @@ function renderProdutos(recs, years){
   var porT = (PROD_MEDIDA === "rst");
   function val(v, y){
     if(!porT) return v;
-    var den = (y === undefined) ? tonTotal : tonAno[y];
+    var den = (y === undefined) ? tonTotal : tonCol[y];
     return den > 0 ? v/den : NaN;
   }
   function fmt(v){
@@ -2291,16 +2320,16 @@ function renderProdutos(recs, years){
 
   // ---- tabela ----
   var maxCel = 0;
-  itens.forEach(function(it){ years.forEach(function(y){
+  itens.forEach(function(it){ cols.forEach(function(y){
     var v = val(it.anos[y]||0, y); if(isFinite(v) && v>maxCel) maxCel = v; }); });
   var podeAbrir = PROD_TRILHA.length < N.length-1;
 
   var head = "<tr><th class='l'>"+nivel.rot+"</th>"+
-    years.map(function(y){ return "<th class='n'>"+y+"</th>"; }).join("")+
+    cols.map(function(y){ return "<th class='n'>"+rotCol(y)+"</th>"; }).join("")+
     "<th class='n'>Total</th><th class='n'>Part.</th></tr>";
 
   var corpo = itens.map(function(it){
-    var cells = years.map(function(y){
+    var cells = cols.map(function(y){
       var bruto = it.anos[y]||0, v = val(bruto, y), st = "";
       if(isFinite(v) && v>0 && maxCel>0){
         st = " style=\"background:rgba(18,34,74,"+(0.05+0.27*(v/maxCel)).toFixed(3)+")\"";
@@ -2319,12 +2348,12 @@ function renderProdutos(recs, years){
 
   if(resto){
     corpo += "<tr><td class='l' style='color:var(--mut);font-style:italic'>Outros "+resto.n+" itens</td>"+
-      years.map(function(y){ return "<td class='n muted'>"+fmt(val(resto.anos[y]||0, y))+"</td>"; }).join("")+
+      cols.map(function(y){ return "<td class='n muted'>"+fmt(val(resto.anos[y]||0, y))+"</td>"; }).join("")+
       "<td class='n muted'>"+fmt(val(resto.tot))+"</td>"+
       "<td class='n muted'>"+E.fmtDec(totalGeral>0?resto.tot/totalGeral*100:0,1)+"%</td></tr>";
   }
 
-  var totAnos = years.map(function(y){
+  var totAnos = cols.map(function(y){
     var s=0; itens.forEach(function(it){ s += it.anos[y]||0; });
     if(resto) s += resto.anos[y]||0;
     return "<td class='n strong'>"+fmt(val(s,y))+"</td>";
@@ -2378,15 +2407,19 @@ function renderProdutos(recs, years){
 }
 
 function initProdutosUI(){
-  var box = document.getElementById("prod-medida");
-  if(!box) return;
-  box.addEventListener("click", function(e){
-    var b = e.target.closest ? e.target.closest("button[data-medida]") : null;
-    if(!b) return;
-    PROD_MEDIDA = b.getAttribute("data-medida");
-    Array.prototype.forEach.call(box.querySelectorAll("button"), function(x){ x.classList.toggle("on", x===b); });
-    if(window.replayProdutos) window.replayProdutos();
-  });
+  function liga(id, attr, aplica){
+    var box = document.getElementById(id);
+    if(!box) return;
+    box.addEventListener("click", function(e){
+      var b = e.target.closest ? e.target.closest("button["+attr+"]") : null;
+      if(!b) return;
+      aplica(b.getAttribute(attr));
+      Array.prototype.forEach.call(box.querySelectorAll("button"), function(x){ x.classList.toggle("on", x===b); });
+      if(window.replayProdutos) window.replayProdutos();
+    });
+  }
+  liga("prod-medida", "data-medida", function(v){ PROD_MEDIDA = v; });
+  liga("prod-eixo",   "data-eixo",   function(v){ PROD_EIXO   = v; });
 }
 
 function initTrocaUI(){
