@@ -131,14 +131,14 @@ nav.toc a.on{color:var(--gold);border-bottom-color:var(--gold)}
 /* três tabelas empilhadas com as MESMAS larguras de coluna: 2020 embaixo de 2020.
    --tf (fonte) e --tp (respiro da linha) são calculados em JS a partir da altura
    real do cartão, para as linhas ocuparem o espaço disponível sem sobrar vazio. */
-.s-card.s-tables{display:block;overflow-y:auto;padding:4px 14px 8px;--tf:13px;--tp:5px}
+.s-card.s-tables{display:block;overflow-y:auto;padding:4px 14px 8px;--tf:13px;--tp:5px;--c1:196px;--cN:132px}
 .s-tables p.sub-h{margin:calc(var(--tp) + 3px) 0 3px;font-size:calc(var(--tf) - 1px);color:var(--navy)}
 .s-tables p.sub-h:first-child{margin-top:1px}
-table.prod-tbl{table-layout:fixed;width:100%;font-size:var(--tf);line-height:1.3}
-table.prod-tbl thead th{padding:calc(var(--tp) + 1px) 6px;font-size:calc(var(--tf) - 1px);line-height:1.2}
-table.prod-tbl td{padding:var(--tp) 6px}
-table.prod-tbl th:first-child,table.prod-tbl td:first-child{width:196px;text-align:left}
-table.prod-tbl th:last-child,table.prod-tbl td:last-child{width:132px}
+table.grid-tbl{table-layout:fixed;width:100%;font-size:var(--tf);line-height:1.3}
+table.grid-tbl thead th{padding:calc(var(--tp) + 1px) 6px;font-size:calc(var(--tf) - 1px);line-height:1.2}
+table.grid-tbl td{padding:var(--tp) 6px}
+table.grid-tbl th:first-child,table.grid-tbl td:first-child{width:var(--c1);text-align:left}
+table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{width:var(--cN)}
 
 .s-card.s-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:1fr;gap:9px}
 .s-card.s-grid.two{grid-template-columns:repeat(2,1fr);grid-template-rows:1fr 1fr}
@@ -179,7 +179,7 @@ table.prod-tbl th:last-child,table.prod-tbl td:last-child{width:132px}
 
 <nav class="toc">
 <a href="#capa">Capa</a><a href="#panorama">1 · Panorama do grupo</a><a href="#producao">2 · Produção</a><a href="#producao-graf">2 · Por unidade</a>
-<a href="#idade">3 · Custo por ano de uso</a><a href="#marca">4 · John Deere x Case</a>
+<a href="#idade">3 · Custo por ano de uso</a><a href="#idade-unidade">3 · Por unidade</a><a href="#idade-tabelas">3 · Detalhe</a><a href="#idade-frota">3 · Envelhecimento</a><a href="#marca">4 · John Deere x Case</a>
 <a href="#maquinas">5 · Ranking de máquinas</a><a href="#detalhe">6 · Detalhe por unidade</a><a href="#metodologia">7 · Metodologia</a>
 </nav>
 
@@ -247,11 +247,11 @@ table.prod-tbl th:last-child,table.prod-tbl td:last-child{width:132px}
 </div>
 <div class="s-card s-tables">
 <p class="sub-h">Tonelada colhida por unidade e safra</p>
-<table class="tbl prod-tbl" id="table-ton"><thead></thead><tbody></tbody></table>
+<table class="tbl grid-tbl tem-total" id="table-ton"><thead></thead><tbody></tbody></table>
 <p class="sub-h">Colhedoras ativas por unidade e safra</p>
-<table class="tbl prod-tbl" id="table-cnt"><thead></thead><tbody></tbody></table>
+<table class="tbl grid-tbl tem-total" id="table-cnt"><thead></thead><tbody></tbody></table>
 <p class="sub-h">Tonelada colhida por máquina em cada safra</p>
-<table class="tbl prod-tbl" id="table-avgprod"><thead></thead><tbody></tbody></table>
+<table class="tbl grid-tbl tem-total" id="table-avgprod"><thead></thead><tbody></tbody></table>
 </div>
 <div class="s-insight" id="producao-insight">carregando…</div>
 </article>
@@ -278,24 +278,88 @@ table.prod-tbl th:last-child,table.prod-tbl td:last-child{width:132px}
 </article>
 
 
-<article class="slide legacy" id="idade" data-title="Custo por ano de uso">
-<section class="alt">
-<h2><span class="idx">3</span>Custo por ano de uso da máquina</h2>
-<p class="desc">A pergunta de fundo: quanto uma colhedora custa no 1º, 2º, 3º ano de vida — e como isso se comporta em cada unidade. Agora com a data real de aquisição de cada máquina (cadastro de frota), a análise cobre toda a frota, não só as compradas recentemente.</p>
-<p class="desc" id="idade-desc-dyn" style="margin-top:-8px"></p>
-<p class="sub-h">Idade média da frota por safra e unidade</p>
-<p class="desc" style="margin-top:-8px">Média do ano de uso das colhedoras ativas em cada safra, por unidade. Mostra o envelhecimento (ou a renovação) da frota de cada empresa ao longo do período.</p>
-<svg id="chart-idade-media" class="rc-chart" viewBox="0 0 960 400"></svg>
+<article class="slide slide-dark" id="idade" data-title="Custo por ano de uso">
+<div class="s-head">
+<div>
+<div class="s-eyebrow">03 &middot; Custo por ano de uso</div>
+<h2 class="s-title" style="border:0;color:#fff;padding:0">Quanto custa envelhecer uma colhedora</h2>
+<p class="s-sub" id="idade-desc-dyn"></p>
+</div>
+<div class="s-right">
+<div class="s-chips">
+<div class="s-chip"><div class="v" id="idade-chip-novo">&ndash;</div><div class="k" id="idade-chip-novo-k">1&ordm; ano de uso</div></div>
+<div class="s-chip"><div class="v" id="idade-chip-pico">&ndash;</div><div class="k" id="idade-chip-pico-k">Pico</div></div>
+<div class="s-chip"><div class="v" id="idade-chip-mult">&ndash;</div><div class="k" id="idade-chip-mult-k">Multiplicador</div></div>
+</div>
+</div>
+</div>
+<div class="s-legend" id="idade-legend"></div>
+<div class="s-card" id="idade-card"></div>
+<div class="s-insight" id="idade-insight">carregando&hellip;</div>
+</article>
+
+
+<article class="slide slide-dark" id="idade-unidade" data-title="Custo por ano de uso, por unidade">
+<div class="s-head">
+<div>
+<div class="s-eyebrow">03 &middot; Custo por ano de uso &middot; por unidade</div>
+<h2 class="s-title" style="border:0;color:#fff;padding:0">A mesma curva, empresa por empresa</h2>
+<p class="s-sub">Cada painel mostra como o custo da colhedora evolui com a idade dentro da unidade. Mesma escala nos quatro, para comparar diretamente.</p>
+</div>
+<div class="s-right">
+<div class="s-chips">
+<div class="s-chip"><div class="v" id="idadeu-chip-melhor">&ndash;</div><div class="k">Menor custo por ano de uso</div></div>
+<div class="s-chip"><div class="v" id="idadeu-chip-pior">&ndash;</div><div class="k">Maior custo por ano de uso</div></div>
+</div>
+</div>
+</div>
+<div class="s-legend" id="idade-unidade-legend"></div>
+<div class="s-card" id="idade-unidade-card"></div>
+<div class="s-insight" id="idade-unidade-insight">carregando&hellip;</div>
+</article>
+
+
+<article class="slide slide-dark" id="idade-tabelas" data-title="Custo por ano de uso &middot; tabelas">
+<div class="s-head">
+<div>
+<div class="s-eyebrow">03 &middot; Custo por ano de uso &middot; detalhe</div>
+<h2 class="s-title" style="border:0;color:#fff;padding:0">Os n&uacute;meros por tr&aacute;s da curva</h2>
+<p class="s-sub">As duas tabelas usam a mesma grade: cada ano de uso fica exatamente sob o mesmo ano de uso na outra. A cor acompanha o valor.</p>
+</div>
+<div class="s-right">
+<div class="s-chips">
+<div class="s-chip"><div class="v" id="idadet-chip-amostra">&ndash;</div><div class="k">M&aacute;quinas na amostra</div></div>
+</div>
+</div>
+</div>
+<div class="s-card s-tables">
 <p class="sub-h">R$/t por ano de uso e unidade</p>
-<div class="table-wrap"><table class="tbl" id="table-idade-rt"><thead></thead><tbody></tbody></table></div>
-<p class="sub-h">Custo médio por máquina em cada ano de uso</p>
-<div class="table-wrap"><table class="tbl" id="table-idade-custo"><thead></thead><tbody></tbody></table></div>
-<svg id="chart-idade-rt" class="rc-chart" viewBox="0 0 960 430"></svg>
-<svg id="chart-idade-custo" class="rc-chart" viewBox="0 0 960 380"></svg>
-<p class="sub-h">Produção, consumo de combustível e custo médio por ano de uso</p>
-<div class="table-wrap"><table class="tbl small" id="table-idade-comparativo"><thead></thead><tbody></tbody></table></div>
-<svg id="chart-idade-comparativo" class="rc-chart" viewBox="0 0 960 420"></svg>
-</section>
+<table class="tbl grid-tbl" id="table-idade-rt"><thead></thead><tbody></tbody></table>
+<p class="sub-h">Custo m&eacute;dio de oficina por m&aacute;quina em cada ano de uso (R$/ano)</p>
+<table class="tbl grid-tbl" id="table-idade-custo"><thead></thead><tbody></tbody></table>
+</div>
+<div class="s-insight" id="idade-tabelas-insight">carregando&hellip;</div>
+</article>
+
+
+<article class="slide slide-dark" id="idade-frota" data-title="Envelhecimento da frota">
+<div class="s-head">
+<div>
+<div class="s-eyebrow">03 &middot; Envelhecimento da frota</div>
+<h2 class="s-title" style="border:0;color:#fff;padding:0">Em que ponto da curva cada unidade est&aacute;</h2>
+<p class="s-sub">Idade m&eacute;dia das colhedoras que colheram em cada safra. Cruzando com a curva de custo das p&aacute;ginas anteriores, mostra quanto cada unidade ainda vai gastar se n&atilde;o renovar.</p>
+</div>
+<div class="s-right">
+<div class="s-chips">
+<div class="s-chip"><div class="v" id="idadef-chip-grupo">&ndash;</div><div class="k" id="idadef-chip-grupo-k">Idade m&eacute;dia do grupo</div></div>
+<div class="s-chip"><div class="v" id="idadef-chip-velha">&ndash;</div><div class="k">Frota mais velha</div></div>
+<div class="s-chip"><div class="v" id="idadef-chip-nova">&ndash;</div><div class="k">Frota mais nova</div></div>
+</div>
+</div>
+</div>
+<div class="s-legend" id="idade-frota-legend"></div>
+<div class="s-card" id="idade-frota-card"></div>
+<div class="s-insight" id="idade-frota-insight">carregando&hellip;</div>
 </article>
 
 
@@ -910,11 +974,14 @@ function miniCombo(svg, o){
   svg.setAttribute("viewBox","0 0 "+W+" "+H);
   svg.setAttribute("preserveAspectRatio","xMidYMid meet");
 
-  var padL=38, padR=32, padT=38, padB=54;
+  // escala: 1 = painel compacto (4 por página); >1 = gráfico grande de página inteira
+  var k = o.escala || 1;
+  var padL=38*k, padR=34*k, padT=38*k, padB=54*k;
   var n=o.labels.length, plotW=W-padL-padR, plotH=H-padT-padB, base=padT+plotH;
   if(plotW<40 || plotH<40) return;
-  // colunas largas: o corpo da barra é usado para escrever o valor gasto
-  var slot=plotW/n, barW=Math.min(slot*0.74, 46);
+  // colunas largas: o corpo da barra é usado para escrever o valor
+  var slot=plotW/n, barW=Math.min(slot*0.74, 46*k);
+  function corBarra(i){ return (o.barColors && o.barColors[i]) || o.color; }
   function yL(v){ return base-(v/o.maxL)*plotH; }
   function yR(v){ return base-(v/o.maxR)*plotH; }
   function cx(i){ return padL+i*slot+slot/2; }
@@ -923,11 +990,11 @@ function miniCombo(svg, o){
     parent.appendChild(t); return t; }
 
   // cabeçalho do painel
-  var sw=ns("rect"); sw.setAttribute("x",padL-4); sw.setAttribute("y",8); sw.setAttribute("width",12);
-  sw.setAttribute("height",12); sw.setAttribute("rx",2.5); sw.setAttribute("fill",o.color);
+  var sw=ns("rect"); sw.setAttribute("x",padL-4); sw.setAttribute("y",8*k); sw.setAttribute("width",12*k);
+  sw.setAttribute("height",12*k); sw.setAttribute("rx",2.5); sw.setAttribute("fill",o.color);
   svg.appendChild(sw);
-  txt(svg, padL+13, 18, o.unit, {"font-size":"13","font-weight":"700",fill:E.NAVY});
-  txt(svg, W-padR+10, 18, o.headRight, {"text-anchor":"end","font-size":"11.5","font-weight":"700",fill:"#5A6072"});
+  txt(svg, padL+13*k, 18*k, o.unit, {"font-size":String(13*k),"font-weight":"700",fill:E.NAVY});
+  txt(svg, W-padR+10, 18*k, o.headRight, {"text-anchor":"end","font-size":String(11.5*k),"font-weight":"700",fill:"#5A6072"});
 
   // grade
   for(var i=0;i<=2;i++){
@@ -935,11 +1002,11 @@ function miniCombo(svg, o){
     var gl=ns("line"); gl.setAttribute("x1",padL); gl.setAttribute("x2",W-padR);
     gl.setAttribute("y1",y); gl.setAttribute("y2",y);
     gl.setAttribute("stroke", i===0?"#B9C0CE":"#E7EAF0"); svg.appendChild(gl);
-    txt(svg, padL-6, y+3.5, o.axisFmtL(o.maxL*f), {"text-anchor":"end","font-size":"9.5",fill:"#8A92A4"});
-    txt(svg, W-padR+6, y+3.5, o.axisFmtR(o.maxR*f), {"text-anchor":"start","font-size":"9.5",fill:o.lineColor});
+    txt(svg, padL-6, y+3.5*k, o.axisFmtL(o.maxL*f), {"text-anchor":"end","font-size":String(9.5*k),fill:"#8A92A4"});
+    txt(svg, W-padR+6, y+3.5*k, o.axisFmtR(o.maxR*f), {"text-anchor":"start","font-size":String(9.5*k),fill:o.lineColor});
   }
-  txt(svg, padL-6, padT-7, o.unitL||"", {"text-anchor":"end","font-size":"8.5",fill:"#A6AEBC"});
-  txt(svg, W-padR+6, padT-7, o.unitR||"", {"text-anchor":"start","font-size":"8.5",fill:o.lineColor});
+  txt(svg, padL-6, padT-7*k, o.unitL||"", {"text-anchor":"end","font-size":String(8.5*k),fill:"#A6AEBC"});
+  txt(svg, W-padR+6, padT-7*k, o.unitR||"", {"text-anchor":"start","font-size":String(8.5*k),fill:o.lineColor});
 
   // barras
   var g=ns("g");
@@ -948,8 +1015,8 @@ function miniCombo(svg, o){
     if(!(v>0)) return;
     var h=(v/o.maxL)*plotH, y=yL(v), x=cx(i)-barW/2;
     var r=ns("rect"); r.setAttribute("x",x); r.setAttribute("y",y);
-    r.setAttribute("width",barW); r.setAttribute("height",h); r.setAttribute("rx",3);
-    r.setAttribute("fill",o.color); g.appendChild(r);
+    r.setAttribute("width",barW); r.setAttribute("height",h); r.setAttribute("rx",3*k);
+    r.setAttribute("fill",corBarra(i)); g.appendChild(r);
   });
   svg.appendChild(g);
 
@@ -958,15 +1025,15 @@ function miniCombo(svg, o){
   o.bars.forEach(function(v,i){
     if(!(v>0)) return;
     var s=o.barFmt(v), h=(v/o.maxL)*plotH, y=yL(v);
-    var fs=Math.min(11.5, Math.max(7.5, (barW-5)/(s.length*0.58)));
-    if(h >= fs+7){
+    var fs=Math.min(11.5*k, Math.max(7.5, (barW-5)/(s.length*0.58)));
+    if(h >= fs+7*k){
       // cabe dentro da barra: texto na cor de maior contraste sobre o fundo
       txt(vg, cx(i), y + h/2 + fs*0.35, s,
-        {"text-anchor":"middle","font-size":String(fs),"font-weight":"700",fill:o.textOnBar});
+        {"text-anchor":"middle","font-size":String(fs),"font-weight":"700",fill:textoSobre(corBarra(i))});
     } else {
       // barra baixa demais: escreve logo acima, na cor da unidade
-      txt(vg, cx(i), y-4, s,
-        {"text-anchor":"middle","font-size":String(fs),"font-weight":"700",fill:o.color});
+      txt(vg, cx(i), y-4*k, s,
+        {"text-anchor":"middle","font-size":String(fs),"font-weight":"700",fill:corBarra(i)});
     }
   });
   svg.appendChild(vg);
@@ -976,37 +1043,37 @@ function miniCombo(svg, o){
   var pts=o.line.map(function(v,i){ return [cx(i), yR(v)]; });
   var d=pts.map(function(p,i){ return (i===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1); }).join(" ");
   var halo=ns("path"); halo.setAttribute("d",d); halo.setAttribute("fill","none");
-  halo.setAttribute("stroke","#fff"); halo.setAttribute("stroke-width","5"); halo.setAttribute("stroke-linejoin","round");
+  halo.setAttribute("stroke","#fff"); halo.setAttribute("stroke-width",String(5*k)); halo.setAttribute("stroke-linejoin","round");
   lg.appendChild(halo);
   var lp=ns("path"); lp.setAttribute("d",d); lp.setAttribute("fill","none"); lp.setAttribute("stroke",o.lineColor);
-  lp.setAttribute("stroke-width","2.4"); lp.setAttribute("stroke-linejoin","round"); lp.setAttribute("stroke-linecap","round");
+  lp.setAttribute("stroke-width",String(2.4*k)); lp.setAttribute("stroke-linejoin","round"); lp.setAttribute("stroke-linecap","round");
   lg.appendChild(lp);
-  var lfs = Math.min(10.5, Math.max(8, slot/4.6));
+  var lfs = Math.min(10.5*k, Math.max(8, slot/4.6));
   pts.forEach(function(p,i){
-    var c=ns("circle"); c.setAttribute("cx",p[0]); c.setAttribute("cy",p[1]); c.setAttribute("r",3.6);
-    c.setAttribute("fill","#fff"); c.setAttribute("stroke",o.lineColor); c.setAttribute("stroke-width","2.1");
+    var c=ns("circle"); c.setAttribute("cx",p[0]); c.setAttribute("cy",p[1]); c.setAttribute("r",3.6*k);
+    c.setAttribute("fill","#fff"); c.setAttribute("stroke",o.lineColor); c.setAttribute("stroke-width",String(2.1*k));
     lg.appendChild(c);
-    txt(lg, p[0], p[1]-8, o.lineFmt(o.line[i]),
+    txt(lg, p[0], p[1]-8*k, o.lineFmt(o.line[i]),
       {"text-anchor":"middle","font-size":String(lfs),"font-weight":"700",fill:o.lineColor,
-       stroke:"#fff","stroke-width":"3","paint-order":"stroke"});
+       stroke:"#fff","stroke-width":String(3*k),"paint-order":"stroke"});
   });
   svg.appendChild(lg);
 
   // rótulos de ano + pílula de idade
   o.labels.forEach(function(lab,i){
-    txt(svg, cx(i), base+15, lab, {"text-anchor":"middle","font-size":"10",fill:"#5A6072"});
+    txt(svg, cx(i), base+15*k, lab, {"text-anchor":"middle","font-size":String(10*k),fill:"#5A6072"});
     var nt=o.notes[i];
     if(!nt || !nt.text) return;
-    var fs = slot<40 ? 8.5 : 9.5;
-    var w = Math.max(20, nt.text.length*fs*0.62 + 10), x = cx(i)-w/2, y = base+23;
+    var fs = (slot<40 ? 8.5 : 9.5)*k;
+    var w = Math.max(20*k, nt.text.length*fs*0.62 + 10*k), x = cx(i)-w/2, y = base+23*k;
     if(w <= slot-1){
       var pill=ns("rect"); pill.setAttribute("x",x); pill.setAttribute("y",y);
-      pill.setAttribute("width",w); pill.setAttribute("height",17); pill.setAttribute("rx",8.5);
-      pill.setAttribute("fill","#fff"); pill.setAttribute("stroke",nt.color); pill.setAttribute("stroke-width","1.4");
+      pill.setAttribute("width",w); pill.setAttribute("height",17*k); pill.setAttribute("rx",8.5*k);
+      pill.setAttribute("fill","#fff"); pill.setAttribute("stroke",nt.color); pill.setAttribute("stroke-width",String(1.4*k));
       svg.appendChild(pill);
     }
     // sem espaço para a pílula, mantém o número colorido — a informação nunca some
-    txt(svg, cx(i), y+12, nt.text,
+    txt(svg, cx(i), y+12*k, nt.text,
       {"text-anchor":"middle","font-size":String(fs),"font-weight":"700",fill:nt.color});
   });
 }
@@ -1283,24 +1350,8 @@ function renderProducao(recs, years, unitAgg, grupoAgg){
   ajustarTabelasProducao();
 }
 
-// Ajusta fonte e altura de linha das três tabelas à altura real do cartão:
-// primeiro cresce a fonte até o limite confortável, depois distribui o que
-// sobrar como respiro nas linhas — em vez de deixar espaço vazio embaixo.
 function ajustarTabelasProducao(){
-  var card = document.querySelector("#producao .s-tables");
-  if(!card) return;
-  var alvo = card.clientHeight;
-  if(alvo < 80) return;
-  var f, p = 2;
-  card.style.setProperty("--tp", p+"px");
-  for(f = 16; f >= 9; f -= 0.5){
-    card.style.setProperty("--tf", f+"px");
-    if(card.scrollHeight <= alvo) break;
-  }
-  for(; p < 13; p += 0.5){
-    card.style.setProperty("--tp", (p+0.5)+"px");
-    if(card.scrollHeight > alvo){ card.style.setProperty("--tp", p+"px"); break; }
-  }
+  window.ReportSections.ajustarTabelas(document.querySelector("#producao .s-tables"));
 }
 
 // ---- página 2b: um painel por unidade — coluna = tonelada total,
@@ -1394,115 +1445,271 @@ function q(sel){ return document.querySelector(sel); }
 function esc(s){ return E.esc(s); }
 function setHTML(id, html){ var el=document.getElementById(id); if(el) el.innerHTML = html; }
 function setText(id, t){ var el=document.getElementById(id); if(el) el.textContent = t; }
+var SVGNS = "http://www.w3.org/2000/svg";
+var RT_COLOR = "#C0392B";
+
+// Ajusta fonte e altura de linha das tabelas de um cartão à altura real dele:
+// cresce a fonte até o limite confortável e distribui o que sobrar como respiro
+// nas linhas, em vez de deixar espaço vazio embaixo.
+function ajustarTabelas(card){
+  if(!card) return;
+  var alvo = card.clientHeight;
+  if(alvo < 80) return;
+  var f, p = 2;
+  card.style.setProperty("--tp", p+"px");
+  for(f = 16; f >= 9; f -= 0.5){
+    card.style.setProperty("--tf", f+"px");
+    if(card.scrollHeight <= alvo) break;
+  }
+  for(; p < 13; p += 0.5){
+    card.style.setProperty("--tp", (p+0.5)+"px");
+    if(card.scrollHeight > alvo){ card.style.setProperty("--tp", p+"px"); break; }
+  }
+}
 
 // ============================================================
+// Página 3 — custo por ano de uso da máquina
+// ============================================================
+function corCusto(v, base){
+  if(!isFinite(v) || !isFinite(base) || base<=0) return "#9AA1AE";
+  var m = v/base;
+  return m < 1.6 ? "#2E7D46" : (m < 2.6 ? "#C9A227" : "#C0392B");
+}
 
-// ============================================================
-// Idade da maquina (table7 rt, table8 avgcusto) + charts
-// ============================================================
 function renderIdade(recs, years){
   var idade = S.idadeAggregate(recs);
-  var ages = S.activeAgeBuckets(idade, 3); // show buckets with at least 3 datapoints
+  var ages = S.activeAgeBuckets(idade, 3); // só faixas com amostra mínima de 3 máquinas
   if(!ages.length) ages = [1];
+  var lbls = ages.map(function(a){ return a+"º"; });
 
+  // ---------- 3a: curva do grupo — custo por máquina x R$/t x amostra ----------
+  var custos = ages.map(function(a){ return idade.grupo[a].avgcusto/1000; });
+  var rts    = ages.map(function(a){ var v=idade.grupo[a].rt; return isFinite(v)?v:0; });
+  var amostra= ages.map(function(a){ return idade.grupo[a].n; });
+  var base = custos[0];
+  var cores = custos.map(function(v){ return corCusto(v, base); });
+
+  var card = document.getElementById("idade-card");
+  if(card){
+    card.className = "s-card";
+    card.innerHTML = "";
+    var svg = document.createElementNS(SVGNS, "svg");
+    card.appendChild(svg);
+    var b = svg.getBoundingClientRect();
+    C.miniCombo(svg, {
+      W: Math.max(700, Math.round(b.width)), H: Math.max(300, Math.round(b.height)),
+      escala: 1.75,
+      unit: "Grupo — todas as unidades", color: E.NAVY, lineColor: RT_COLOR,
+      barColors: cores,
+      headRight: "amostra de "+E.fmtInt(E.sum(ages, function(a){ return idade.grupo[a].n; }))+" máquina-safra",
+      unitL: "R$ mil por máquina/ano", unitR: "R$/t",
+      labels: lbls,
+      bars: custos, barFmt: function(v){ return E.fmtInt(v); },
+      line: rts,  lineFmt: function(v){ return E.fmtDec(v,2); },
+      notes: amostra.map(function(n){ return {text: String(n), color: E.NAVY}; }),
+      maxL: C.niceAxis(Math.max.apply(null, custos)*1.42, 2) || 1,
+      maxR: C.niceAxis(Math.max.apply(null, rts)*1.12, 2) || 1,
+      axisFmtL: function(v){ return E.fmtInt(v); },
+      axisFmtR: function(v){ return E.fmtDec(v, v%1===0?0:1); }
+    });
+  }
+  setHTML("idade-legend",
+    "<span class='lg'>"+C.marcadorBarras(["#2E7D46","#C9A227","#C0392B"])+
+      "Coluna: custo de oficina por máquina no ano <b>(R$ mil, eixo esq.)</b> — verde até 1,6x o 1º ano, ouro até 2,6x, vermelho acima</span>"+
+    "<span class='lg'>"+C.marcadorLinha(RT_COLOR)+"Linha: R$/t naquele ano de uso <b>(eixo dir.)</b></span>"+
+    "<span class='lg'>"+C.marcadorPilula("51", E.NAVY)+"Máquinas na amostra</span>");
+
+  var iPico = 0;
+  custos.forEach(function(v,i){ if(v > custos[iPico]) iPico = i; });
+  setText("idade-chip-novo", E.fmtMoneyMil(idade.grupo[ages[0]].avgcusto));
+  setText("idade-chip-novo-k", ages[0]+"º ano de uso · por máquina");
+  setText("idade-chip-pico", E.fmtMoneyMil(idade.grupo[ages[iPico]].avgcusto));
+  setText("idade-chip-pico-k", "Pico, no "+ages[iPico]+"º ano de uso");
+  setText("idade-chip-mult", (base>0 ? E.fmtDec(custos[iPico]/base,1)+"x" : "–"));
+  setText("idade-chip-mult-k", "Do "+ages[0]+"º ao "+ages[iPico]+"º ano");
+
+  setHTML("idade-desc-dyn", "Considera as "+E.nunique(recs.filter(function(r){
+      return r.ano_de_uso>=1 && r.ano_de_uso<=idade.maxBuckets; }), function(r){ return r.frota; })+
+    " colhedoras com data de aquisição conhecida no período, agrupadas pela idade que tinham em cada safra.");
+
+  var prodIni = idade.grupo[ages[0]].avgprod, prodPico = idade.grupo[ages[iPico]].avgprod;
+  var msg = "Uma colhedora custa <strong>"+E.fmtMoneyMil(idade.grupo[ages[0]].avgcusto)+"</strong> de oficina no "+
+    ages[0]+"º ano de uso e chega a <strong>"+E.fmtMoneyMil(idade.grupo[ages[iPico]].avgcusto)+"</strong> no "+
+    ages[iPico]+"º — <strong>"+E.fmtDec(custos[iPico]/base,1)+" vezes mais</strong>.";
+  if(isFinite(prodIni) && isFinite(prodPico) && prodIni>0){
+    msg += " No mesmo intervalo a produção cai de <strong>"+E.fmtInt(prodIni)+" t</strong> para <strong>"+
+      E.fmtInt(prodPico)+" t</strong> por máquina (<strong>"+E.fmtDec((prodPico/prodIni-1)*100,0)+"%</strong>): custa mais e entrega menos.";
+  }
+  if(rts[0]>0 && rts[iPico]>0){
+    msg += " O R$/t sai de <strong>R$ "+E.fmtDec(rts[0],2)+"</strong> para <strong>R$ "+E.fmtDec(rts[iPico],2)+
+      "</strong> — <strong>"+E.fmtDec(rts[iPico]/rts[0],1)+"x</strong>.";
+  }
+  // a cauda da curva cai porque a amostra encolhe, não porque a máquina barateia
+  if(iPico < ages.length-1 && amostra[amostra.length-1] < amostra[iPico]*0.7){
+    msg += " <span style='opacity:.8'>Do "+ages[iPico]+"º ano em diante a coluna baixa porque a amostra encolhe de "+
+      amostra[iPico]+" para "+amostra[amostra.length-1]+" máquinas: sobram as que se mantiveram boas, "+
+      "as piores já saíram da frota. Não é a máquina que barateia.</span>";
+  }
+  setHTML("idade-insight", msg);
+
+  // ---------- 3b: a mesma curva, por unidade ----------
+  renderIdadeUnidade(idade, ages, lbls);
+
+  // ---------- 3c: as duas tabelas alinhadas ----------
   function fillTable(id, valueFn, fmt, grupoLabel){
     var table = document.getElementById(id);
+    if(!table) return;
     var thead = table.querySelector("thead"), tbody = table.querySelector("tbody");
-    thead.innerHTML = "<tr><th class='l'>Unidade</th>"+ages.map(function(a){return "<th class='n'>"+a+"º ano</th>";}).join("")+"</tr>";
+    thead.innerHTML = "<tr><th class='l'>Unidade</th>"+ages.map(function(a){ return "<th class='n'>"+a+"º ano</th>"; }).join("")+"</tr>";
+    var vals = [];
+    U.forEach(function(u){ ages.forEach(function(a){
+      var c = idade.byUnit[u] && idade.byUnit[u][a];
+      var v = c ? valueFn(c) : NaN;
+      if(isFinite(v) && v>0) vals.push(v);
+    }); });
+    var maxV = vals.length ? Math.max.apply(null, vals) : 0;
     var rows = U.map(function(u){
       var cells = ages.map(function(a){
-        var cell = idade.byUnit[u] && idade.byUnit[u][a];
-        var v = cell ? valueFn(cell) : NaN;
-        return "<td class='n'>"+(isFinite(v)?fmt(v):"–")+"</td>";
+        var c = idade.byUnit[u] && idade.byUnit[u][a];
+        var v = c ? valueFn(c) : NaN;
+        var st = "";
+        if(isFinite(v) && v>0 && maxV>0){
+          var hex = COLORS[u], rr=parseInt(hex.slice(1,3),16), gg=parseInt(hex.slice(3,5),16), bb=parseInt(hex.slice(5,7),16);
+          st = " style='background:rgba("+rr+","+gg+","+bb+","+(0.05+0.27*(v/maxV)).toFixed(3)+")'";
+        }
+        return "<td class='n'"+st+">"+(isFinite(v)?fmt(v):"–")+"</td>";
       }).join("");
-      return "<tr><td class='l'>"+esc(u)+"</td>"+cells+"</tr>";
+      return "<tr><td class='l' style='box-shadow:inset 4px 0 0 "+COLORS[u]+"'>"+esc(u)+"</td>"+cells+"</tr>";
     }).join("");
     var gcells = ages.map(function(a){ var v=valueFn(idade.grupo[a]); return "<td class='n strong'>"+(isFinite(v)?fmt(v):"–")+"</td>"; }).join("");
     rows += "<tr class='tot'><td class='l strong'>"+grupoLabel+"</td>"+gcells+"</tr>";
-    var amostra = ages.map(function(a){ return "<td class='n muted'>"+idade.grupo[a].n+" máq.</td>"; }).join("");
-    rows += "<tr class='amostra'><td class='l'>Máquinas na amostra</td>"+amostra+"</tr>";
+    rows += "<tr class='amostra'><td class='l'>Máquinas na amostra</td>"+
+      ages.map(function(a){ return "<td class='n muted'>"+idade.grupo[a].n+" máq.</td>"; }).join("")+"</tr>";
     tbody.innerHTML = rows;
   }
-  // Idade média da frota por safra e unidade (média do ano_de_uso das colhedoras ativas)
+  fillTable("table-idade-rt", function(c){ return c.rt; }, function(v){ return E.fmtDec(v,2); }, "MÉDIA DO GRUPO");
+  fillTable("table-idade-custo", function(c){ return c.avgcusto; }, function(v){ return E.fmtMoneyMil(v); }, "MÉDIA DO GRUPO");
+  ajustarTabelas(document.querySelector("#idade-tabelas .s-tables"));
+  setText("idadet-chip-amostra", E.fmtInt(E.sum(ages, function(a){ return idade.grupo[a].n; })));
+  setHTML("idade-tabelas-insight",
+    "Leia da esquerda para a direita: o custo por máquina sobe e o R$/t acompanha. "+
+    "A linha de cada unidade mostra em que ponto da curva ela opera — e quanto ainda vai subir se a frota não for renovada.");
+
+  // ---------- 3d: envelhecimento da frota ao longo das safras ----------
+  renderIdadeFrota(recs, years);
+}
+
+// 3b — um painel por unidade: coluna = custo médio por máquina, linha = R$/t, pílula = amostra
+function renderIdadeUnidade(idade, ages, lbls){
+  var card = document.getElementById("idade-unidade-card");
+  if(!card) return;
+  var cw = Math.round(card.getBoundingClientRect().width);
+  card.className = "s-card s-grid" + (cw < 1180 ? " two" : "");
+  card.innerHTML = "";
+  var svgs = U.map(function(){ var s=document.createElementNS(SVGNS,"svg"); card.appendChild(s); return s; });
+
+  var maxC=0, maxR=0;
+  U.forEach(function(u){ ages.forEach(function(a){
+    var c = idade.byUnit[u] && idade.byUnit[u][a];
+    if(!c) return;
+    if(isFinite(c.avgcusto) && c.avgcusto/1000 > maxC) maxC = c.avgcusto/1000;
+    if(isFinite(c.rt) && c.rt > maxR) maxR = c.rt;
+  }); });
+  var maxL = C.niceAxis(maxC*1.42, 2) || 1, maxRr = C.niceAxis(maxR*1.12, 2) || 1;
+
+  var resumo = [];
+  U.forEach(function(u, k){
+    var b = svgs[k].getBoundingClientRect();
+    var bars = ages.map(function(a){ var c=idade.byUnit[u] && idade.byUnit[u][a]; return (c && isFinite(c.avgcusto)) ? c.avgcusto/1000 : 0; });
+    var line = ages.map(function(a){ var c=idade.byUnit[u] && idade.byUnit[u][a]; return (c && isFinite(c.rt)) ? c.rt : 0; });
+    var nn   = ages.map(function(a){ var c=idade.byUnit[u] && idade.byUnit[u][a]; return c ? c.n : 0; });
+    var validos = bars.filter(function(v){ return v>0; });
+    var media = validos.length ? validos.reduce(function(x,y){ return x+y; },0)/validos.length : NaN;
+    if(isFinite(media)) resumo.push({u:u, media:media});
+    C.miniCombo(svgs[k], {
+      W: Math.max(200, Math.round(b.width)), H: Math.max(150, Math.round(b.height)),
+      unit: u, color: COLORS[u], lineColor: RT_COLOR,
+      headRight: isFinite(media) ? ("média "+E.fmtInt(media)+" mil") : "",
+      unitL: "R$ mil/máq", unitR: "R$/t",
+      labels: lbls,
+      bars: bars, barFmt: function(v){ return E.fmtInt(v); },
+      line: line, lineFmt: function(v){ return E.fmtDec(v,1); },
+      notes: nn.map(function(x){ return {text: x>0?String(x):"–", color: x>0?COLORS[u]:"#8A92A4"}; }),
+      maxL: maxL, maxR: maxRr,
+      axisFmtL: function(v){ return E.fmtInt(v); },
+      axisFmtR: function(v){ return E.fmtDec(v, v%1===0?0:1); }
+    });
+  });
+
+  setHTML("idade-unidade-legend",
+    "<span class='lg'>"+C.marcadorBarras(U.map(function(u){ return COLORS[u]; }))+
+      "Coluna: custo de oficina por máquina no ano de uso <b>(R$ mil, eixo esq.)</b></span>"+
+    "<span class='lg'>"+C.marcadorLinha(RT_COLOR)+"Linha: R$/t naquele ano de uso <b>(eixo dir.)</b></span>"+
+    "<span class='lg'>"+C.marcadorPilula("12", E.NAVY)+"Máquinas na amostra</span>"+
+    "<span class='lg'>Mesma escala nos 4 painéis</span>");
+
+  resumo.sort(function(a,b){ return a.media-b.media; });
+  if(resumo.length>=2){
+    var mel=resumo[0], pio=resumo[resumo.length-1];
+    setText("idadeu-chip-melhor", E.fmtInt(mel.media)+" mil");
+    setText("idadeu-chip-pior",   E.fmtInt(pio.media)+" mil");
+    setHTML("idade-unidade-insight",
+      "Na média de todos os anos de uso, uma colhedora da <strong>"+esc(pio.u)+"</strong> custa <strong>"+
+      E.fmtInt(pio.media)+" mil</strong> por ano contra <strong>"+E.fmtInt(mel.media)+" mil</strong> da <strong>"+
+      esc(mel.u)+"</strong> — <strong>"+E.fmtDec(pio.media/mel.media,1)+"x</strong>. "+
+      "Máquinas de mesma idade e, em boa parte, mesmo modelo: a diferença está em operação e manutenção, não na frota.");
+  }
+}
+
+// 3d — idade média da frota por safra e unidade
+function renderIdadeFrota(recs, years){
+  var card = document.getElementById("idade-frota-card");
+  if(!card) return;
   var idadeF = E.idadeFrotaAgg(recs, years);
-  C.lineChart(q("#chart-idade-media"), {
-    title:"Idade média da frota por safra e unidade", yLabel:"Anos de uso (média)",
-    xs: years.map(String), endLabels:true,
+  card.className = "s-card";
+  card.innerHTML = "";
+  var svg = document.createElementNS(SVGNS, "svg");
+  card.appendChild(svg);
+  var b = svg.getBoundingClientRect();
+  var H = Math.max(280, Math.round(b.height));
+  C.lineChart(svg, {
+    title: "Idade média das colhedoras que colheram em cada safra",
+    yLabel: "Anos de uso", height: H,
+    xs: years.map(String), endLabels: true,
     series: U.map(function(u){ return {name:u, color:COLORS[u], values: years.map(function(y){
         var v = idadeF.avg(idadeF.byUnit[u][y]); return isFinite(v)?v:0; })}; })
       .concat([{name:"Média do grupo", color:GRAY, dash:true, values: years.map(function(y){
         var v = idadeF.avg(idadeF.grupo[y]); return isFinite(v)?v:0; })}]),
     axisFmt: function(v){ return E.fmtDec(v,1); }, valueFmt: function(v){ return E.fmtDec(v,1); }
   });
+  svg.setAttribute("preserveAspectRatio","xMidYMid meet");
 
-  fillTable("table-idade-rt", function(c){return c.rt;}, function(v){return E.fmtDec(v,2);}, "MÉDIA DO GRUPO");
-  fillTable("table-idade-custo", function(c){return c.avgcusto;}, function(v){return E.fmtMoneyMil(v);}, "MÉDIA DO GRUPO");
-
-  var sampleTotal = idade.grupo[ages[0]] ? idade.grupo[ages[0]].n : 0;
-  var jaAtivas = new Set(recs.filter(function(r){return r.ano_de_uso==null || r.ano_de_uso<1;}).map(function(r){return r.frota;})).size;
-  setHTML("idade-desc-dyn", "Considera as "+E.nunique(recs.filter(function(r){return r.ano_de_uso>=1 && r.ano_de_uso<=idade.maxBuckets;}), function(r){return r.frota;})+
-    " máquinas com data de aquisição conhecida no período selecionado, agrupadas pelo ano de uso (idade real, via cadastro de frota).");
-
-  C.lineChart(q("#chart-idade-rt"), {
-    title:"Curva de custo por ano de uso — R$/t por unidade", xLabel:"Ano de uso da máquina", yLabel:"R$/t Oficina",
-    height: 430, xs: ages.map(function(a){return a+"º ano";}), endLabels:false,
-    series: U.map(function(u){ return {name:u, color:COLORS[u], values: ages.map(function(a){ var c=idade.byUnit[u][a]; return (c&&isFinite(c.rt))?c.rt:0; })}; })
-      .concat([{name:"Média do grupo", color:GRAY, dash:true, values: ages.map(function(a){ return isFinite(idade.grupo[a].rt)?idade.grupo[a].rt:0; })}]),
-    axisFmt: function(v){return E.fmtDec(v,0);}, valueFmt: function(v){return E.fmtDec(v,2);}
-  });
-
-  var vals = ages.map(function(a){ return idade.grupo[a].avgcusto/1000; });
-  var base = vals[0];
-  var colors6 = vals.map(function(v){ var p=(v/base-1)*100; return p<=0?"#2E7D46":(p<200?"#C9A227":"#C0392B"); });
-  C.singleBarChart(q("#chart-idade-custo"), {
-    title:"Custo médio por máquina em cada ano de uso (variação vs. 1º ano)", yLabel:"R$ mil por máquina/ano",
-    categories: ages.map(function(a){return a+"º ano";}), colors: colors6, values: vals,
-    subLabels: ages.map(function(a){return idade.grupo[a].n+" máq.";}),
-    insideLabels: vals.map(function(v,i){ return i===0? "" : Math.round((v/base-1)*100)+"%"; }),
-    axisFmt: function(v){return E.fmtInt(v);}, valueFmt: function(v){return "R$ "+Math.round(v)+" mil";}
-  });
-
-  // Producao, consumo de combustivel e custo medios por ano de uso (indicador comparativo)
-  var compTable = document.getElementById("table-idade-comparativo");
-  if(compTable){
-    var thead = compTable.querySelector("thead"), tbody = compTable.querySelector("tbody");
-    thead.innerHTML = "<tr><th class='l'>Ano de uso</th>"+ages.map(function(a){return "<th class='n'>"+a+"º ano</th>";}).join("")+"</tr>";
-    function compRow(label, valueFn, fmt){
-      var cells = ages.map(function(a){
-        var c = idade.grupo[a];
-        var v = valueFn(c);
-        return "<td class='n'>"+((v>0 && isFinite(v))?fmt(v):"–")+"</td>";
-      }).join("");
-      return "<tr><td class='l'>"+label+"</td>"+cells+"</tr>";
-    }
-    var rows = compRow("Produção média (t/ano)", function(c){return c.avgprod;}, function(v){return E.fmtInt(v);})
-      + compRow("Consumo médio de combustível (L/ano)", function(c){return c.avglitros;}, function(v){return E.fmtInt(v);})
-      + compRow("Custo médio de oficina (R$/ano)", function(c){return c.avgcusto;}, function(v){return E.fmtMoneyMil(v);});
-    var amostra = ages.map(function(a){ return "<td class='n muted'>"+idade.grupo[a].n+" máq.</td>"; }).join("");
-    rows += "<tr class='amostra'><td class='l'>Máquinas na amostra</td>"+amostra+"</tr>";
-    tbody.innerHTML = rows;
-
-    function firstBase(vals){ for(var i=0;i<vals.length;i++){ if(vals[i]>0 && isFinite(vals[i])) return vals[i]; } return NaN; }
-    var prodVals = ages.map(function(a){ return idade.grupo[a].avgprod; });
-    var litrosVals = ages.map(function(a){ return idade.grupo[a].avglitros; });
-    var custoVals = ages.map(function(a){ return idade.grupo[a].avgcusto; });
-    var prodBase = firstBase(prodVals), litrosBase = firstBase(litrosVals), custoBase = firstBase(custoVals);
-    function idx(vals, base){ return vals.map(function(v){ return (v>0 && isFinite(v) && isFinite(base) && base>0) ? (v/base*100) : 0; }); }
-    var compSeries = [];
-    if(isFinite(prodBase) && prodBase>0) compSeries.push({name:"Produção média (t)", color:"#2E7D46", values: idx(prodVals, prodBase)});
-    if(isFinite(litrosBase) && litrosBase>0) compSeries.push({name:"Consumo de combustível (L)", color:"#C9A227", values: idx(litrosVals, litrosBase)});
-    if(isFinite(custoBase) && custoBase>0) compSeries.push({name:"Custo de oficina (R$)", color:"#C0392B", values: idx(custoVals, custoBase)});
-    C.lineChart(q("#chart-idade-comparativo"), {
-      title:"Produção, consumo de combustível e custo médio por ano de uso (índice, 1º ano = 100)",
-      xLabel:"Ano de uso da máquina", yLabel:"Índice (1º ano = 100)",
-      height: 420, xs: ages.map(function(a){return a+"º ano";}), endLabels:true,
-      series: compSeries,
-      axisFmt: function(v){return E.fmtInt(v);}, valueFmt: function(v){return E.fmtInt(v);}
-    });
+  var ateY = years[years.length-1];
+  var linhas = U.map(function(u){ return {u:u, v: idadeF.avg(idadeF.byUnit[u][ateY])}; })
+                .filter(function(x){ return isFinite(x.v); });
+  linhas.sort(function(a,b){ return a.v-b.v; });
+  var g = idadeF.avg(idadeF.grupo[ateY]);
+  setText("idadef-chip-grupo", isFinite(g) ? E.fmtDec(g,1)+" anos" : "–");
+  setText("idadef-chip-grupo-k", "Idade média do grupo em "+ateY);
+  if(linhas.length>=2){
+    var nova=linhas[0], velha=linhas[linhas.length-1];
+    setText("idadef-chip-nova",  E.fmtDec(nova.v,1)+" anos");
+    setText("idadef-chip-velha", E.fmtDec(velha.v,1)+" anos");
+    setHTML("idade-frota-insight",
+      "Em <strong>"+ateY+"</strong> a frota mais velha é a da <strong>"+esc(velha.u)+"</strong> ("+E.fmtDec(velha.v,1)+
+      " anos) e a mais nova, a da <strong>"+esc(nova.u)+"</strong> ("+E.fmtDec(nova.v,1)+" anos). "+
+      "Cruzando com a curva das páginas anteriores: cada ano que a frota avança empurra a unidade para a faixa seguinte de custo.");
   }
+  setHTML("idade-frota-legend",
+    "<span class='lg'>"+C.marcadorLinha(COLORS[U[0]])+"Uma linha por unidade</span>"+
+    "<span class='lg'>"+C.marcadorLinha(GRAY)+"Tracejado: média do grupo</span>"+
+    "<span class='lg'>Só entram colhedoras que colheram na safra</span>");
 }
 
 window.ReportSections.renderIdade = renderIdade;
+window.ReportSections.renderIdadeUnidade = renderIdadeUnidade;
+window.ReportSections.renderIdadeFrota = renderIdadeFrota;
+window.ReportSections.ajustarTabelas = ajustarTabelas;
 window.ReportEngine.fmtInt2 = function(v){ return isFinite(v)?E.fmtInt(v):"–"; };
 })();
 </script>
@@ -1867,6 +2074,8 @@ window.replayProducao = function(){
   if(LAST) S.renderProducaoGrafico(LAST.years, LAST.unitAgg, LAST.grupoAgg);
 };
 window.replayProducaoTabelas = function(){ S.ajustarTabelasProducao(); };
+// a página 3 mede o cartão em pixel real: precisa refazer ao reentrar e ao redimensionar
+window.replayIdade = function(){ if(LAST) S.renderIdade(LAST.recs, LAST.years); };
 
 function initPanoramaUI(){
   var box = document.getElementById("pan-modo");
@@ -1886,6 +2095,7 @@ function initPanoramaUI(){
     clearTimeout(t);
     t = setTimeout(function(){
       window.replayPanorama(); window.replayProducao(); window.replayProducaoTabelas();
+      window.replayIdade();
     }, 220);
   });
 }
@@ -1993,6 +2203,7 @@ function go(i, skipHash){
   if(id==="panorama" && window.replayPanorama) window.replayPanorama();
   if(id==="producao-graf" && window.replayProducao) window.replayProducao();
   if(id==="producao" && window.replayProducaoTabelas) window.replayProducaoTabelas();
+  if(id.indexOf("idade")===0 && window.replayIdade) window.replayIdade();
 }
 function next(){ go(cur+1); }
 function prev(){ go(cur-1); }
