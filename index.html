@@ -545,7 +545,7 @@ CRV Minas Gerais a PFCMO Minas Gerais e Uruaçu a Agro Uruaçu, resultando nas 4
 <div class="deck-nav">
 <button id="deck-prev" type="button">&lsaquo; Anterior</button>
 <div class="deck-dots" id="deck-dots"></div>
-<span class="deck-hint">&larr; &rarr; &middot; espaço &middot; roda do mouse</span>
+<span class="deck-hint">Trocar de página: bot&otilde;es, bolinhas ou &larr; &rarr;</span>
 <button id="deck-next" type="button">Próxima &rsaquo;</button>
 <span class="deck-count" id="deck-count">–</span>
 </div>
@@ -3092,29 +3092,26 @@ document.addEventListener("keydown", function(e){
   else if(e.key==="End"){ e.preventDefault(); go(slides.length-1); }
 });
 
-// roda do mouse: só troca de página quando a página atual não tem mais o que rolar
-var wheelLock = 0;
-deck.addEventListener("wheel", function(e){
-  var s = slides[cur];
-  if(!s) return;
-  if(s.scrollHeight - s.clientHeight > 4){
-    var atTop = s.scrollTop <= 0;
-    var atBottom = s.scrollTop + s.clientHeight >= s.scrollHeight - 2;
-    if((e.deltaY > 0 && !atBottom) || (e.deltaY < 0 && !atTop)) return;
-  }
-  if(Math.abs(e.deltaY) < 12) return;
-  var now = Date.now();
-  if(now - wheelLock < 700) return;
-  wheelLock = now;
-  if(e.deltaY > 0) next(); else prev();
-}, {passive:true});
+// A roda do mouse NÃO troca de página: várias páginas rolam por dentro do cartão
+// (a listagem de máquinas, as tabelas) e a troca automática atrapalhava a leitura.
+// Para mudar de página: botões do rodapé, bolinhas, índice do topo ou as setas.
 
-// toque (tablet na sala de reunião)
-var tsX=0, tsY=0;
+// toque (tablet na sala de reunião): ignora o gesto que começou dentro de algo
+// que rola, senão arrastar a tabela viraria troca de página
+var tsX=0, tsY=0, tsValido=false;
+function rolavel(el){
+  while(el && el !== deck){
+    if(el.scrollHeight - el.clientHeight > 4) return true;
+    el = el.parentElement;
+  }
+  return false;
+}
 deck.addEventListener("touchstart", function(e){
   tsX = e.touches[0].clientX; tsY = e.touches[0].clientY;
+  tsValido = !rolavel(e.target);
 }, {passive:true});
 deck.addEventListener("touchend", function(e){
+  if(!tsValido) return;
   var dx = e.changedTouches[0].clientX - tsX, dy = e.changedTouches[0].clientY - tsY;
   if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)*1.4){ if(dx < 0) next(); else prev(); }
 }, {passive:true});
