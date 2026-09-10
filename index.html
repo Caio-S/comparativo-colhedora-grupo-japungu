@@ -122,6 +122,23 @@ nav.toc a.on{color:var(--gold);border-bottom-color:var(--gold)}
 .s-toggle button.on{background:var(--gold);color:var(--navy)}
 .s-legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:#C6CEE0}
 .s-legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+/* três tabelas empilhadas com as MESMAS larguras de coluna: 2020 embaixo de 2020 */
+.s-card.s-tables{display:block;overflow-y:auto;padding:4px 14px 10px}
+.s-tables p.sub-h{margin:10px 0 4px;font-size:12px;color:var(--navy)}
+.s-tables p.sub-h:first-child{margin-top:2px}
+table.prod-tbl{table-layout:fixed;width:100%;font-size:11.8px}
+table.prod-tbl thead th{padding:5px 6px;font-size:11.4px;line-height:1.2}
+table.prod-tbl td{padding:3px 6px}
+table.prod-tbl th:first-child,table.prod-tbl td:first-child{width:170px;text-align:left}
+table.prod-tbl th:last-child,table.prod-tbl td:last-child{width:116px}
+@media(max-height:780px){
+  .s-card.s-tables{padding:2px 12px 6px}
+  .s-tables p.sub-h{margin:3px 0 2px;font-size:10.8px}
+  table.prod-tbl{font-size:10.8px;line-height:1.25}
+  table.prod-tbl td{padding:1.5px 5px}
+  table.prod-tbl thead th{padding:3px 5px;font-size:10.2px;line-height:1.15}
+}
+
 .s-card.s-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:1fr;gap:9px}
 .s-card.s-grid.two{grid-template-columns:repeat(2,1fr);grid-template-rows:1fr 1fr}
 .s-card.s-grid > svg{width:100%;height:100%;display:block;margin:0;min-width:0;min-height:0}
@@ -160,7 +177,7 @@ nav.toc a.on{color:var(--gold);border-bottom-color:var(--gold)}
 <div class="meta">Comparativo de custo de colhedoras &middot; safras 2020–2026 (período selecionável)</div></header>
 
 <nav class="toc">
-<a href="#capa">Capa</a><a href="#panorama">1 · Panorama do grupo</a><a href="#producao">2 · Produção</a><a href="#unidades">3 · Comparativo por unidade</a>
+<a href="#capa">Capa</a><a href="#panorama">1 · Panorama do grupo</a><a href="#producao">2 · Produção</a><a href="#producao-graf">2 · Por unidade</a><a href="#unidades">3 · Comparativo por unidade</a>
 <a href="#idade">4 · Custo por ano de uso</a><a href="#marca">5 · John Deere x Case</a>
 <a href="#maquinas">6 · Ranking de máquinas</a><a href="#detalhe">7 · Detalhe por unidade</a><a href="#metodologia">8 · Metodologia</a>
 </nav>
@@ -212,19 +229,51 @@ nav.toc a.on{color:var(--gold);border-bottom-color:var(--gold)}
 </article>
 
 
-<article class="slide legacy" id="producao" data-title="Produção">
-<section class="alt">
-<h2><span class="idx">2</span>Produção — tonelada colhida por safra</h2>
-<p class="desc" id="producao-desc-dyn">Quanto cada unidade colheu em cada safra e, principalmente, quanto cada máquina entregou.</p>
+<article class="slide slide-dark" id="producao" data-title="Produção">
+<div class="s-head">
+<div>
+<div class="s-eyebrow">02 &middot; Produção</div>
+<h2 class="s-title" style="border:0;color:#fff;padding:0">Quanto o grupo colheu — e com quantas máquinas</h2>
+<p class="s-sub" id="producao-desc-dyn">As três tabelas usam a mesma grade de colunas: cada safra fica exatamente sob a mesma safra nas outras duas.</p>
+</div>
+<div class="s-right">
+<div class="s-chips">
+<div class="s-chip"><div class="v" id="prod-chip-ton">–</div><div class="k" id="prod-chip-ton-k">Tonelada colhida</div></div>
+<div class="s-chip"><div class="v" id="prod-chip-maq">–</div><div class="k" id="prod-chip-maq-k">Colhedoras</div></div>
+<div class="s-chip"><div class="v" id="prod-chip-prod">–</div><div class="k" id="prod-chip-prod-k">Tonelada por máquina</div></div>
+</div>
+</div>
+</div>
+<div class="s-card s-tables">
 <p class="sub-h">Tonelada colhida por unidade e safra</p>
-<div class="table-wrap"><table class="tbl" id="table-ton"><thead></thead><tbody></tbody></table></div>
+<table class="tbl prod-tbl" id="table-ton"><thead></thead><tbody></tbody></table>
 <p class="sub-h">Colhedoras ativas por unidade e safra</p>
-<div class="table-wrap"><table class="tbl" id="table-cnt"><thead></thead><tbody></tbody></table></div>
+<table class="tbl prod-tbl" id="table-cnt"><thead></thead><tbody></tbody></table>
 <p class="sub-h">Tonelada colhida por máquina em cada safra</p>
-<div class="table-wrap"><table class="tbl" id="table-avgprod"><thead></thead><tbody></tbody></table></div>
-<svg id="chart-ton" class="rc-chart" viewBox="0 0 960 380"></svg>
-<svg id="chart-avgprod" class="rc-chart" viewBox="0 0 960 400"></svg>
-</section>
+<table class="tbl prod-tbl" id="table-avgprod"><thead></thead><tbody></tbody></table>
+</div>
+<div class="s-insight" id="producao-insight">carregando…</div>
+</article>
+
+
+<article class="slide slide-dark" id="producao-graf" data-title="Produção por unidade">
+<div class="s-head">
+<div>
+<div class="s-eyebrow">02 &middot; Produção por unidade</div>
+<h2 class="s-title" style="border:0;color:#fff;padding:0">Mais máquinas, menos tonelada por máquina</h2>
+<p class="s-sub">Colunas: tonelada total da safra. Linha: tonelada média por colhedora. Sob cada safra, o número de colhedoras ativas.</p>
+</div>
+<div class="s-right">
+<div class="s-chips">
+<div class="s-chip"><div class="v" id="prodg-chip-ton">–</div><div class="k" id="prodg-chip-ton-k">Tonelada colhida</div></div>
+<div class="s-chip"><div class="v" id="prodg-chip-maq">–</div><div class="k" id="prodg-chip-maq-k">Colhedoras</div></div>
+<div class="s-chip"><div class="v" id="prodg-chip-prod">–</div><div class="k" id="prodg-chip-prod-k">Tonelada por máquina</div></div>
+</div>
+</div>
+</div>
+<div class="s-legend" id="prod-legend"></div>
+<div class="s-card" id="producao-card"></div>
+<div class="s-insight" id="producao-graf-insight">carregando…</div>
 </article>
 
 
@@ -916,8 +965,8 @@ function miniCombo(svg, o){
     txt(svg, padL-6, y+3.5, o.axisFmtL(o.maxL*f), {"text-anchor":"end","font-size":"9.5",fill:"#8A92A4"});
     txt(svg, W-padR+6, y+3.5, o.axisFmtR(o.maxR*f), {"text-anchor":"start","font-size":"9.5",fill:o.lineColor});
   }
-  txt(svg, padL-6, padT-7, "R$ mi", {"text-anchor":"end","font-size":"8.5",fill:"#A6AEBC"});
-  txt(svg, W-padR+6, padT-7, "R$/t", {"text-anchor":"start","font-size":"8.5",fill:o.lineColor});
+  txt(svg, padL-6, padT-7, o.unitL||"", {"text-anchor":"end","font-size":"8.5",fill:"#A6AEBC"});
+  txt(svg, W-padR+6, padT-7, o.unitR||"", {"text-anchor":"start","font-size":"8.5",fill:o.lineColor});
 
   // barras
   var g=ns("g");
@@ -989,8 +1038,14 @@ function miniCombo(svg, o){
   });
 }
 
+// texto claro ou escuro conforme a luminância do fundo (o dourado precisa de texto escuro)
+function textoSobre(hex){
+  var r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return (0.2126*r + 0.7152*g + 0.0722*b)/255 > 0.5 ? "#1A1A1A" : "#FFFFFF";
+}
+
 window.ReportCharts = { groupedBarChart: groupedBarChart, lineChart: lineChart, singleBarChart: singleBarChart,
-  comboBarLine: comboBarLine, miniCombo: miniCombo, niceAxis: niceAxis, niceMax: niceMax };
+  comboBarLine: comboBarLine, miniCombo: miniCombo, niceAxis: niceAxis, niceMax: niceMax, textoSobre: textoSobre };
 })();
 </script>
 <script>(function(){
@@ -1162,27 +1217,98 @@ function renderProducao(recs, years, unitAgg, grupoAgg){
   });
 
   var deY=years[0], ateY=years[years.length-1];
-  var tonDe=grupoAgg[deY].tonelada, tonAte=grupoAgg[ateY].tonelada;
-  var cntDe=grupoAgg[deY].cnt, cntAte=grupoAgg[ateY].cnt;
-  setHTML("producao-desc-dyn", "O volume total do grupo "+(Math.abs(tonAte-tonDe)/Math.max(tonDe,1)<0.08?"ficou estável":"mudou")+" no período ("+
-    E.fmtDec(tonDe/1e6,2)+" mi t em "+deY+" contra "+E.fmtDec(tonAte/1e6,2)+" mi t em "+ateY+"), "+
-    (cntAte>cntDe? "mas a frota cresceu de "+cntDe+" para "+cntAte+" colhedoras" : "com a frota em "+cntAte+" colhedoras")+".");
+  var tonTotal = E.sum(years, function(y){ return grupoAgg[y].tonelada; });
+  var cntAte = grupoAgg[ateY].cnt;
+  var prodAte = cntAte>0 ? grupoAgg[ateY].tonelada/cntAte : NaN;
 
-  // chart: tonelada bars
-  C.groupedBarChart(q("#chart-ton"), {
-    title:"Tonelada colhida por unidade e safra (milhões t)", yLabel:"Milhões de toneladas",
-    labels: years.map(String),
-    series: U.map(function(u){ return {name:u, color:COLORS[u], values: years.map(function(y){ return unitAgg[u][y].tonelada/1e6; })}; }),
-    axisFmt: function(v){ return E.fmtDec(v,1); }, valueFmt: function(v){ return E.fmtDec(v,2); }, showValues:true
+  ["prod","prodg"].forEach(function(p){
+    setText(p+"-chip-ton", E.fmtDec(tonTotal/1e6,1)+" mi t");
+    setText(p+"-chip-ton-k", "Tonelada colhida · "+(years.length>1 ? deY+"–"+ateY : deY));
+    setText(p+"-chip-maq", String(cntAte));
+    setText(p+"-chip-maq-k", "Colhedoras ativas em "+ateY);
+    setText(p+"-chip-prod", isFinite(prodAte) ? E.fmtInt(prodAte/1000)+" mil t" : "–");
+    setText(p+"-chip-prod-k", "Por máquina em "+ateY);
   });
-  // chart: avg producao line
-  C.lineChart(q("#chart-avgprod"), {
-    title:"Produtividade — tonelada colhida por máquina em cada safra", yLabel:"Mil t por máquina/safra",
-    xs: years.map(String), endLabels:true,
-    series: U.map(function(u){ return {name:u, color:COLORS[u], values: years.map(function(y){ var c=unitAgg[u][y]; return c.cnt>0?c.tonelada/c.cnt/1000:0; })}; })
-      .concat([{name:"Média do grupo", color:GRAY, dash:true, values: years.map(function(y){ var g=grupoAgg[y]; return g.cnt>0?g.tonelada/g.cnt/1000:0; })}]),
-    axisFmt: function(v){ return E.fmtInt(v); }, valueFmt: function(v){ return E.fmtDec(v,1); }
+
+  // 2026 é safra parcial: comparar contra ela distorce a leitura
+  var ateComp = (ateY===2026 && years.length>1) ? years[years.length-2] : ateY;
+  var parcial = (ateComp !== ateY);
+  var tonDe=grupoAgg[deY].tonelada, tonComp=grupoAgg[ateComp].tonelada;
+  var cntDe=grupoAgg[deY].cnt, cntComp=grupoAgg[ateComp].cnt;
+  var prodDe = cntDe>0 ? tonDe/cntDe : NaN, prodComp = cntComp>0 ? tonComp/cntComp : NaN;
+
+  var m;
+  if(years.length>1 && isFinite(prodDe) && isFinite(prodComp) && prodDe>0){
+    var varProd = (prodComp/prodDe-1)*100, varTon = (tonComp/tonDe-1)*100;
+    m = "De <strong>"+deY+"</strong> a <strong>"+ateComp+"</strong> a frota do grupo foi de <strong>"+cntDe+
+      "</strong> para <strong>"+cntComp+" colhedoras</strong> ("+(cntComp>=cntDe?"+":"")+E.fmtDec((cntComp/cntDe-1)*100,0)+"%), "+
+      "enquanto a tonelada colhida "+(Math.abs(varTon)<8 ? "ficou praticamente estável" : (varTon>0?"subiu "+E.fmtDec(varTon,0)+"%":"caiu "+E.fmtDec(-varTon,0)+"%"))+
+      " ("+E.fmtDec(tonDe/1e6,2)+" → "+E.fmtDec(tonComp/1e6,2)+" mi t). "+
+      "Resultado: cada máquina colheu <strong>"+E.fmtInt(prodDe)+" t</strong> em "+deY+" e <strong>"+E.fmtInt(prodComp)+" t</strong> em "+ateComp+
+      " — <strong>"+(varProd>0?"+":"")+E.fmtDec(varProd,0)+"%</strong> de produtividade por colhedora."+
+      (parcial ? " <span style='opacity:.75'>("+ateY+" é safra parcial e ficou fora desta comparação.)</span>" : "");
+  } else {
+    m = "Safra <strong>"+ateY+"</strong>: <strong>"+E.fmtDec(tonTotal/1e6,2)+" mi t</strong> colhidas com <strong>"+cntAte+
+      "</strong> colhedoras — <strong>"+E.fmtInt(prodAte)+" t</strong> por máquina.";
+  }
+  setHTML("producao-insight", m);
+  setHTML("producao-graf-insight", m);
+
+  renderProducaoGrafico(years, unitAgg, grupoAgg);
+}
+
+// ---- página 2b: um painel por unidade — coluna = tonelada total,
+//      linha = tonelada média por máquina, pílula = nº de colhedoras ----
+function renderProducaoGrafico(years, unitAgg, grupoAgg){
+  var card = document.getElementById("producao-card");
+  if(!card) return;
+  var cw = Math.round(card.getBoundingClientRect().width);
+  card.className = "s-card s-grid" + (cw < 1180 ? " two" : "");
+  card.innerHTML = "";
+  var svgs = U.map(function(){
+    var s = document.createElementNS("http://www.w3.org/2000/svg","svg");
+    card.appendChild(s); return s;
   });
+
+  var maxTon=0, maxProd=0;
+  U.forEach(function(u){
+    years.forEach(function(y){
+      var c = unitAgg[u][y];
+      if(c.tonelada/1e6 > maxTon) maxTon = c.tonelada/1e6;
+      if(c.cnt>0 && c.tonelada/c.cnt/1000 > maxProd) maxProd = c.tonelada/c.cnt/1000;
+    });
+  });
+  var maxL = C.niceAxis(maxTon*1.42, 2) || 1;
+  var maxR = C.niceAxis(maxProd*1.12, 2) || 1;
+  var lbls = years.map(function(y){ return years.length>7 ? ("'"+String(y).slice(2)) : String(y); });
+
+  U.forEach(function(u, k){
+    var b = svgs[k].getBoundingClientRect();
+    C.miniCombo(svgs[k], {
+      W: Math.max(200, Math.round(b.width)), H: Math.max(150, Math.round(b.height)),
+      unit: u, color: COLORS[u], lineColor: "#C0392B", textOnBar: C.textoSobre(COLORS[u]),
+      headRight: E.fmtDec(E.rowTotal(unitAgg, u, years, "tonelada")/1e6, 1)+" mi t",
+      unitL: "mi t", unitR: "mil t/máq",
+      labels: lbls,
+      bars: years.map(function(y){ return unitAgg[u][y].tonelada/1e6; }),
+      barFmt: function(v){ return E.fmtDec(v,2); },
+      line: years.map(function(y){ var c=unitAgg[u][y]; return c.cnt>0 ? c.tonelada/c.cnt/1000 : 0; }),
+      lineFmt: function(v){ return E.fmtInt(v); },
+      notes: years.map(function(y){
+        var c = unitAgg[u][y].cnt;
+        return {text: c>0 ? String(c) : "–", color: c>0 ? COLORS[u] : "#8A92A4"};
+      }),
+      maxL: maxL, maxR: maxR,
+      axisFmtL: function(v){ return E.fmtDec(v, v%1===0?0:1); },
+      axisFmtR: function(v){ return E.fmtInt(v); }
+    });
+  });
+
+  setHTML("prod-legend",
+    "<span>Colunas: tonelada colhida no ano (mi t, eixo esq.)</span>"+
+    "<span><b style='color:#C0392B'>&#9472;</b> tonelada média por colhedora (mil t, eixo dir.)</span>"+
+    "<span>Mesma escala nos 4 painéis</span>"+
+    "<span>Pílula = colhedoras ativas na safra</span>");
 }
 
 function appendMaxColumn(tableId, years, unitAgg, grupoAgg, field, label){
@@ -1205,6 +1331,7 @@ function appendMaxColumn(tableId, years, unitAgg, grupoAgg, field, label){
 window.ReportSections = window.ReportSections || {};
 window.ReportSections.renderKPIs = renderKPIs;
 window.ReportSections.renderProducao = renderProducao;
+window.ReportSections.renderProducaoGrafico = renderProducaoGrafico;
 window.ReportSections.idadeAggregate = idadeAggregate;
 window.ReportSections.activeAgeBuckets = activeAgeBuckets;
 window.ReportSections.renderYearMatrixTable = renderYearMatrixTable;
@@ -1654,11 +1781,6 @@ var SVGNS = "http://www.w3.org/2000/svg";
 var PAN_MODO = "unidade"; // "unidade" (por empresa) | "grupo"
 
 function fmtIdade(a){ return isFinite(a) ? (E.fmtDec(a,1)+" anos") : "–"; }
-// texto claro ou escuro conforme a luminância do fundo (o dourado precisa de texto escuro)
-function textoSobre(hex){
-  var r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
-  return (0.2126*r + 0.7152*g + 0.0722*b)/255 > 0.5 ? "#1A1A1A" : "#FFFFFF";
-}
 function legendaIdade(){
   return "<span><b style='color:#2E7D46'>&#9679;</b> até 3,5 anos</span>"+
          "<span><b style='color:#C9A227'>&#9679;</b> 3,5 a 5,5</span>"+
@@ -1757,8 +1879,9 @@ function renderPanorama(years, unitAgg, grupoAgg, recs){
     var custoU = E.rowTotal(unitAgg, u, years, "custo");
     C.miniCombo(svgs[k], {
       W: Math.max(200, Math.round(b.width)), H: Math.max(150, Math.round(b.height)),
-      unit: u, color: COLORS[u], lineColor: RT_COLOR, textOnBar: textoSobre(COLORS[u]),
+      unit: u, color: COLORS[u], lineColor: RT_COLOR, textOnBar: C.textoSobre(COLORS[u]),
       headRight: E.fmtMoneyMi(custoU),
+      unitL: "R$ mi", unitR: "R$/t",
       labels: lbls,
       barFmt: function(v){ return E.fmtDec(v,1); },
       bars: years.map(function(y){ return unitAgg[u][y].custo/1e6; }),
@@ -1807,6 +1930,9 @@ var LAST = null;
 window.replayPanorama = function(){
   if(LAST) renderPanorama(LAST.years, LAST.unitAgg, LAST.grupoAgg, LAST.recs);
 };
+window.replayProducao = function(){
+  if(LAST) S.renderProducaoGrafico(LAST.years, LAST.unitAgg, LAST.grupoAgg);
+};
 
 function initPanoramaUI(){
   var box = document.getElementById("pan-modo");
@@ -1824,7 +1950,7 @@ function initPanoramaUI(){
   var t = null;
   window.addEventListener("resize", function(){
     clearTimeout(t);
-    t = setTimeout(function(){ window.replayPanorama(); }, 220);
+    t = setTimeout(function(){ window.replayPanorama(); window.replayProducao(); }, 220);
   });
 }
 
@@ -1926,6 +2052,7 @@ function go(i, skipHash){
     try { history.replaceState(null, "", "#"+id); } catch(e){ /* file:// */ }
   }
   if(id==="panorama" && window.replayPanorama) window.replayPanorama();
+  if(id==="producao-graf" && window.replayProducao) window.replayProducao();
 }
 function next(){ go(cur+1); }
 function prev(){ go(cur-1); }
