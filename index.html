@@ -78,8 +78,11 @@ html,body{height:100%}
 body{margin:0;display:flex;flex-direction:column;overflow:hidden}
 header.top{position:static;flex:0 0 auto}
 nav.toc{position:static;flex:0 0 auto;padding:7px 28px}
-nav.toc a{padding-bottom:4px;border-bottom:2px solid transparent;transition:color .15s,border-color .15s}
-nav.toc a.on{color:var(--gold);border-bottom-color:var(--gold)}
+nav.toc a{padding-bottom:4px;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;
+  margin-right:16px;font-size:12.5px;font-weight:500}
+nav.toc a b{color:var(--gold);font-weight:700;margin-right:4px}
+nav.toc a.on{color:var(--gold);border-bottom-color:var(--gold);font-weight:700}
+nav.toc a.on b{color:var(--gold)}
 
 .deck{position:relative;flex:1 1 auto;min-height:0}
 .slide{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;visibility:hidden;
@@ -101,11 +104,34 @@ nav.toc a.on{color:var(--gold);border-bottom-color:var(--gold)}
 .deck-hint{color:#8C97AE;font-size:11px;letter-spacing:.02em}
 
 /* ---- capa ---- */
-.slide-cover{background:linear-gradient(180deg,var(--navy) 0%,#16295A 100%);color:#fff;
-  justify-content:center;padding:24px 34px;gap:14px;overflow-y:auto}
-.slide-cover h1{font-size:32px;margin:0 0 6px}
-.slide-cover p.sub{margin:0;color:#C6CEE0;font-size:14.5px}
-.slide-cover .kpis,.slide-cover .band,.slide-cover .filtro-periodo{margin:0}
+.slide-cover{background:radial-gradient(1200px 700px at 8% -20%,#22407D 0%,#152A5C 45%,#0A1330 100%);
+  color:#fff;justify-content:flex-end;padding:0;gap:0;overflow:hidden;position:relative}
+/* curva de R$/t do grupo, bem apagada, ocupando o fundo: a capa já conta a história */
+/* height em % e não auto: com auto o SVG assume a proporção do viewBox e
+   estoura a caixa da capa */
+.capa-fundo{position:absolute;left:0;right:0;bottom:92px;width:100%;height:46%;
+  pointer-events:none;opacity:.5}
+.capa-corpo{position:relative;z-index:1;padding:34px 42px 0;display:flex;flex-direction:column;gap:16px}
+.capa-selo{display:inline-flex;align-items:center;gap:10px;font-size:11.5px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--gold);font-weight:700}
+.capa-selo::before{content:"";width:34px;height:3px;background:var(--gold);border-radius:2px}
+.slide-cover h1{font-size:44px;line-height:1.08;margin:0;font-weight:700;letter-spacing:-.5px;max-width:900px}
+.slide-cover h1 em{display:block;font-style:normal;font-size:26px;font-weight:600;color:#AEBBD8;
+  margin-top:8px;letter-spacing:0}
+.slide-cover p.sub{margin:0;color:#C6CEE0;font-size:14.5px;max-width:760px;line-height:1.5}
+.slide-cover .filtro-periodo{margin:0;align-self:flex-start}
+.capa-rodape{position:relative;z-index:1;margin-top:auto}
+.slide-cover .kpis{margin:0;border-left:0;border-right:0}
+.slide-cover .kpi{background:rgba(255,255,255,.06);backdrop-filter:blur(2px)}
+.slide-cover .kpi-num{font-size:24px}
+.slide-cover .band{margin:0}
+@media(max-height:780px){
+  .capa-corpo{padding:20px 34px 0;gap:11px}
+  .slide-cover h1{font-size:34px}
+  .slide-cover h1 em{font-size:20px;margin-top:5px}
+  .slide-cover .kpi-num{font-size:20px}
+  .capa-fundo{bottom:80px;height:42%}
+}
 
 /* ---- páginas reformuladas (fundo escuro + cartão do gráfico) ---- */
 .slide-dark{background:radial-gradient(1100px 620px at 12% -12%,#20386E 0%,#111F45 55%,#0A1330 100%);
@@ -198,16 +224,23 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <div class="meta">Comparativo de custo de colhedoras &middot; safras 2020–2026 (período selecionável)</div></header>
 
 <nav class="toc">
-<a href="#capa">Capa</a><a href="#panorama">1 · Panorama do grupo</a><a href="#producao">2 · Produção</a><a href="#producao-graf">2 · Por unidade</a>
-<a href="#idade">3 · Custo por ano de uso</a><a href="#idade-unidade">3 · Por unidade</a><a href="#idade-tabelas">3 · Detalhe</a><a href="#idade-frota">3 · Idade média da frota</a><a href="#idade-troca">3 · Ponto de troca</a><a href="#idade-compra">3 · Compra na conta</a><a href="#produtos">3 · Onde o dinheiro é gasto</a><a href="#marca">4 · John Deere x Case</a>
-<a href="#maquinas">5 · Ranking de máquinas</a><a href="#metodologia">6 · Metodologia</a>
+<a href="#capa">Capa</a>
+<a href="#panorama"><b>1</b> Panorama</a>
+<a href="#producao"><b>2</b> Produção</a><a href="#producao-graf">Produtividade</a>
+<a href="#idade"><b>3</b> Curva de custo</a><a href="#idade-unidade">Curva por empresa</a><a href="#idade-tabelas">Tabelas da curva</a><a href="#idade-frota">Idade da frota</a><a href="#idade-troca">Ponto de troca</a><a href="#idade-compra">Compra na conta</a><a href="#produtos">Onde o dinheiro vai</a>
+<a href="#marca"><b>4</b> Deere x Case</a>
+<a href="#maquinas"><b>5</b> Máquina a máquina</a>
+<a href="#metodologia"><b>6</b> Metodologia</a>
 </nav>
 
 <div class="deck" id="deck">
 
 <article class="slide slide-cover" id="capa" data-title="Capa">
-<h1>Comparativo de Custo — Colhedoras do Grupo</h1>
-<p class="sub">Custo de oficina por safra, por unidade, por ano de uso da máquina e por marca &middot; período selecionável</p>
+<svg class="capa-fundo" id="capa-fundo" preserveAspectRatio="none" aria-hidden="true"></svg>
+<div class="capa-corpo">
+<div class="capa-selo">PCM &middot; Grupo CRV &middot; safras 2020&ndash;2026</div>
+<h1>Comparativo de Custo<em>Colhedoras do Grupo</em></h1>
+<p class="sub">Custo de oficina por safra, por unidade, por ano de uso da máquina e por marca. Cada página responde a uma pergunta — e a última diz quando trocar a colhedora compensa.</p>
 <div class="filtro-periodo">
 <span class="filtro-titulo">Período de comparação</span>
 <label>De <select id="filtro-de"></select></label>
@@ -215,6 +248,8 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <span class="filtro-atual">Exibindo: <strong id="filtro-periodo-label"></strong></span>
 <span class="hora-badge" id="filtro-parcial-badge" hidden>2026 parcial &mdash; dados até 09/09/2026</span>
 </div>
+</div>
+<div class="capa-rodape">
 <div class="kpis">
 <div class="kpi"><div class="kpi-num" id="kpi-custo-total"></div><div class="kpi-lab">Custo total do grupo<br><span id="kpi-custo-total-sub"></span></div></div>
 <div class="kpi"><div class="kpi-num" id="kpi-rt"></div><div class="kpi-lab">R$/t do grupo<br><span id="kpi-rt-sub"></span></div></div>
@@ -223,6 +258,7 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <div class="kpi"><div class="kpi-num">4</div><div class="kpi-lab">Unidades do grupo<br>consolidadas</div></div>
 </div>
 <div class="band" id="decisao-band">DECISÃO EM FOCO: carregando…</div>
+</div>
 </article>
 
 <article class="slide slide-dark" id="panorama" data-title="Panorama do grupo">
@@ -1281,7 +1317,53 @@ function setHTML(id, html){ var el = document.getElementById(id); if(el) el.inne
 // ============================================================
 // KPI hero + decision band
 // ============================================================
+// Fundo da capa: a curva de R$/t do grupo, apagada, atrás do título.
+// Não é decoração vazia — é a mesma curva da página 1, então a capa já mostra
+// para onde o custo foi antes de qualquer explicação.
+function renderCapaFundo(years, grupoAgg){
+  var svg = document.getElementById("capa-fundo");
+  if(!svg || years.length < 2) return;
+  var W = 1000, H = 300, padB = 6;
+  svg.setAttribute("viewBox", "0 0 "+W+" "+H);
+  svg.innerHTML = "";
+  var rts = years.map(function(y){ var g=grupoAgg[y]; return g.tonelada>0 ? g.custo/g.tonelada : 0; });
+  var max = Math.max.apply(null, rts) * 1.15 || 1;
+  var n = rts.length;
+  function px(i){ return (i/(n-1))*W; }
+  function py(v){ return H - padB - (v/max)*(H - padB - 10); }
+  var pts = rts.map(function(v,i){ return px(i).toFixed(1)+","+py(v).toFixed(1); });
+
+  var ns = "http://www.w3.org/2000/svg";
+  var defs = document.createElementNS(ns, "defs");
+  defs.innerHTML = "<linearGradient id='capaGrad' x1='0' y1='0' x2='0' y2='1'>"+
+    "<stop offset='0%' stop-color='#C9A227' stop-opacity='.34'/>"+
+    "<stop offset='100%' stop-color='#C9A227' stop-opacity='0'/></linearGradient>";
+  svg.appendChild(defs);
+
+  var area = document.createElementNS(ns, "path");
+  area.setAttribute("d", "M0,"+H+" L"+pts.join(" L")+" L"+W+","+H+" Z");
+  area.setAttribute("fill", "url(#capaGrad)");
+  svg.appendChild(area);
+
+  var linha = document.createElementNS(ns, "path");
+  linha.setAttribute("d", "M"+pts.join(" L"));
+  linha.setAttribute("fill", "none");
+  linha.setAttribute("stroke", "#C9A227");
+  linha.setAttribute("stroke-opacity", ".55");
+  linha.setAttribute("stroke-width", "2.5");
+  linha.setAttribute("vector-effect", "non-scaling-stroke");
+  svg.appendChild(linha);
+
+  rts.forEach(function(v,i){
+    var c = document.createElementNS(ns, "circle");
+    c.setAttribute("cx", px(i)); c.setAttribute("cy", py(v)); c.setAttribute("r", 3);
+    c.setAttribute("fill", "#C9A227"); c.setAttribute("fill-opacity", ".6");
+    svg.appendChild(c);
+  });
+}
+
 function renderKPIs(recs, years, unitAgg, grupoAgg){
+  renderCapaFundo(years, grupoAgg);
   var custoTotal = E.sum(years, function(y){ return grupoAgg[y].custo; });
   var deY = years[0], ateY = years[years.length-1];
   var rtDe = grupoAgg[deY].tonelada>0 ? grupoAgg[deY].custo/grupoAgg[deY].tonelada : NaN;
