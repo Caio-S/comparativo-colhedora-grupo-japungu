@@ -423,7 +423,7 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <button type="button" data-taxa="0.10">+10% a.a.</button>
 </div>
 <div class="s-chips">
-<div class="s-chip"><div class="v" id="compra-chip-cruza">&ndash;</div><div class="k">Empata com a nova no</div></div>
+<div class="s-chip"><div class="v" id="compra-chip-cruza">&ndash;</div><div class="k" id="compra-chip-cruza-k">Vantagem de ter comprado antes</div></div>
 <div class="s-chip"><div class="v" id="compra-chip-ref">&ndash;</div><div class="k" id="compra-chip-ref-k">Nova hoje</div></div>
 </div>
 </div>
@@ -1911,13 +1911,15 @@ function renderPontoTroca(escopo, ages){
   totalT.forEach(function(v,i){ if(isFinite(v) && (!isFinite(totalT[iCiclo]) || v < totalT[iCiclo])) iCiclo = i; });
   var ref = totalT[iCiclo];
 
-  // ponto de troca = primeiro ano em que manter custa mais que a referência da nova
+  // ponto de troca = primeiro ano em que manter custa mais que a nova naquele mesmo ano.
+  // A comparação é ano a ano: a coluna da nova acompanha a diluição do investimento.
   var iTroca = -1;
-  manter.forEach(function(v,i){ if(iTroca<0 && isFinite(v) && isFinite(ref) && v > ref) iTroca = i; });
+  manter.forEach(function(v,i){ if(iTroca<0 && isFinite(v) && isFinite(totalT[i]) && v > totalT[i]) iTroca = i; });
 
-  var cores = manter.map(function(v){
-    if(!isFinite(v) || !isFinite(ref)) return "#9AA1AE";
-    return v > ref ? "#C0392B" : (v > ref*0.75 ? "#C9A227" : "#2E7D46");
+  var cores = manter.map(function(v,i){
+    var alvo = totalT[i];
+    if(!isFinite(v) || !isFinite(alvo)) return "#9AA1AE";
+    return v > alvo ? "#C0392B" : (v > alvo*0.75 ? "#C9A227" : "#2E7D46");
   });
 
   card.className = "s-card s-troca";
@@ -1951,7 +1953,8 @@ function renderPontoTroca(escopo, ages){
   // ---- gráfico ----
   var b = svg.getBoundingClientRect();
   var H = Math.max(220, Math.round(b.height));
-  var maxBar = Math.max.apply(null, manter.filter(function(v){ return isFinite(v); }).concat([ref]));
+  var maxBar = Math.max.apply(null, manter.filter(function(v){ return isFinite(v); })
+                 .concat(totalT.filter(function(v){ return isFinite(v); })));
   C.miniCombo(svg, {
     W: Math.max(700, Math.round(b.width)), H: H,
     escala: Math.max(1.1, Math.min(1.7, H/290)),
@@ -1962,9 +1965,9 @@ function renderPontoTroca(escopo, ages){
     labels: ages.map(function(a){ return a+"º"; }),
     bars: manter.map(function(v){ return isFinite(v)?v:0; }),
     barFmt: function(v){ return E.fmtDec(v,2); },
-    // segunda coluna: o que custaria renovar — a mesma em todos os anos, porque é
-    // sempre a mesma decisão (comprar uma nova e rodá-la no melhor ciclo)
-    bars2: ages.map(function(){ return isFinite(ref)?ref:0; }),
+    // segunda coluna: o que a nova teria custado por tonelada se fosse mantida até
+    // aquele ano — vai caindo conforme o investimento se dilui na tonelada
+    bars2: totalT.map(function(v){ return isFinite(v)?v:0; }),
     color2: "#12224A",
     line: prod.map(function(v){ return v/1000; }),
     lineFmt: function(v){ return E.fmtInt(v); },
@@ -1979,8 +1982,8 @@ function renderPontoTroca(escopo, ages){
     "<span class='lg'>"+C.marcadorBarras(["#2E7D46","#C9A227","#C0392B"])+
       "<b>Manter</b> a máquina atual: oficina do ano por tonelada — verde folgado, ouro perto do limite, vermelho acima</span>"+
     "<span class='lg'>"+C.marcadorBarras(["#12224A"])+
-      "<b>Renovar</b>: colhedora nova a "+E.fmtMoneyMi(PRECO_NOVA)+" rodada no melhor ciclo ("+ages[iCiclo]+" anos) — R$ "+
-      E.fmtDec(ref,2)+"/t</span>"+
+      "<b>Renovar</b>: nova a "+E.fmtMoneyMi(PRECO_NOVA)+" mantida at&eacute; aquele ano — o investimento vai se diluindo, "+
+      "fundo de R$ "+E.fmtDec(ref,2)+"/t no "+ages[iCiclo]+"º</span>"+
     "<span class='lg'>"+C.marcadorLinha(RT_COLOR)+"Linha: tonelada colhida no ano <b>(mil t, eixo dir.)</b></span>"+
     "<span class='lg'>"+C.marcadorPilula("51", E.NAVY)+"Máquinas na amostra</span>");
 
@@ -1990,7 +1993,7 @@ function renderPontoTroca(escopo, ages){
 
   var msg;
   if(isFinite(ref) && iTroca >= 0){
-    var excedente = manter[iTroca] - ref;
+    var excedente = manter[iTroca] - totalT[iTroca];
     var perdaAno = excedente * prod[iTroca];
     setText("troca-chip-perda", E.fmtMoneyMil(perdaAno));
     setText("troca-chip-perda-k", "Por máquina/ano a partir do "+ages[iTroca]+"º");
@@ -1999,9 +2002,11 @@ function renderPontoTroca(escopo, ages){
       "se acumula — de <strong>R$ "+E.fmtDec(capitalT[0],2)+"/t</strong> no 1º ano para <strong>R$ "+
       E.fmtDec(capitalT[iCiclo],2)+"/t</strong> no "+ages[iCiclo]+"º. Só que a oficina acumulada sobe no sentido contrário, "+
       "e a soma das duas encontra o fundo no <strong>"+ages[iCiclo]+"º ano, a R$ "+E.fmtDec(ref,2)+"/t</strong>: é o melhor ciclo possível. "+
-      "Manter a máquina atual custa menos que isso até o <strong>"+ages[Math.max(0,iTroca-1)]+"º ano</strong>. "+
-      "A partir do <strong>"+ages[iTroca]+"º</strong> a oficina sozinha já cobra <strong>R$ "+E.fmtDec(manter[iTroca],2)+"/t</strong>, "+
-      "acima do custo de operar uma nova: é o <strong>ponto de troca</strong>. Cada colhedora mantida além dele desperdiça cerca de "+
+      "A coluna azul acompanha essa diluição ano a ano. Manter a máquina atual sai mais barato até o <strong>"+
+      ages[Math.max(0,iTroca-1)]+"º ano</strong>. "+
+      "No <strong>"+ages[iTroca]+"º</strong> a oficina sozinha cobra <strong>R$ "+E.fmtDec(manter[iTroca],2)+"/t</strong> contra <strong>R$ "+
+      E.fmtDec(totalT[iTroca],2)+"/t</strong> da nova no mesmo ponto: é o <strong>ponto de troca</strong>. "+
+      "Cada colhedora mantida além dele desperdiça cerca de "+
       "<strong>"+E.fmtMoneyMil(perdaAno)+" por safra</strong>. "+
       "<span style='opacity:.8'>Sem considerar a revenda da usada — com ela, a troca compensaria ainda antes.</span>";
   } else {
@@ -2045,13 +2050,20 @@ function renderCompraNaConta(escopo, ages, ateY){
   cicloHoje.forEach(function(v,i){ if(isFinite(v) && (!isFinite(cicloHoje[iCiclo]) || v < cicloHoje[iCiclo])) iCiclo = i; });
   var ref = cicloHoje[iCiclo];
 
-  // onde o custo já realizado da máquina atual alcança o da nova
-  var iCruza = -1;
-  tco.forEach(function(v,i){ if(iCruza<0 && isFinite(v) && isFinite(ref) && v <= ref) iCruza = i; });
+  // comparação ano a ano: a máquina atual contra o que a nova custaria no mesmo ponto.
+  // No 1º ano as duas são a mesma máquina (comprada hoje), então a vantagem começa
+  // no 2º — e vem inteira da diferença de preço entre a época e hoje.
+  var iCruza = -1, maiorVant = 0;
+  tco.forEach(function(v,i){
+    if(i===0 || !isFinite(v) || !isFinite(cicloHoje[i])) return;
+    var vant = cicloHoje[i] - v;
+    if(vant > maiorVant){ maiorVant = vant; iCruza = i; }
+  });
 
-  var cores = tco.map(function(v){
-    if(!isFinite(v) || !isFinite(ref)) return "#9AA1AE";
-    return v <= ref ? "#2E7D46" : (v <= ref*1.35 ? "#C9A227" : "#C0392B");
+  var cores = tco.map(function(v,i){
+    var alvo = cicloHoje[i];
+    if(!isFinite(v) || !isFinite(alvo)) return "#9AA1AE";
+    return v <= alvo ? "#2E7D46" : (v <= alvo*1.35 ? "#C9A227" : "#C0392B");
   });
 
   card.className = "s-card s-troca";
@@ -2081,7 +2093,8 @@ function renderCompraNaConta(escopo, ages, ateY){
 
   var b = svg.getBoundingClientRect();
   var H = Math.max(220, Math.round(b.height));
-  var maxBar = Math.max.apply(null, tco.filter(function(v){ return isFinite(v); }).concat([ref]));
+  var maxBar = Math.max.apply(null, tco.filter(function(v){ return isFinite(v); })
+                 .concat(cicloHoje.filter(function(v){ return isFinite(v); })));
   C.miniCombo(svg, {
     W: Math.max(700, Math.round(b.width)), H: H,
     escala: Math.max(1.1, Math.min(1.7, H/290)),
@@ -2092,7 +2105,7 @@ function renderCompraNaConta(escopo, ages, ateY){
     labels: ages.map(function(a){ return a+"º"; }),
     bars: tco.map(function(v){ return isFinite(v)?v:0; }),
     barFmt: function(v){ return E.fmtDec(v,2); },
-    bars2: ages.map(function(){ return isFinite(ref)?ref:0; }),
+    bars2: cicloHoje.map(function(v){ return isFinite(v)?v:0; }),
     color2: "#12224A",
     line: precoEpoca.map(function(v){ return v/1e6; }),
     lineFmt: function(v){ return E.fmtDec(v,2); },
@@ -2107,24 +2120,29 @@ function renderCompraNaConta(escopo, ages, ateY){
     "<span class='lg'>"+C.marcadorBarras(["#2E7D46","#C9A227","#C0392B"])+
       "<b>Máquina atual</b>: compra da época + oficina acumulada, por tonelada já colhida</span>"+
     "<span class='lg'>"+C.marcadorBarras(["#12224A"])+
-      "<b>Nova hoje</b> a "+E.fmtMoneyMi(PRECO_NOVA)+" no melhor ciclo — R$ "+E.fmtDec(ref,2)+"/t</span>"+
+      "<b>Nova hoje</b> a "+E.fmtMoneyMi(PRECO_NOVA)+" mantida at&eacute; aquele ano — diluindo ano a ano, fundo de R$ "+
+      E.fmtDec(ref,2)+"/t no "+ages[iCiclo]+"º</span>"+
     "<span class='lg'>"+C.marcadorLinha(RT_COLOR)+"Linha: preço estimado da compra <b>(R$ mi, eixo dir.)</b></span>"+
     "<span class='lg'>"+C.marcadorPilula("2020", E.NAVY)+"Ano da compra</span>");
 
   setText("compra-chip-ref", isFinite(ref) ? ("R$ "+E.fmtDec(ref,2)+"/t") : "–");
   setText("compra-chip-ref-k", "Nova a "+E.fmtMoneyMi(PRECO_NOVA)+", ciclo de "+ages[iCiclo]+" anos");
-  setText("compra-chip-cruza", iCruza>=0 ? (ages[iCruza]+"º ano") : "não alcança");
+  setText("compra-chip-cruza", iCruza>=0 ? ("R$ "+E.fmtDec(maiorVant,2)+"/t") : "sem vantagem");
+  setText("compra-chip-cruza-k", iCruza>=0
+    ? ("Máxima, na comprada em "+Math.round(anoAq[iCruza])) : "Preço fixo: as duas se igualam");
 
   var msg = (IDADE_UNIDADE==="GRUPO" ? "" : "<strong>"+esc(IDADE_UNIDADE)+"</strong> — ");
   if(isFinite(ref) && iCruza >= 0){
     msg += "com a compra das duas na conta, a colhedora que hoje está no <strong>"+ages[iCruza]+"º ano</strong> "+
       "— adquirida em <strong>"+Math.round(anoAq[iCruza])+"</strong> por cerca de <strong>"+E.fmtMoneyMi(precoEpoca[iCruza])+
-      "</strong> — já entregou a tonelada dela a <strong>R$ "+E.fmtDec(tco[iCruza],2)+"/t</strong>, "+
-      "abaixo dos <strong>R$ "+E.fmtDec(ref,2)+"/t</strong> que uma nova conseguiria hoje. "+
-      "Antes disso a compra ainda não tinha se pagado em tonelada; a partir daí, pagou. ";
+      "</strong> — entregou a tonelada dela a <strong>R$ "+E.fmtDec(tco[iCruza],2)+"/t</strong>, contra <strong>R$ "+
+      E.fmtDec(cicloHoje[iCruza],2)+"/t</strong> de uma nova de hoje no mesmo ponto da vida. "+
+      "São <strong>R$ "+E.fmtDec(maiorVant,2)+"/t</strong> de vantagem — e ela vem inteira de a máquina ter sido comprada "+
+      "quando custava menos, não de ela ser melhor. ";
   } else {
-    msg += "com a compra das duas na conta, nenhuma safra de aquisição da amostra chegou a bater os <strong>R$ "+
-      E.fmtDec(ref,2)+"/t</strong> de uma máquina nova de hoje. ";
+    msg += "com <strong>preço fixo</strong>, a máquina atual e uma nova de hoje custam exatamente o mesmo por tonelada em "+
+      "cada ponto da vida: sem diferença de preço de compra, não há vantagem em ter comprado antes. "+
+      "Toda a vantagem das outras opções vem da premissa de valorização. ";
   }
   msg += "<span style='opacity:.85'>Esta página olha para trás: mostra o que cada máquina já custou de verdade, compra incluída. "+
     "Ela <u>não</u> muda a decisão de trocar — o dinheiro da compra antiga já saiu e não volta, então o que decide é só o que ainda "+
