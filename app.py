@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 import mysql.connector
 from dotenv import load_dotenv
-from flask import Flask, Response
+from flask import Flask, Response, jsonify
 
 # Sem isso, print() fica no buffer do processo e so aparece nos logs do Render quando
 # o worker e reiniciado -- inutil para acompanhar uma busca em andamento.
@@ -286,6 +286,12 @@ def refresh_loop():
 threading.Thread(target=refresh_loop, daemon=True).start()
 
 
+def _no_cache(resp):
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    return resp
+
+
 @app.route("/")
 def index():
     with _lock:
@@ -300,18 +306,19 @@ def index():
             body = f"<meta http-equiv='refresh' content='15'><p>Erro ao carregar dados do banco, tentando de novo: {error}</p>"
         else:
             body = "<meta http-equiv='refresh' content='15'><p>Carregando dados do banco pela primeira vez, isso pode levar alguns minutos...</p>"
-        return Response(body, mimetype="text/html; charset=utf-8")
-    return Response(html, mimetype="text/html; charset=utf-8")
+        return _no_cache(Response(body, mimetype="text/html; charset=utf-8"))
+    return _no_cache(Response(html, mimetype="text/html; charset=utf-8"))
 
 
 @app.route("/health")
 def health():
     with _lock:
-        return {
+        data = {
             "updated_at": str(_cache["updated_at"]) if _cache["updated_at"] else None,
             "error": _cache["error"],
             "refreshing": _cache["refreshing"],
         }
+    return _no_cache(jsonify(data))
 
 
 if __name__ == "__main__":
