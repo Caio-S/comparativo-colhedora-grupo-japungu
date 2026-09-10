@@ -379,7 +379,7 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <div>
 <div class="s-eyebrow">03 &middot; Ponto de troca</div>
 <h2 class="s-title" style="border:0;color:#fff;padding:0">Quando trocar a colhedora compensa</h2>
-<p class="s-sub">Cada coluna &eacute; o que a m&aacute;quina cobra de oficina por tonelada naquele ano de uso. A linha tracejada &eacute; o custo por tonelada de uma colhedora nova, com o investimento diluído no seu melhor ciclo. Coluna acima da linha: manter ficou mais caro que trocar.</p>
+<p class="s-sub">Em cada ano de uso, duas colunas lado a lado: o que custa <b>manter</b> a m&aacute;quina atual e o que custaria <b>renovar</b>. Enquanto a coluna de manter for menor, segurar a m&aacute;quina compensa. No ano em que ela ultrapassa a de renovar, virou preju&iacute;zo.</p>
 </div>
 <div class="s-right">
 <div class="s-toggle" id="troca-preco">
@@ -1016,9 +1016,17 @@ function miniCombo(svg, o){
   var padL=38*k, padR=34*k, padT=38*k, padB=54*k;
   var n=o.labels.length, plotW=W-padL-padR, plotH=H-padT-padB, base=padT+plotH;
   if(plotW<40 || plotH<40) return;
-  // colunas largas: o corpo da barra é usado para escrever o valor
-  var slot=plotW/n, barW=Math.min(slot*0.74, 46*k);
+  // colunas largas: o corpo da barra é usado para escrever o valor.
+  // com o.bars2, duas colunas por categoria, lado a lado
+  var pareado = !!(o.bars2 && o.bars2.length);
+  var slot=plotW/n;
+  var barW = pareado ? Math.min(slot*0.36, 42*k) : Math.min(slot*0.74, 46*k);
+  var vao  = pareado ? Math.max(3*k, slot*0.04) : 0;
   function corBarra(i){ return (o.barColors && o.barColors[i]) || o.color; }
+  function bx(i, si){
+    if(!pareado) return cx(i)-barW/2;
+    return si===0 ? cx(i)-barW-vao/2 : cx(i)+vao/2;
+  }
   function yL(v){ return base-(v/o.maxL)*plotH; }
   function yR(v){ return base-(v/o.maxR)*plotH; }
   function cx(i){ return padL+i*slot+slot/2; }
@@ -1048,30 +1056,37 @@ function miniCombo(svg, o){
   // barras
   var g=ns("g");
   g.setAttribute("style","transform-origin:0px "+base+"px;animation:rcRise .72s cubic-bezier(.2,.85,.3,1)");
-  o.bars.forEach(function(v,i){
-    if(!(v>0)) return;
-    var h=(v/o.maxL)*plotH, y=yL(v), x=cx(i)-barW/2;
-    var r=ns("rect"); r.setAttribute("x",x); r.setAttribute("y",y);
-    r.setAttribute("width",barW); r.setAttribute("height",h); r.setAttribute("rx",3*k);
-    r.setAttribute("fill",corBarra(i)); g.appendChild(r);
+  var series = [{vals:o.bars, cor:corBarra, fmt:o.barFmt}];
+  if(pareado) series.push({vals:o.bars2, cor:function(){ return o.color2 || "#12224A"; },
+                           fmt:o.barFmt2 || o.barFmt});
+  series.forEach(function(sr, si){
+    sr.vals.forEach(function(v,i){
+      if(!(v>0)) return;
+      var h=(v/o.maxL)*plotH, y=yL(v), x=bx(i,si);
+      var r=ns("rect"); r.setAttribute("x",x); r.setAttribute("y",y);
+      r.setAttribute("width",barW); r.setAttribute("height",h); r.setAttribute("rx",3*k);
+      r.setAttribute("fill",sr.cor(i)); g.appendChild(r);
+    });
   });
   svg.appendChild(g);
 
-  // valor gasto escrito dentro do corpo da coluna (horizontal, centralizado)
+  // valor escrito dentro do corpo da coluna (horizontal, centralizado)
   var vg=ns("g"); vg.setAttribute("style","animation:rcFade .5s ease .48s both");
-  o.bars.forEach(function(v,i){
-    if(!(v>0)) return;
-    var s=o.barFmt(v), h=(v/o.maxL)*plotH, y=yL(v);
-    var fs=Math.min(11.5*k, Math.max(7.5, (barW-5)/(s.length*0.58)));
-    if(h >= fs+7*k){
-      // cabe dentro da barra: texto na cor de maior contraste sobre o fundo
-      txt(vg, cx(i), y + h/2 + fs*0.35, s,
-        {"text-anchor":"middle","font-size":String(fs),"font-weight":"700",fill:textoSobre(corBarra(i))});
-    } else {
-      // barra baixa demais: escreve logo acima, na cor da unidade
-      txt(vg, cx(i), y-4*k, s,
-        {"text-anchor":"middle","font-size":String(fs),"font-weight":"700",fill:corBarra(i)});
-    }
+  series.forEach(function(sr, si){
+    sr.vals.forEach(function(v,i){
+      if(!(v>0)) return;
+      var s=sr.fmt(v), h=(v/o.maxL)*plotH, y=yL(v), xc=bx(i,si)+barW/2;
+      var fs=Math.min(11.5*k, Math.max(7.5, (barW-5)/(s.length*0.58)));
+      if(h >= fs+7*k){
+        // cabe dentro da barra: texto na cor de maior contraste sobre o fundo
+        txt(vg, xc, y + h/2 + fs*0.35, s,
+          {"text-anchor":"middle","font-size":String(fs),"font-weight":"700",fill:textoSobre(sr.cor(i))});
+      } else {
+        // barra baixa demais: escreve logo acima, na cor da própria coluna
+        txt(vg, xc, y-4*k, s,
+          {"text-anchor":"middle","font-size":String(fs),"font-weight":"700",fill:sr.cor(i)});
+      }
+    });
   });
   svg.appendChild(vg);
 
@@ -1865,20 +1880,25 @@ function renderPontoTroca(idade, ages){
     labels: ages.map(function(a){ return a+"º"; }),
     bars: manter.map(function(v){ return isFinite(v)?v:0; }),
     barFmt: function(v){ return E.fmtDec(v,2); },
+    // segunda coluna: o que custaria renovar — a mesma em todos os anos, porque é
+    // sempre a mesma decisão (comprar uma nova e rodá-la no melhor ciclo)
+    bars2: ages.map(function(){ return isFinite(ref)?ref:0; }),
+    color2: "#12224A",
     line: prod.map(function(v){ return v/1000; }),
     lineFmt: function(v){ return E.fmtInt(v); },
     notes: ages.map(function(a){ return {text: String(idade.grupo[a].n), color: E.NAVY}; }),
     maxL: C.niceAxis(maxBar*1.35, 2) || 1,
     maxR: C.niceAxis(Math.max.apply(null, prod)/1000*1.12, 2) || 1,
     axisFmtL: function(v){ return E.fmtDec(v, v%1===0?0:1); },
-    axisFmtR: function(v){ return E.fmtInt(v); },
-    ref: isFinite(ref) ? {value: ref, color:"#12224A",
-      label:"Máquina nova no melhor ciclo ("+ages[iCiclo]+" anos): R$ "+E.fmtDec(ref,2)+"/t"} : null
+    axisFmtR: function(v){ return E.fmtInt(v); }
   });
 
   setHTML("idade-troca-legend",
     "<span class='lg'>"+C.marcadorBarras(["#2E7D46","#C9A227","#C0392B"])+
-      "Coluna: custo de oficina por tonelada ao manter a máquina <b>(R$/t)</b> — verde folgado, ouro perto do limite, vermelho acima</span>"+
+      "<b>Manter</b> a máquina atual: oficina do ano por tonelada — verde folgado, ouro perto do limite, vermelho acima</span>"+
+    "<span class='lg'>"+C.marcadorBarras(["#12224A"])+
+      "<b>Renovar</b>: colhedora nova a "+E.fmtMoneyMi(PRECO_NOVA)+" rodada no melhor ciclo ("+ages[iCiclo]+" anos) — R$ "+
+      E.fmtDec(ref,2)+"/t</span>"+
     "<span class='lg'>"+C.marcadorLinha(RT_COLOR)+"Linha: tonelada colhida no ano <b>(mil t, eixo dir.)</b></span>"+
     "<span class='lg'>"+C.marcadorPilula("51", E.NAVY)+"Máquinas na amostra</span>");
 
