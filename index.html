@@ -262,7 +262,7 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <a href="#idade"><b>3</b> Curva de custo</a><a href="#idade-unidade">Curva por empresa</a><a href="#idade-tabelas">Tabelas da curva</a><a href="#idade-frota">Idade da frota</a><a href="#idade-troca">Ponto de troca</a><a href="#produtos">Onde o dinheiro vai</a>
 <a href="#marca"><b>4</b> Deere x Case</a>
 <a href="#maquinas"><b>5</b> Máquina a máquina</a>
-<a href="#metodologia"><b>6</b> Metodologia</a>
+
 </nav>
 
 <div class="deck" id="deck">
@@ -569,33 +569,6 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <div class="s-insight" id="maquinas-insight">carregando&hellip;</div>
 </article>
 
-
-<article class="slide legacy" id="metodologia" data-title="Metodologia">
-<section class="alt">
-<h2><span class="idx">6</span>Metodologia e limitações</h2>
-<p class="desc" style="max-width:100%">
-<b>Fonte:</b> consulta ao vivo ao banco MariaDB do grupo — view <code>vw_consumo</code> (custo de oficina, 2020–2026), tabelas <code>pes_pesagem_capa</code>/<code>pes_pesagem_item</code> (produção colhida), view <code>vw_abastecimento</code> (horímetro, cobertura real a partir de 2024) e tabela <code>fro_frota</code> (cadastro mestre: empresa atual e data de aquisição real de cada máquina). Dados extraídos em 09/09/2026.
-O custo considera apenas quatro ordens de produção — <b>PEÇAS</b>, <b>SERVIÇOS TERCEIROS</b>, <b>MATERIAL DE USO E CONSUMO</b> e <b>LUBRIFICANTES</b> — nos tipos de documento RQE, FRO, CA, REQ, RQI e DEV. Ficam de fora: lançamentos sem ordem de produção, ordens de CAPEX (reformas de motor e caixa picador lançadas por máquina), ferramentas, EPI/EPC, pneus, IPVA/seguros, locação e a cauda de ordens administrativas — além do tipo de documento RQC.
-Esse recorte responde por <b>R$ 217,3 milhões em 558.390 lançamentos</b>, contra R$ 224,8 milhões se todas as ordens e os sete tipos fossem somados: uma diferença de <b>3,3%</b>. O critério é o mesmo em <u>todas</u> as páginas, então qualquer número do relatório fecha com o detalhamento por produto.
-Também não inclui abastecimento/combustível, mão de obra própria nem serviços de terceiros fora de requisição de material.<br><br>
-<b>Colhedora ativa na safra:</b> a máquina só entra nos cálculos do ano em que colheu pelo menos <b><span id="metodo-minton">1.000</span> toneladas</b>. Abaixo disso a pesagem não sustenta nenhum indicador por tonelada — R$/t de máquina quase parada chega a milhares de reais e contamina médias e rankings. As frotas de código <b>46xxx</b> ficam fora em qualquer safra, por apontamento não confiável (uma delas registra 66 mil t sem nenhum custo; outra, R$ 1,6 milhão sobre 327 t).
-O critério é por <u>máquina-safra</u>, não por máquina: uma colhedora com um ano de apontamento ruim sai apenas daquele ano e permanece nos demais — a frota 62509, por exemplo, sai de 2026 (12 t) e continua em 2020–2025, quando colheu de 83 a 111 mil t por safra.
-A regra vale para <u>todos</u> os critérios: contagem de frota, custo, horas rodadas, combustível, R$/t, R$/hora, custo por máquina, idade média e rankings. Ao todo <span id="metodo-excluidos">–</span> pares máquina-safra ficam de fora, representando <span id="metodo-excluidos-custo">–</span> do custo bruto do período completo.<br><br>
-<b>Filtro de período:</b> o seletor "De/Até" no topo do relatório reprocessa todas as tabelas e gráficos para o intervalo de safras escolhido — inclusive KPIs, rankings e a curva de idade da máquina. 2026 é um ano parcial (dados até 09/09/2026).<br><br>
-<b>Consolidação de unidades:</b> as bases traziam 7 códigos de empresa. Conforme a estrutura real do grupo, CRV Goiás foi somada a PFCMO Goiás,
-CRV Minas Gerais a PFCMO Minas Gerais e Uruaçu a Agro Uruaçu, resultando nas 4 unidades deste relatório. Agro Rubiataba corresponde ao código AGRO-RUB
-(a base de pesagem usava AGRO-RTB para a mesma unidade).<br><br>
-<b>Ano de uso:</b> calculado como o ano da safra menos o ano de início real de operação da máquina. Usa a data de aquisição (cadastro <code>fro_frota</code>) como base, mas quando a 1ª pesagem da máquina ocorre depois do ano de aquisição — comum em compras no fim de safra, que só entram em operação na safra seguinte — o ano de início é ajustado para o da 1ª pesagem. Máquinas adquiridas antes de 2020 mantêm a data de aquisição (nossa base de pesagem só cobre 2020 em diante, então "1ª pesagem" não é um sinal confiável de início de operação para elas). Cobre toda a frota, não apenas as compradas recentemente. Colunas com menos de 3 máquinas na amostra não são exibidas.<br><br>
-<b>Unidade responsável pela frota:</b> definida pela faixa numérica do código da frota, não pela empresa que registrou cada lançamento — uma colhedora pode ter custo ou produção lançados sob mais de um código de empresa ao longo do tempo, mas para todos os indicadores e filtros deste relatório ela é sempre contada na mesma unidade. Faixas: 12000–12999 PFCMO Goiás, 20000–29999 Agro Rubiataba, 50000–59999 Agro Uruaçu, 60000–69999 PFCMO Minas Gerais. As poucas frotas fora dessas faixas (12 de 113) usam a empresa atual do cadastro <code>fro_frota</code>.<br><br>
-<b>Horímetro:</b> as horas rodadas por abastecimento continuam na base (cobertura real a partir de 2024, leituras com salto acima de 100h descartadas por reset de painel), mas nenhuma página do relatório apresenta R$/hora no momento.<br><br>
-<b>R$/t:</b> custo dividido pela tonelada colhida da própria máquina/unidade no período. Rankings de eficiência limitados a frotas com tonelada mínima escalada ao número de safras do período selecionado (referência: 5.000 t/safra).
-</p>
-</section>
-
-
-<footer>Fonte: consulta ao vivo ao MariaDB do grupo (vw_consumo + pes_pesagem_capa/item + vw_abastecimento + fro_frota) &middot; 558.390 lançamentos de custo (RQE, FRO, CA, REQ, RQI, DEV nas ordens PEÇAS, SERVIÇOS TERCEIROS, USO E CONSUMO e LUBRIFICANTES) e 61.973 leituras de horímetro (2020–2026) &middot; extraído em 09/09/2026 &middot; Documento interno — uso gerencial</footer>
-</article>
-
 </div><!-- /deck -->
 
 <div class="mf" id="mf" hidden>
@@ -761,48 +734,107 @@ function idadeFrotaAgg(recs, years){
 }
 
 // ---- painel de detalhe: as frotas por trás de um número clicado ----
-// filtro(r) escolhe os registros que compõem aquele valor; o painel soma por
-// colhedora e mostra quanto cada uma representa.
-function abrirFrotas(titulo, sub, recs, filtro){
+// O conteúdo acompanha o que o gráfico mostra: um gráfico de idade abre idades,
+// um de produção abre tonelada. Mostrar custo em todos seria ruído.
+//   modo "custo"    -> tonelada, custo, R$/t, participação no custo
+//   modo "producao" -> ano de uso, tonelada, participação na tonelada
+//   modo "idade"    -> 1ª safra, ano de uso na safra, tonelada; total = idade média
+function abrirFrotas(titulo, sub, recs, filtro, modo){
   var caixa = document.getElementById("mf");
   if(!caixa) return;
-  var m = {};
-  recs.filter(filtro).forEach(function(r){
-    var f = m[r.frota] || (m[r.frota] = {frota:r.frota, modelo:r.modelo, unit:r.unit,
-                                         custo:0, tonelada:0, safras:{}});
-    f.custo += r.custo; f.tonelada += r.tonelada; f.safras[r.ano] = true;
-    if(r.modelo) f.modelo = r.modelo;
-  });
-  var lista = Object.keys(m).map(function(k){ return m[k]; })
-                .sort(function(a,b){ return b.custo - a.custo; });
-  var totC = lista.reduce(function(s,f){ return s+f.custo; }, 0);
-  var totT = lista.reduce(function(s,f){ return s+f.tonelada; }, 0);
+  modo = modo || "custo";
+  var sel = recs.filter(filtro);
+
+  function cab(cols){
+    return "<thead><tr>"+cols.map(function(c){
+      return "<th class='"+(c[1]||"n")+"'>"+c[0]+"</th>"; }).join("")+"</tr></thead>";
+  }
+  var head, corpo, resumo;
+
+  if(modo === "idade"){
+    // uma linha por máquina-safra: é assim que a média do gráfico é formada
+    var itens = sel.filter(function(r){ return r.ano_de_uso >= 1; })
+      .sort(function(a,b){ return b.ano_de_uso - a.ano_de_uso; });
+    var somaIdade = itens.reduce(function(s,r){ return s + r.ano_de_uso; }, 0);
+    var somaTon = itens.reduce(function(s,r){ return s + r.tonelada; }, 0);
+    head = cab([["Frota","l"],["Modelo","l"],["Unidade","l"],["1ª safra"],["Safra"],
+                ["Ano de uso"],["Tonelada"]]);
+    corpo = itens.map(function(r){
+      return "<tr><td class='l'>"+r.frota+"</td>"+
+        "<td class='l'>"+esc((r.modelo||"").replace("JOHN DEERE ","JD ").replace("COLHEDORA ",""))+"</td>"+
+        "<td class='l'>"+esc(r.unit||"")+"</td>"+
+        "<td class='n'>"+(r.ano - r.ano_de_uso + 1)+"</td>"+
+        "<td class='n'>"+r.ano+"</td>"+
+        "<td class='n strong'>"+r.ano_de_uso+"º</td>"+
+        "<td class='n'>"+fmtInt(r.tonelada)+"</td></tr>";
+    }).join("");
+    corpo += "<tr class='tot'><td class='l'>MÉDIA</td><td></td><td></td><td></td><td></td>"+
+      "<td class='n'>"+(itens.length ? fmtDec(somaIdade/itens.length,1)+" anos" : "–")+"</td>"+
+      "<td class='n'>"+fmtInt(somaTon)+"</td></tr>";
+    resumo = itens.length + (itens.length===1?" colhedora":" colhedoras");
+
+  } else if(modo === "producao"){
+    var porFrota = {};
+    sel.forEach(function(r){
+      var f = porFrota[r.frota] || (porFrota[r.frota] = {frota:r.frota, modelo:r.modelo,
+        unit:r.unit, tonelada:0, idade:r.ano_de_uso, safras:{}});
+      f.tonelada += r.tonelada; f.safras[r.ano] = true;
+      if(r.modelo) f.modelo = r.modelo;
+    });
+    var lst = Object.keys(porFrota).map(function(k){ return porFrota[k]; })
+      .sort(function(a,b){ return b.tonelada - a.tonelada; });
+    var tt = lst.reduce(function(s,f){ return s+f.tonelada; }, 0);
+    head = cab([["Frota","l"],["Modelo","l"],["Unidade","l"],["Ano de uso"],
+                ["Tonelada"],["Part. da tonelada"]]);
+    corpo = lst.map(function(f){
+      var pct = tt>0 ? f.tonelada/tt*100 : 0;
+      return "<tr><td class='l'>"+f.frota+"</td>"+
+        "<td class='l'>"+esc((f.modelo||"").replace("JOHN DEERE ","JD ").replace("COLHEDORA ",""))+"</td>"+
+        "<td class='l'>"+esc(f.unit||"")+"</td>"+
+        "<td class='n'>"+(f.idade>=1 ? f.idade+"º" : "–")+"</td>"+
+        "<td class='n'>"+fmtInt(f.tonelada)+"</td>"+
+        "<td class='n' style=\"background:linear-gradient(90deg,rgba(201,162,39,.45) "+pct.toFixed(1)+
+          "%,transparent "+pct.toFixed(1)+"%)\">"+fmtDec(pct,1)+"%</td></tr>";
+    }).join("");
+    corpo += "<tr class='tot'><td class='l'>TOTAL</td><td></td><td></td><td></td>"+
+      "<td class='n'>"+fmtInt(tt)+"</td><td class='n'>100,0%</td></tr>";
+    resumo = lst.length + (lst.length===1?" colhedora":" colhedoras");
+
+  } else {
+    var m = {};
+    sel.forEach(function(r){
+      var f = m[r.frota] || (m[r.frota] = {frota:r.frota, modelo:r.modelo, unit:r.unit,
+        custo:0, tonelada:0, idade:r.ano_de_uso, safras:{}});
+      f.custo += r.custo; f.tonelada += r.tonelada; f.safras[r.ano] = true;
+      if(r.modelo) f.modelo = r.modelo;
+    });
+    var lista = Object.keys(m).map(function(k){ return m[k]; })
+      .sort(function(a,b){ return b.custo - a.custo; });
+    var totC = lista.reduce(function(s,f){ return s+f.custo; }, 0);
+    var totT = lista.reduce(function(s,f){ return s+f.tonelada; }, 0);
+    head = cab([["Frota","l"],["Modelo","l"],["Unidade","l"],["Ano de uso"],
+                ["Tonelada"],["Custo"],["R$/t"],["Part. do custo"]]);
+    corpo = lista.map(function(f){
+      var pct = totC>0 ? f.custo/totC*100 : 0;
+      return "<tr><td class='l'>"+f.frota+"</td>"+
+        "<td class='l'>"+esc((f.modelo||"").replace("JOHN DEERE ","JD ").replace("COLHEDORA ",""))+"</td>"+
+        "<td class='l'>"+esc(f.unit||"")+"</td>"+
+        "<td class='n'>"+(f.idade>=1 ? f.idade+"º" : "–")+"</td>"+
+        "<td class='n'>"+fmtInt(f.tonelada)+"</td>"+
+        "<td class='n'>"+fmtMoney(f.custo)+"</td>"+
+        "<td class='n'>"+(f.tonelada>0 ? fmtDec(f.custo/f.tonelada,2) : "–")+"</td>"+
+        "<td class='n' style=\"background:linear-gradient(90deg,rgba(201,162,39,.45) "+pct.toFixed(1)+
+          "%,transparent "+pct.toFixed(1)+"%)\">"+fmtDec(pct,1)+"%</td></tr>";
+    }).join("");
+    corpo += "<tr class='tot'><td class='l'>TOTAL</td><td></td><td></td><td></td>"+
+      "<td class='n'>"+fmtInt(totT)+"</td><td class='n'>"+fmtMoney(totC)+"</td>"+
+      "<td class='n'>"+(totT>0 ? fmtDec(totC/totT,2) : "–")+"</td><td class='n'>100,0%</td></tr>";
+    resumo = lista.length + (lista.length===1?" colhedora":" colhedoras");
+  }
 
   document.getElementById("mf-titulo").textContent = titulo;
-  document.getElementById("mf-sub").textContent =
-    lista.length + (lista.length===1 ? " colhedora" : " colhedoras") + " · " + sub;
-
-  var corpo = lista.map(function(f){
-    var pct = totC>0 ? f.custo/totC*100 : 0;
-    var safras = Object.keys(f.safras).sort();
-    return "<tr><td class='l'>"+f.frota+"</td>"+
-      "<td class='l'>"+esc((f.modelo||"").replace("JOHN DEERE ","JD ").replace("COLHEDORA ",""))+"</td>"+
-      "<td class='l'>"+esc(f.unit||"")+"</td>"+
-      "<td class='n'>"+(safras.length>1 ? safras[0]+"–"+safras[safras.length-1] : safras[0])+"</td>"+
-      "<td class='n'>"+fmtInt(f.tonelada)+"</td>"+
-      "<td class='n'>"+fmtMoney(f.custo)+"</td>"+
-      "<td class='n'>"+(f.tonelada>0 ? fmtDec(f.custo/f.tonelada,2) : "–")+"</td>"+
-      "<td class='n' style=\"background:linear-gradient(90deg,rgba(201,162,39,.45) "+pct.toFixed(1)+
-        "%,transparent "+pct.toFixed(1)+"%)\">"+fmtDec(pct,1)+"%</td></tr>";
-  }).join("");
-  corpo += "<tr class='tot'><td class='l'>TOTAL</td><td></td><td></td><td></td>"+
-    "<td class='n'>"+fmtInt(totT)+"</td><td class='n'>"+fmtMoney(totC)+"</td>"+
-    "<td class='n'>"+(totT>0 ? fmtDec(totC/totT,2) : "–")+"</td><td class='n'>100,0%</td></tr>";
-
-  document.getElementById("mf-corpo").innerHTML =
-    "<table><thead><tr><th class='l'>Frota</th><th class='l'>Modelo</th><th class='l'>Unidade</th>"+
-    "<th class='n'>Safras</th><th class='n'>Tonelada</th><th class='n'>Custo</th>"+
-    "<th class='n'>R$/t</th><th class='n'>Part.</th></tr></thead><tbody>"+corpo+"</tbody></table>";
+  document.getElementById("mf-sub").textContent = resumo + " · " + sub;
+  document.getElementById("mf-corpo").innerHTML = "<table>"+head+"<tbody>"+corpo+"</tbody></table>";
   caixa.hidden = false;
 }
 function fecharFrotas(){
@@ -1741,7 +1773,7 @@ function renderProducaoGrafico(years, unitAgg, grupoAgg){
       onBar: function(i){
         var y = years[i];
         E.abrirFrotas(esc(u)+" — safra "+y, "tonelada colhida em "+y,
-          LISTA_RECS, function(r){ return r.unit === u && r.ano === y; });
+          LISTA_RECS, function(r){ return r.unit === u && r.ano === y; }, "producao");
       }
     });
   });
@@ -2113,8 +2145,8 @@ function renderIdadeFrota(recs, years, unitAgg){
       axisFmtR: function(v){ return E.fmtDec(v, v%1===0?0:1); },
       onBar: function(i){
         var y = years[i];
-        E.abrirFrotas(esc(u)+" — safra "+y, "colhedoras que cortaram cana em "+y,
-          recs, function(r){ return r.unit === u && r.ano === y; });
+        E.abrirFrotas(esc(u)+" — safra "+y, "as idades que formam a média da safra",
+          recs, function(r){ return r.unit === u && r.ano === y; }, "idade");
       }
     });
   });
@@ -3178,10 +3210,6 @@ function initFilter(){
   S.initProdutosUI();
   S.initRankUI();
   E.initFrotasUI();
-  var exc = E.EXCLUIDOS;
-  setText("metodo-minton", E.fmtInt(exc.minTon));
-  setText("metodo-excluidos", E.fmtInt(exc.registros));
-  setText("metodo-excluidos-custo", E.fmtDec(exc.custo/exc.custoBruto*100, 1)+"% ("+E.fmtMoneyMi(exc.custo)+")");
   renderAll(parseInt(de.value), parseInt(ate.value));
 }
 
