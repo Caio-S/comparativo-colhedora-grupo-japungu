@@ -125,22 +125,17 @@ nav.toc a.on{color:var(--gold);border-bottom-color:var(--gold)}
 /* o cartão é claro: recupera a cor de texto, senão herda o branco do slide escuro */
 .slide-dark .s-card{color:var(--ink)}
 
-/* três tabelas empilhadas com as MESMAS larguras de coluna: 2020 embaixo de 2020 */
-.s-card.s-tables{display:block;overflow-y:auto;padding:4px 14px 10px}
-.s-tables p.sub-h{margin:10px 0 4px;font-size:12px;color:var(--navy)}
-.s-tables p.sub-h:first-child{margin-top:2px}
-table.prod-tbl{table-layout:fixed;width:100%;font-size:11.8px}
-table.prod-tbl thead th{padding:5px 6px;font-size:11.4px;line-height:1.2}
-table.prod-tbl td{padding:3px 6px}
-table.prod-tbl th:first-child,table.prod-tbl td:first-child{width:170px;text-align:left}
-table.prod-tbl th:last-child,table.prod-tbl td:last-child{width:116px}
-@media(max-height:780px){
-  .s-card.s-tables{padding:2px 12px 6px}
-  .s-tables p.sub-h{margin:3px 0 2px;font-size:10.8px}
-  table.prod-tbl{font-size:10.8px;line-height:1.25}
-  table.prod-tbl td{padding:1.5px 5px}
-  table.prod-tbl thead th{padding:3px 5px;font-size:10.2px;line-height:1.15}
-}
+/* três tabelas empilhadas com as MESMAS larguras de coluna: 2020 embaixo de 2020.
+   --tf (fonte) e --tp (respiro da linha) são calculados em JS a partir da altura
+   real do cartão, para as linhas ocuparem o espaço disponível sem sobrar vazio. */
+.s-card.s-tables{display:block;overflow-y:auto;padding:4px 14px 8px;--tf:13px;--tp:5px}
+.s-tables p.sub-h{margin:calc(var(--tp) + 3px) 0 3px;font-size:calc(var(--tf) - 1px);color:var(--navy)}
+.s-tables p.sub-h:first-child{margin-top:1px}
+table.prod-tbl{table-layout:fixed;width:100%;font-size:var(--tf);line-height:1.3}
+table.prod-tbl thead th{padding:calc(var(--tp) + 1px) 6px;font-size:calc(var(--tf) - 1px);line-height:1.2}
+table.prod-tbl td{padding:var(--tp) 6px}
+table.prod-tbl th:first-child,table.prod-tbl td:first-child{width:196px;text-align:left}
+table.prod-tbl th:last-child,table.prod-tbl td:last-child{width:132px}
 
 .s-card.s-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:1fr;gap:9px}
 .s-card.s-grid.two{grid-template-columns:repeat(2,1fr);grid-template-rows:1fr 1fr}
@@ -1282,6 +1277,27 @@ function renderProducao(recs, years, unitAgg, grupoAgg){
   setHTML("producao-graf-insight", m);
 
   renderProducaoGrafico(years, unitAgg, grupoAgg);
+  ajustarTabelasProducao();
+}
+
+// Ajusta fonte e altura de linha das três tabelas à altura real do cartão:
+// primeiro cresce a fonte até o limite confortável, depois distribui o que
+// sobrar como respiro nas linhas — em vez de deixar espaço vazio embaixo.
+function ajustarTabelasProducao(){
+  var card = document.querySelector("#producao .s-tables");
+  if(!card) return;
+  var alvo = card.clientHeight;
+  if(alvo < 80) return;
+  var f, p = 2;
+  card.style.setProperty("--tp", p+"px");
+  for(f = 16; f >= 9; f -= 0.5){
+    card.style.setProperty("--tf", f+"px");
+    if(card.scrollHeight <= alvo) break;
+  }
+  for(; p < 13; p += 0.5){
+    card.style.setProperty("--tp", (p+0.5)+"px");
+    if(card.scrollHeight > alvo){ card.style.setProperty("--tp", p+"px"); break; }
+  }
 }
 
 // ---- página 2b: um painel por unidade — coluna = tonelada total,
@@ -1359,6 +1375,7 @@ window.ReportSections = window.ReportSections || {};
 window.ReportSections.renderKPIs = renderKPIs;
 window.ReportSections.renderProducao = renderProducao;
 window.ReportSections.renderProducaoGrafico = renderProducaoGrafico;
+window.ReportSections.ajustarTabelasProducao = ajustarTabelasProducao;
 window.ReportSections.idadeAggregate = idadeAggregate;
 window.ReportSections.activeAgeBuckets = activeAgeBuckets;
 window.ReportSections.renderYearMatrixTable = renderYearMatrixTable;
@@ -1960,6 +1977,7 @@ window.replayPanorama = function(){
 window.replayProducao = function(){
   if(LAST) S.renderProducaoGrafico(LAST.years, LAST.unitAgg, LAST.grupoAgg);
 };
+window.replayProducaoTabelas = function(){ S.ajustarTabelasProducao(); };
 
 function initPanoramaUI(){
   var box = document.getElementById("pan-modo");
@@ -1977,7 +1995,9 @@ function initPanoramaUI(){
   var t = null;
   window.addEventListener("resize", function(){
     clearTimeout(t);
-    t = setTimeout(function(){ window.replayPanorama(); window.replayProducao(); }, 220);
+    t = setTimeout(function(){
+      window.replayPanorama(); window.replayProducao(); window.replayProducaoTabelas();
+    }, 220);
   });
 }
 
@@ -2080,6 +2100,7 @@ function go(i, skipHash){
   }
   if(id==="panorama" && window.replayPanorama) window.replayPanorama();
   if(id==="producao-graf" && window.replayProducao) window.replayProducao();
+  if(id==="producao" && window.replayProducaoTabelas) window.replayProducaoTabelas();
 }
 function next(){ go(cur+1); }
 function prev(){ go(cur-1); }
