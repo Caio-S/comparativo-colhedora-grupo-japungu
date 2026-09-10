@@ -223,6 +223,30 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
   .s-card.s-troca{--tf:10.5px;--tp:1px;--c1:210px;gap:3px;padding:6px 10px 4px}
 }
 
+/* painel de detalhe: quais frotas compõem o número que foi clicado */
+.mf{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:28px}
+.mf[hidden]{display:none!important}
+.mf-fundo{position:absolute;inset:0;background:rgba(6,12,28,.72);backdrop-filter:blur(2px)}
+.mf-caixa{position:relative;background:#fff;border-radius:12px;box-shadow:0 24px 70px rgba(0,0,0,.5);
+  width:min(1100px,94vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+.mf-topo{flex:0 0 auto;display:flex;align-items:flex-start;gap:16px;padding:16px 20px 12px;
+  background:var(--navy);color:#fff;border-bottom:3px solid var(--gold)}
+.mf-titulo{font-size:17px;font-weight:700}
+.mf-sub{font-size:12.5px;color:#C6CEE0;margin-top:3px}
+.mf-fechar{margin-left:auto;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;
+  background:var(--gold);color:var(--navy);border:0;border-radius:6px;padding:7px 16px}
+.mf-corpo{flex:1 1 auto;min-height:0;overflow:auto;padding:12px 20px 18px}
+.mf-corpo table{width:100%;border-collapse:collapse;font-size:12.5px}
+.mf-corpo thead th{position:sticky;top:0;background:var(--navy);color:#fff;text-align:center;
+  padding:7px 9px;font-weight:600;font-size:12px}
+.mf-corpo thead th.l{text-align:left}
+.mf-corpo td{padding:5px 9px;border-bottom:1px solid var(--line)}
+.mf-corpo td.l{text-align:left} .mf-corpo td.n{text-align:center;font-variant-numeric:tabular-nums}
+.mf-corpo tbody tr:nth-child(even){background:var(--bgsoft)}
+.mf-corpo tr.tot td{background:#FFF3D0!important;font-weight:700}
+.rc-clicavel{cursor:pointer}
+.rc-clicavel:hover{opacity:.78}
+
 @keyframes rcRise{from{transform:scaleY(0)}to{transform:scaleY(1)}}
 @keyframes rcFade{from{opacity:0}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.slide{transition:none}}
@@ -574,6 +598,17 @@ CRV Minas Gerais a PFCMO Minas Gerais e Uruaçu a Agro Uruaçu, resultando nas 4
 
 </div><!-- /deck -->
 
+<div class="mf" id="mf" hidden>
+<div class="mf-fundo" id="mf-fundo"></div>
+<div class="mf-caixa" role="dialog" aria-modal="true" aria-labelledby="mf-titulo">
+<div class="mf-topo">
+<div><div class="mf-titulo" id="mf-titulo"></div><div class="mf-sub" id="mf-sub"></div></div>
+<button type="button" class="mf-fechar" id="mf-fechar">Fechar &times;</button>
+</div>
+<div class="mf-corpo" id="mf-corpo"></div>
+</div>
+</div>
+
 <div class="deck-nav">
 <button id="deck-prev" type="button">&lsaquo; Anterior</button>
 <div class="deck-dots" id="deck-dots"></div>
@@ -725,6 +760,62 @@ function idadeFrotaAgg(recs, years){
   return {byUnit: byUnit, grupo: grupo, avg: function(c){ return (c && c.n>0) ? c.soma/c.n : NaN; }};
 }
 
+// ---- painel de detalhe: as frotas por trás de um número clicado ----
+// filtro(r) escolhe os registros que compõem aquele valor; o painel soma por
+// colhedora e mostra quanto cada uma representa.
+function abrirFrotas(titulo, sub, recs, filtro){
+  var caixa = document.getElementById("mf");
+  if(!caixa) return;
+  var m = {};
+  recs.filter(filtro).forEach(function(r){
+    var f = m[r.frota] || (m[r.frota] = {frota:r.frota, modelo:r.modelo, unit:r.unit,
+                                         custo:0, tonelada:0, safras:{}});
+    f.custo += r.custo; f.tonelada += r.tonelada; f.safras[r.ano] = true;
+    if(r.modelo) f.modelo = r.modelo;
+  });
+  var lista = Object.keys(m).map(function(k){ return m[k]; })
+                .sort(function(a,b){ return b.custo - a.custo; });
+  var totC = lista.reduce(function(s,f){ return s+f.custo; }, 0);
+  var totT = lista.reduce(function(s,f){ return s+f.tonelada; }, 0);
+
+  document.getElementById("mf-titulo").textContent = titulo;
+  document.getElementById("mf-sub").textContent =
+    lista.length + (lista.length===1 ? " colhedora" : " colhedoras") + " · " + sub;
+
+  var corpo = lista.map(function(f){
+    var pct = totC>0 ? f.custo/totC*100 : 0;
+    var safras = Object.keys(f.safras).sort();
+    return "<tr><td class='l'>"+f.frota+"</td>"+
+      "<td class='l'>"+esc((f.modelo||"").replace("JOHN DEERE ","JD ").replace("COLHEDORA ",""))+"</td>"+
+      "<td class='l'>"+esc(f.unit||"")+"</td>"+
+      "<td class='n'>"+(safras.length>1 ? safras[0]+"–"+safras[safras.length-1] : safras[0])+"</td>"+
+      "<td class='n'>"+fmtInt(f.tonelada)+"</td>"+
+      "<td class='n'>"+fmtMoney(f.custo)+"</td>"+
+      "<td class='n'>"+(f.tonelada>0 ? fmtDec(f.custo/f.tonelada,2) : "–")+"</td>"+
+      "<td class='n' style=\"background:linear-gradient(90deg,rgba(201,162,39,.45) "+pct.toFixed(1)+
+        "%,transparent "+pct.toFixed(1)+"%)\">"+fmtDec(pct,1)+"%</td></tr>";
+  }).join("");
+  corpo += "<tr class='tot'><td class='l'>TOTAL</td><td></td><td></td><td></td>"+
+    "<td class='n'>"+fmtInt(totT)+"</td><td class='n'>"+fmtMoney(totC)+"</td>"+
+    "<td class='n'>"+(totT>0 ? fmtDec(totC/totT,2) : "–")+"</td><td class='n'>100,0%</td></tr>";
+
+  document.getElementById("mf-corpo").innerHTML =
+    "<table><thead><tr><th class='l'>Frota</th><th class='l'>Modelo</th><th class='l'>Unidade</th>"+
+    "<th class='n'>Safras</th><th class='n'>Tonelada</th><th class='n'>Custo</th>"+
+    "<th class='n'>R$/t</th><th class='n'>Part.</th></tr></thead><tbody>"+corpo+"</tbody></table>";
+  caixa.hidden = false;
+}
+function fecharFrotas(){
+  var c = document.getElementById("mf");
+  if(c) c.hidden = true;
+}
+function initFrotasUI(){
+  var f = document.getElementById("mf-fechar"), fundo = document.getElementById("mf-fundo");
+  if(f) f.addEventListener("click", fecharFrotas);
+  if(fundo) fundo.addEventListener("click", fecharFrotas);
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape") fecharFrotas(); });
+}
+
 window.ReportEngine = {
   UNIT_ORDER: UNIT_ORDER, COLORS: COLORS, GRAY: GRAY, NAVY: NAVY,
   RECORDS: RECORDS, ALL_YEARS: ALL_YEARS, STATE: STATE, EXCLUIDOS: EXCLUIDOS,
@@ -732,7 +823,8 @@ window.ReportEngine = {
   yearsInRange: yearsInRange, filterRecords: filterRecords,
   groupBy: groupBy, sum: sum, nunique: nunique,
   unitYearAgg: unitYearAgg, grupoYearAgg: grupoYearAgg, rowTotal: rowTotal,
-  idadeFrotaAgg: idadeFrotaAgg
+  idadeFrotaAgg: idadeFrotaAgg,
+  abrirFrotas: abrirFrotas, fecharFrotas: fecharFrotas, initFrotasUI: initFrotasUI
 };
 })();
 </script>
@@ -1028,6 +1120,10 @@ function comboBarLine(svg, opts){
       if(si===topIdx){ el=ns("path"); el.setAttribute("d", topRoundPath(x,y,barW,h,6)); }
       else { el=ns("rect"); el.setAttribute("x",x); el.setAttribute("y",y); el.setAttribute("width",barW); el.setAttribute("height",h); }
       el.setAttribute("fill", s.color);
+      if(opts.onBar){
+        el.setAttribute("class","rc-clicavel");
+        (function(idx, serie){ el.addEventListener("click", function(){ opts.onBar(idx, serie); }); })(i, si);
+      }
       barsG.appendChild(el);
       acc += v;
     });
@@ -1165,7 +1261,12 @@ function miniCombo(svg, o){
       var h=(v/o.maxL)*plotH, y=yL(v), x=bx(i,si);
       var r=ns("rect"); r.setAttribute("x",x); r.setAttribute("y",y);
       r.setAttribute("width",barW); r.setAttribute("height",h); r.setAttribute("rx",3*k);
-      r.setAttribute("fill",sr.cor(i)); g.appendChild(r);
+      r.setAttribute("fill",sr.cor(i));
+      if(o.onBar){
+        r.setAttribute("class","rc-clicavel");
+        (function(idx, serie){ r.addEventListener("click", function(){ o.onBar(idx, serie); }); })(i, si);
+      }
+      g.appendChild(r);
     });
   });
   svg.appendChild(g);
@@ -1583,6 +1684,7 @@ function renderProducao(recs, years, unitAgg, grupoAgg){
   setHTML("producao-insight", m);
   setHTML("producao-graf-insight", m);
 
+  LISTA_RECS = recs;
   renderProducaoGrafico(years, unitAgg, grupoAgg);
   ajustarTabelasProducao();
 }
@@ -1593,6 +1695,7 @@ function ajustarTabelasProducao(){
 
 // ---- página 2b: um painel por unidade — coluna = tonelada total,
 //      linha = tonelada média por máquina, pílula = nº de colhedoras ----
+var LISTA_RECS = [];
 function renderProducaoGrafico(years, unitAgg, grupoAgg){
   var card = document.getElementById("producao-card");
   if(!card) return;
@@ -1634,7 +1737,12 @@ function renderProducaoGrafico(years, unitAgg, grupoAgg){
       }),
       maxL: maxL, maxR: maxR,
       axisFmtL: function(v){ return E.fmtDec(v, v%1===0?0:1); },
-      axisFmtR: function(v){ return E.fmtInt(v); }
+      axisFmtR: function(v){ return E.fmtInt(v); },
+      onBar: function(i){
+        var y = years[i];
+        E.abrirFrotas(esc(u)+" — safra "+y, "tonelada colhida em "+y,
+          LISTA_RECS, function(r){ return r.unit === u && r.ano === y; });
+      }
     });
   });
 
@@ -1756,6 +1864,7 @@ function corCusto(v, base){
 }
 
 function renderIdade(recs, years, unitAgg){
+  LISTA_IDADE = recs;
   var idade = S.idadeAggregate(recs);
   // 3b e 3c comparam as unidades entre si: usam sempre a faixa do grupo
   var agesGrupo = S.activeAgeBuckets(idade, 3);
@@ -1794,7 +1903,16 @@ function renderIdade(recs, years, unitAgg){
       maxL: C.niceAxis(Math.max.apply(null, custos)*1.42, 2) || 1,
       maxR: C.niceAxis(Math.max.apply(null, rts)*1.12, 2) || 1,
       axisFmtL: function(v){ return E.fmtInt(v); },
-      axisFmtR: function(v){ return E.fmtDec(v, v%1===0?0:1); }
+      axisFmtR: function(v){ return E.fmtDec(v, v%1===0?0:1); },
+      onBar: function(i){
+        var a = ages[i];
+        E.abrirFrotas(nomeEscopo()+" — "+a+"º ano de uso",
+          "colhedoras que estavam nesse ano de uso em alguma safra do período",
+          recs, function(r){
+            if(r.ano_de_uso !== a) return false;
+            return IDADE_UNIDADE === "GRUPO" || r.unit === IDADE_UNIDADE;
+          });
+      }
     });
   }
   setHTML("idade-legend",
@@ -1888,6 +2006,7 @@ function renderIdade(recs, years, unitAgg){
 }
 
 // 3b — um painel por unidade: coluna = custo médio por máquina, linha = R$/t, pílula = amostra
+var LISTA_IDADE = [];
 function renderIdadeUnidade(idade, ages, lbls){
   var card = document.getElementById("idade-unidade-card");
   if(!card) return;
@@ -1925,7 +2044,12 @@ function renderIdadeUnidade(idade, ages, lbls){
       notes: nn.map(function(x){ return {text: x>0?String(x):"–", color: x>0?COLORS[u]:"#8A92A4"}; }),
       maxL: maxL, maxR: maxRr,
       axisFmtL: function(v){ return E.fmtInt(v); },
-      axisFmtR: function(v){ return E.fmtDec(v, v%1===0?0:1); }
+      axisFmtR: function(v){ return E.fmtDec(v, v%1===0?0:1); },
+      onBar: function(i){
+        var a = ages[i];
+        E.abrirFrotas(esc(u)+" — "+a+"º ano de uso", "colhedoras da unidade nesse ano de uso",
+          LISTA_IDADE, function(r){ return r.unit === u && r.ano_de_uso === a; });
+      }
     });
   });
 
@@ -1986,7 +2110,12 @@ function renderIdadeFrota(recs, years, unitAgg){
       notes: years.map(function(){ return null; }),
       maxL: maxL, maxR: maxR,
       axisFmtL: function(v){ return E.fmtInt(v); },
-      axisFmtR: function(v){ return E.fmtDec(v, v%1===0?0:1); }
+      axisFmtR: function(v){ return E.fmtDec(v, v%1===0?0:1); },
+      onBar: function(i){
+        var y = years[i];
+        E.abrirFrotas(esc(u)+" — safra "+y, "colhedoras que cortaram cana em "+y,
+          recs, function(r){ return r.unit === u && r.ano === y; });
+      }
     });
   });
 
@@ -2111,7 +2240,17 @@ function renderPontoTroca(escopo, ages){
     maxL: C.niceAxis(maxBar*1.35, 2) || 1,
     maxR: C.niceAxis(Math.max.apply(null, prod)/1000*1.12, 2) || 1,
     axisFmtL: function(v){ return E.fmtDec(v, v%1===0?0:1); },
-    axisFmtR: function(v){ return E.fmtInt(v); }
+    axisFmtR: function(v){ return E.fmtInt(v); },
+    onBar: function(i, si){
+      if(si === 1) return;   // a coluna azul e a referencia da maquina nova
+      var a = ages[i];
+      E.abrirFrotas(nomeEscopo()+" — manter no "+a+"º ano de uso",
+        "colhedoras que compoem esse R$/t",
+        LISTA_IDADE, function(r){
+          if(r.ano_de_uso !== a) return false;
+          return IDADE_UNIDADE === "GRUPO" || r.unit === IDADE_UNIDADE;
+        });
+    }
   });
 
   setHTML("idade-troca-legend",
@@ -2732,7 +2871,12 @@ function renderMarca(recs, years){
     maxL: C.niceAxis(Math.max.apply(null, jdRt.concat(csRt).filter(function(v){ return isFinite(v); }))*1.35, 2) || 1,
     maxR: 1,
     axisFmtL: function(v){ return E.fmtDec(v, v%1===0?0:1); },
-    axisFmtR: function(v){ return ""; }
+    axisFmtR: function(v){ return ""; },
+    onBar: function(i, si){
+      var a = ages[i], m = si === 0 ? JD : CS;
+      E.abrirFrotas(m+" — "+a+"º ano de uso", "colhedoras da marca nesse ano de uso",
+        recs, function(r){ return (r.marca||"") === m && r.ano_de_uso === a; });
+    }
   });
 
   setHTML("marca-legend",
@@ -2847,7 +2991,12 @@ function renderPanorama(years, unitAgg, grupoAgg, recs){
       axisFmtL: function(v){ return E.fmtDec(v, v%1===0?0:1); },
       axisFmtR: function(v){ return E.fmtDec(v, v%1===0?0:1); },
       totalFmt: function(v){ return "R$ "+E.fmtDec(v,1)+" mi"; },
-      lineFmt:  function(v){ return E.fmtDec(v,2); }
+      lineFmt:  function(v){ return E.fmtDec(v,2); },
+      onBar: function(i, si){
+        var u = U[si], y = years[i];
+        E.abrirFrotas(esc(u)+" — safra "+y, "custo de oficina de "+y,
+          recs, function(r){ return r.unit === u && r.ano === y; });
+      }
     });
 
     setHTML("pan-legend",
@@ -2910,7 +3059,12 @@ function renderPanorama(years, unitAgg, grupoAgg, recs){
       maxL: maxL, maxR: maxR,
       axisFmtL: function(v){ return E.fmtDec(v, v%1===0?0:1); },
       axisFmtR: function(v){ return E.fmtDec(v, v%1===0?0:1); },
-      lineFmt: function(v){ return E.fmtDec(v,2); }
+      lineFmt: function(v){ return E.fmtDec(v,2); },
+      onBar: function(i){
+        var y = years[i];
+        E.abrirFrotas(esc(u)+" — safra "+y, "custo de oficina de "+y,
+          recs, function(r){ return r.unit === u && r.ano === y; });
+      }
     });
   });
 
@@ -3023,6 +3177,7 @@ function initFilter(){
   S.initIdadeFiltroUI();
   S.initProdutosUI();
   S.initRankUI();
+  E.initFrotasUI();
   var exc = E.EXCLUIDOS;
   setText("metodo-minton", E.fmtInt(exc.minTon));
   setText("metodo-excluidos", E.fmtInt(exc.registros));
