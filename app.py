@@ -292,9 +292,15 @@ def index():
         html = _cache["html"]
         error = _cache["error"]
     if html is None:
+        # Responde 200 (nao 503) de proposito: uma resposta de erro aqui, sustentada
+        # pelos varios minutos que a primeira busca leva, fazia o proprio Render
+        # concluir que o servico estava travado e reiniciar o container no meio do
+        # carregamento -- resetando o cache bem quando estava quase pronto.
         if error:
-            return f"Erro ao carregar dados do banco: {error}", 503
-        return "Carregando dados do banco pela primeira vez, isso pode levar alguns minutos...", 503
+            body = f"<meta http-equiv='refresh' content='15'><p>Erro ao carregar dados do banco, tentando de novo: {error}</p>"
+        else:
+            body = "<meta http-equiv='refresh' content='15'><p>Carregando dados do banco pela primeira vez, isso pode levar alguns minutos...</p>"
+        return Response(body, mimetype="text/html; charset=utf-8")
     return Response(html, mimetype="text/html; charset=utf-8")
 
 
