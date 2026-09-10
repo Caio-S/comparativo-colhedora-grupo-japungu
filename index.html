@@ -1248,7 +1248,13 @@ function miniCombo(svg, o){
     var c=ns("circle"); c.setAttribute("cx",p[0]); c.setAttribute("cy",p[1]); c.setAttribute("r",3.6*k);
     c.setAttribute("fill","#fff"); c.setAttribute("stroke",o.lineColor); c.setAttribute("stroke-width",String(2.1*k));
     lg.appendChild(c);
-    txt(lg, p[0], p[1]-8*k, o.lineFmt(o.line[i]),
+    // quando o ponto cai dentro da coluna, o rótulo sobe para cima dela: colado
+    // ao ponto ele ficava sobre a barra, brigando com o valor escrito no corpo
+    var yRot = p[1] - 8*k;
+    var alt = (o.bars && o.bars[i] > 0) ? yL(o.bars[i]) : base;
+    if(pareado && o.bars2 && o.bars2[i] > alt) alt = yL(o.bars2[i]);
+    if(p[1] > alt - lfs) yRot = alt - 8*k;
+    txt(lg, p[0], yRot, o.lineFmt(o.line[i]),
       {"text-anchor":"middle","font-size":String(lfs),"font-weight":"700",fill:o.lineColor,
        stroke:"#fff","stroke-width":String(3*k),"paint-order":"stroke"});
   });
@@ -1807,7 +1813,7 @@ function renderIdade(recs, years, unitAgg){
       unit: nomeEscopo(), color: E.NAVY, lineColor: RT_COLOR,
       barColors: cores,
       headRight: "amostra de "+E.fmtInt(E.sum(amostra, function(x){ return x; }))+" máquina-safra",
-      unitL: "R$ mil por máquina/ano", unitR: "R$/t",
+      unitL: "R$ mil/máq", unitR: "R$/t",
       labels: lbls,
       bars: custos, barFmt: function(v){ return E.fmtInt(v); },
       line: rts,  lineFmt: function(v){ return E.fmtDec(v,2); },
