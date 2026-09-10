@@ -891,7 +891,8 @@ function miniCombo(svg, o){
   var padL=38, padR=32, padT=38, padB=54;
   var n=o.labels.length, plotW=W-padL-padR, plotH=H-padT-padB, base=padT+plotH;
   if(plotW<40 || plotH<40) return;
-  var slot=plotW/n, barW=Math.min(slot*0.62, 30);
+  // colunas largas: o corpo da barra é usado para escrever o valor gasto
+  var slot=plotW/n, barW=Math.min(slot*0.74, 46);
   function yL(v){ return base-(v/o.maxL)*plotH; }
   function yR(v){ return base-(v/o.maxR)*plotH; }
   function cx(i){ return padL+i*slot+slot/2; }
@@ -915,6 +916,8 @@ function miniCombo(svg, o){
     txt(svg, padL-6, y+3.5, o.axisFmtL(o.maxL*f), {"text-anchor":"end","font-size":"9.5",fill:"#8A92A4"});
     txt(svg, W-padR+6, y+3.5, o.axisFmtR(o.maxR*f), {"text-anchor":"start","font-size":"9.5",fill:o.lineColor});
   }
+  txt(svg, padL-6, padT-7, "R$ mi", {"text-anchor":"end","font-size":"8.5",fill:"#A6AEBC"});
+  txt(svg, W-padR+6, padT-7, "R$/t", {"text-anchor":"start","font-size":"8.5",fill:o.lineColor});
 
   // barras
   var g=ns("g");
@@ -928,6 +931,24 @@ function miniCombo(svg, o){
   });
   svg.appendChild(g);
 
+  // valor gasto escrito dentro do corpo da coluna (horizontal, centralizado)
+  var vg=ns("g"); vg.setAttribute("style","animation:rcFade .5s ease .48s both");
+  o.bars.forEach(function(v,i){
+    if(!(v>0)) return;
+    var s=o.barFmt(v), h=(v/o.maxL)*plotH, y=yL(v);
+    var fs=Math.min(11.5, Math.max(7.5, (barW-5)/(s.length*0.58)));
+    if(h >= fs+7){
+      // cabe dentro da barra: texto na cor de maior contraste sobre o fundo
+      txt(vg, cx(i), y + h/2 + fs*0.35, s,
+        {"text-anchor":"middle","font-size":String(fs),"font-weight":"700",fill:o.textOnBar});
+    } else {
+      // barra baixa demais: escreve logo acima, na cor da unidade
+      txt(vg, cx(i), y-4, s,
+        {"text-anchor":"middle","font-size":String(fs),"font-weight":"700",fill:o.color});
+    }
+  });
+  svg.appendChild(vg);
+
   // linha R$/t
   var lg=ns("g"); lg.setAttribute("style","animation:rcFade .6s ease .55s both");
   var pts=o.line.map(function(v,i){ return [cx(i), yR(v)]; });
@@ -938,16 +959,14 @@ function miniCombo(svg, o){
   var lp=ns("path"); lp.setAttribute("d",d); lp.setAttribute("fill","none"); lp.setAttribute("stroke",o.lineColor);
   lp.setAttribute("stroke-width","2.4"); lp.setAttribute("stroke-linejoin","round"); lp.setAttribute("stroke-linecap","round");
   lg.appendChild(lp);
+  var lfs = Math.min(10.5, Math.max(8, slot/4.6));
   pts.forEach(function(p,i){
     var c=ns("circle"); c.setAttribute("cx",p[0]); c.setAttribute("cy",p[1]); c.setAttribute("r",3.6);
     c.setAttribute("fill","#fff"); c.setAttribute("stroke",o.lineColor); c.setAttribute("stroke-width","2.1");
     lg.appendChild(c);
-    // só rotula o primeiro e o último para não poluir o painel
-    if(i===0 || i===pts.length-1){
-      txt(lg, p[0], p[1]-9, o.lineFmt(o.line[i]),
-        {"text-anchor":"middle","font-size":"10.5","font-weight":"700",fill:o.lineColor,
-         stroke:"#fff","stroke-width":"3","paint-order":"stroke"});
-    }
+    txt(lg, p[0], p[1]-8, o.lineFmt(o.line[i]),
+      {"text-anchor":"middle","font-size":String(lfs),"font-weight":"700",fill:o.lineColor,
+       stroke:"#fff","stroke-width":"3","paint-order":"stroke"});
   });
   svg.appendChild(lg);
 
@@ -1635,6 +1654,11 @@ var SVGNS = "http://www.w3.org/2000/svg";
 var PAN_MODO = "unidade"; // "unidade" (por empresa) | "grupo"
 
 function fmtIdade(a){ return isFinite(a) ? (E.fmtDec(a,1)+" anos") : "–"; }
+// texto claro ou escuro conforme a luminância do fundo (o dourado precisa de texto escuro)
+function textoSobre(hex){
+  var r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return (0.2126*r + 0.7152*g + 0.0722*b)/255 > 0.5 ? "#1A1A1A" : "#FFFFFF";
+}
 function legendaIdade(){
   return "<span><b style='color:#2E7D46'>&#9679;</b> até 3,5 anos</span>"+
          "<span><b style='color:#C9A227'>&#9679;</b> 3,5 a 5,5</span>"+
@@ -1733,9 +1757,10 @@ function renderPanorama(years, unitAgg, grupoAgg, recs){
     var custoU = E.rowTotal(unitAgg, u, years, "custo");
     C.miniCombo(svgs[k], {
       W: Math.max(200, Math.round(b.width)), H: Math.max(150, Math.round(b.height)),
-      unit: u, color: COLORS[u], lineColor: RT_COLOR,
+      unit: u, color: COLORS[u], lineColor: RT_COLOR, textOnBar: textoSobre(COLORS[u]),
       headRight: E.fmtMoneyMi(custoU),
       labels: lbls,
+      barFmt: function(v){ return E.fmtDec(v,1); },
       bars: years.map(function(y){ return unitAgg[u][y].custo/1e6; }),
       line: years.map(function(y){ var c=unitAgg[u][y]; return c.tonelada>0 ? c.custo/c.tonelada : 0; }),
       notes: years.map(function(y){
