@@ -121,15 +121,23 @@ nav.toc a.on b{color:var(--gold)}
 .slide-cover p.sub{margin:0;color:#C6CEE0;font-size:14.5px;max-width:760px;line-height:1.5}
 .slide-cover .filtro-periodo{margin:0;align-self:flex-start}
 .capa-rodape{position:relative;z-index:1;margin-top:auto}
-.slide-cover .kpis{margin:0;border-left:0;border-right:0}
-.slide-cover .kpi{background:rgba(255,255,255,.06);backdrop-filter:blur(2px)}
-.slide-cover .kpi-num{font-size:24px}
-.slide-cover .band{margin:0}
+/* .kpis usa var(--line), cinza claro, como cor das divisórias. Na capa isso
+   aparecia por baixo do cartão translúcido e apagava número e rótulo. */
+.slide-cover .kpis{margin:0;background:transparent;border:0;gap:10px;padding:0 42px}
+.slide-cover .kpi{background:rgba(9,17,40,.72);border:1px solid rgba(201,162,39,.32);
+  border-radius:10px;padding:14px 14px 13px}
+.slide-cover .kpi-num{font-size:25px;color:var(--gold)}
+.slide-cover .kpi-lab{color:#D5DDF0;font-size:12px}
+.slide-cover .band{margin:14px 0 0;color:#1A1A1A;font-weight:700;
+  background:linear-gradient(90deg,var(--gold) 0%,#E0B93A 100%)}
 @media(max-height:780px){
   .capa-corpo{padding:20px 34px 0;gap:11px}
   .slide-cover h1{font-size:34px}
   .slide-cover h1 em{font-size:20px;margin-top:5px}
-  .slide-cover .kpi-num{font-size:20px}
+  .slide-cover .kpi-num{font-size:21px}
+  .slide-cover .kpi{padding:10px 12px 9px}
+  .slide-cover .kpis{padding:0 34px;gap:8px}
+  .slide-cover .band{margin-top:10px}
   .capa-fundo{bottom:80px;height:42%}
 }
 
