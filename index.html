@@ -294,6 +294,7 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <p class="s-sub" id="producao-desc-dyn">Só entram as colhedoras que colheram ao menos 1.000 t na safra (frotas 46xxx fora). Mesma grade nas três tabelas — cada safra sob a mesma safra — e a cor acompanha o valor.</p>
 </div>
 <div class="s-right">
+<select class="s-sel js-unidade" aria-label="Empresa analisada"></select>
 <div class="s-chips">
 <div class="s-chip"><div class="v" id="prod-chip-ton">–</div><div class="k" id="prod-chip-ton-k">Tonelada colhida</div></div>
 <div class="s-chip"><div class="v" id="prod-chip-maq">–</div><div class="k" id="prod-chip-maq-k">Colhedoras</div></div>
@@ -321,6 +322,7 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <p class="s-sub">Colunas: tonelada total da safra. Linha: tonelada média por colhedora. Sob cada safra, o número de colhedoras ativas.</p>
 </div>
 <div class="s-right">
+<select class="s-sel js-unidade" aria-label="Empresa analisada"></select>
 <div class="s-chips">
 <div class="s-chip"><div class="v" id="prodg-chip-ton">–</div><div class="k" id="prodg-chip-ton-k">Tonelada colhida</div></div>
 <div class="s-chip"><div class="v" id="prodg-chip-maq">–</div><div class="k" id="prodg-chip-maq-k">Colhedoras</div></div>
@@ -364,6 +366,7 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <p class="s-sub">Cada painel mostra como o custo da colhedora evolui com a idade dentro da unidade. Mesma escala nos quatro, para comparar diretamente.</p>
 </div>
 <div class="s-right">
+<select class="s-sel js-unidade" aria-label="Empresa analisada"></select>
 <div class="s-chips">
 <div class="s-chip"><div class="v" id="idadeu-chip-melhor">&ndash;</div><div class="k">Menor custo por ano de uso</div></div>
 <div class="s-chip"><div class="v" id="idadeu-chip-pior">&ndash;</div><div class="k">Maior custo por ano de uso</div></div>
@@ -384,6 +387,7 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <p class="s-sub">As duas tabelas usam a mesma grade: cada ano de uso fica exatamente sob o mesmo ano de uso na outra. A cor acompanha o valor.</p>
 </div>
 <div class="s-right">
+<select class="s-sel js-unidade" aria-label="Empresa analisada"></select>
 <div class="s-chips">
 <div class="s-chip"><div class="v" id="idadet-chip-amostra">&ndash;</div><div class="k">M&aacute;quinas na amostra</div></div>
 </div>
@@ -407,6 +411,7 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <p class="s-sub">Coluna: quantas colhedoras cortaram cana na safra. Linha: idade m&eacute;dia dessas m&aacute;quinas. Cruzando com a curva de custo das p&aacute;ginas anteriores, mostra quanto cada unidade ainda vai gastar se n&atilde;o renovar.</p>
 </div>
 <div class="s-right">
+<select class="s-sel js-unidade" aria-label="Empresa analisada"></select>
 <div class="s-chips">
 <div class="s-chip"><div class="v" id="idadef-chip-grupo">&ndash;</div><div class="k" id="idadef-chip-grupo-k">Idade m&eacute;dia do grupo</div></div>
 <div class="s-chip"><div class="v" id="idadef-chip-velha">&ndash;</div><div class="k">Frota mais velha</div></div>
@@ -483,11 +488,11 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 </div>
 <div class="s-right">
 <select class="s-sel js-unidade" aria-label="Empresa analisada"></select>
-<div class="s-toggle" id="prod-eixo">
+<div class="s-toggle js-eixo" id="prod-eixo">
 <button type="button" data-eixo="safra" class="on">Por safra</button>
 <button type="button" data-eixo="idade">Por ano de uso</button>
 </div>
-<div class="s-toggle" id="prod-medida">
+<div class="s-toggle js-medida" id="prod-medida">
 <button type="button" data-medida="rs" class="on">R$</button>
 <button type="button" data-medida="rst">R$/t</button>
 </div>
@@ -511,6 +516,7 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <p class="s-sub" id="marca-desc-dyn"></p>
 </div>
 <div class="s-right">
+<select class="s-sel js-unidade" aria-label="Empresa analisada"></select>
 <div class="s-chips">
 <div class="s-chip"><div class="v" id="marca-chip-jd">&ndash;</div><div class="k">Colhedoras John Deere</div></div>
 <div class="s-chip"><div class="v" id="marca-chip-cs">&ndash;</div><div class="k">Colhedoras Case</div></div>
@@ -533,6 +539,14 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 </div>
 <div class="s-right">
 <select class="s-sel js-unidade" aria-label="Empresa analisada"></select>
+<div class="s-toggle js-eixo">
+<button type="button" data-eixo="safra" class="on">Por safra</button>
+<button type="button" data-eixo="idade">Por ano de uso</button>
+</div>
+<div class="s-toggle js-medida">
+<button type="button" data-medida="rs">R$</button>
+<button type="button" data-medida="rst" class="on">R$/t</button>
+</div>
 <div class="s-toggle" id="rank-ordem">
 <button type="button" data-ord="rt" class="on">Pior R$/t</button>
 <button type="button" data-ord="custo">Maior custo</button>
@@ -1741,6 +1755,8 @@ function initIdadeFiltroUI(){
       if(window.replayIdade) window.replayIdade();
       if(window.replayProdutos) window.replayProdutos();
       if(window.replayRankings) window.replayRankings();
+      if(window.replayMarca) window.replayMarca();
+      if(window.replayProducao) window.replayProducao();
     });
   });
 }
@@ -2306,6 +2322,7 @@ function initCompraUI(){
 // ============================================================
 var PROD_TRILHA = [];      // valores já escolhidos, um por nível
 var PROD_MEDIDA = "rs";    // "rs" | "rst"
+// eixo e medida sao compartilhados: escolher numa pagina vale nas outras
 var PROD_EIXO   = "safra"; // "safra" (colunas por ano) | "idade" (por ano de uso da máquina)
 var IDADE_TETO  = 10;      // acima disso as idades entram numa coluna só
 
@@ -2509,20 +2526,32 @@ function renderProdutos(recs, years){
   setHTML("produtos-insight", msg);
 }
 
+function sincronizaToggles(classe, attr, valor){
+  Array.prototype.forEach.call(document.querySelectorAll("."+classe+" button["+attr+"]"), function(b){
+    b.classList.toggle("on", b.getAttribute(attr) === valor);
+  });
+}
+
 function initProdutosUI(){
-  function liga(id, attr, aplica){
-    var box = document.getElementById(id);
-    if(!box) return;
-    box.addEventListener("click", function(e){
-      var b = e.target.closest ? e.target.closest("button["+attr+"]") : null;
-      if(!b) return;
-      aplica(b.getAttribute(attr));
-      Array.prototype.forEach.call(box.querySelectorAll("button"), function(x){ x.classList.toggle("on", x===b); });
-      if(window.replayProdutos) window.replayProdutos();
+  // eixo e medida valem para o relatorio inteiro: qualquer botao da mesma classe
+  // muda o estado e todos os outros acompanham
+  function liga(classe, attr, aplica){
+    Array.prototype.forEach.call(document.querySelectorAll("."+classe), function(box){
+      box.addEventListener("click", function(e){
+        var b = e.target.closest ? e.target.closest("button["+attr+"]") : null;
+        if(!b) return;
+        var v = b.getAttribute(attr);
+        aplica(v);
+        sincronizaToggles(classe, attr, v);
+        if(window.replayProdutos) window.replayProdutos();
+        if(window.replayRankings) window.replayRankings();
+      });
     });
   }
-  liga("prod-medida", "data-medida", function(v){ PROD_MEDIDA = v; });
-  liga("prod-eixo",   "data-eixo",   function(v){ PROD_EIXO   = v; });
+  liga("js-medida", "data-medida", function(v){ PROD_MEDIDA = v; });
+  liga("js-eixo",   "data-eixo",   function(v){ PROD_EIXO   = v; });
+  sincronizaToggles("js-eixo", "data-eixo", PROD_EIXO);
+  sincronizaToggles("js-medida", "data-medida", PROD_MEDIDA);
 }
 
 // ============================================================
@@ -2549,16 +2578,32 @@ function renderRankings(recs, years){
     f.unidades[r.unit] = (f.unidades[r.unit] || 0) + r.custo;
     f.custo += r.custo; f.tonelada += r.tonelada;
     var a = r.ano_de_uso;
-    if(a >= 1){
-      var k = a > IDADE_TETO ? (IDADE_TETO + 1) : a;
-      idades[k] = true;
+    if(a >= 1){ idades[a > IDADE_TETO ? (IDADE_TETO+1) : a] = true; }
+    var k = (PROD_EIXO === "idade")
+      ? (a >= 1 ? (a > IDADE_TETO ? (IDADE_TETO+1) : a) : null)
+      : r.ano;
+    if(k != null){
       if(!f.cel[k]) f.cel[k] = {custo:0, tonelada:0};
       f.cel[k].custo += r.custo; f.cel[k].tonelada += r.tonelada;
     }
   });
 
-  var cols = Object.keys(idades).map(Number).sort(function(a,b){ return a-b; });
-  function rotIdade(c){ return c > IDADE_TETO ? (IDADE_TETO+1)+"º+" : c+"º"; }
+  var porIdade = (PROD_EIXO === "idade");
+  var cols, rotCol;
+  if(porIdade){
+    cols = Object.keys(idades).map(Number).sort(function(a,b){ return a-b; });
+    rotCol = function(c){ return c > IDADE_TETO ? (IDADE_TETO+1)+"º+" : c+"º"; };
+  } else {
+    cols = years.slice();
+    rotCol = function(c){ return String(c); };
+  }
+  var porT = (PROD_MEDIDA !== "rs");
+  function celValor(cel){
+    if(!cel) return NaN;
+    if(porT) return cel.tonelada > 0 ? cel.custo/cel.tonelada : NaN;
+    return cel.custo > 0 ? cel.custo : NaN;
+  }
+  function fmtCel(v){ return porT ? E.fmtDec(v,2) : E.fmtMoneyMil(v); }
 
   var ANO_INI = Math.min.apply(null, E.ALL_YEARS);
   var lista = Object.keys(porFrota).map(function(k){
@@ -2585,25 +2630,24 @@ function renderRankings(recs, years){
   // escala de cor comum a todas as celulas, ignorando os extremos que achatariam o resto
   var todos = [];
   lista.forEach(function(f){ cols.forEach(function(c){
-    var cel = f.cel[c];
-    if(cel && cel.tonelada > 0) todos.push(cel.custo/cel.tonelada);
+    var v = celValor(f.cel[c]);
+    if(isFinite(v) && v > 0) todos.push(v);
   }); });
   todos.sort(function(a,b){ return a-b; });
   var teto = todos.length ? todos[Math.floor(todos.length*0.95)] : 1;
   if(!(teto > 0)) teto = 1;
 
   var head = "<tr><th class='l'>Frota</th><th class='l'>Modelo</th><th class='l'>Unidade</th><th class='n'>1&ordm; corte</th>"+
-    cols.map(function(c){ return "<th class='n'>"+rotIdade(c)+"</th>"; }).join("")+
+    cols.map(function(c){ return "<th class='n'>"+rotCol(c)+"</th>"; }).join("")+
     "<th class='n'>Tonelada</th><th class='n'>Custo</th><th class='n'>R$/t</th></tr>";
 
   var corpo = lista.map(function(f){
     var cells = cols.map(function(c){
-      var cel = f.cel[c];
-      if(!cel || !(cel.tonelada > 0)) return "<td class='n muted'>–</td>";
-      var v = cel.custo/cel.tonelada;
+      var v = celValor(f.cel[c]);
+      if(!isFinite(v) || !(v > 0)) return "<td class='n muted'>–</td>";
       var a = Math.min(1, v/teto);
       return "<td class='n' style=\"background:rgba(192,57,43,"+(0.06+0.42*a).toFixed(3)+")\">"+
-        E.fmtDec(v,2)+"</td>";
+        fmtCel(v)+"</td>";
     }).join("");
     var aqTxt = f.aq ? (f.aq < ANO_INI ? "<span title='anterior ao inicio da base' style='color:#8A92A4'>"+f.aq+"*</span>" : String(f.aq)) : "–";
     return "<tr><td class='l' style=\"box-shadow:inset 4px 0 0 "+(COLORS[f.unit]||E.NAVY)+"\">"+f.frota+"</td>"+
@@ -2620,7 +2664,8 @@ function renderRankings(recs, years){
   var totCel = cols.map(function(c){
     var cu=0, to=0;
     lista.forEach(function(f){ var cel=f.cel[c]; if(cel){ cu+=cel.custo; to+=cel.tonelada; } });
-    return "<td class='n strong'>"+(to>0?E.fmtDec(cu/to,2):"–")+"</td>";
+    var v = porT ? (to>0 ? cu/to : NaN) : cu;
+    return "<td class='n strong'>"+(isFinite(v)&&v>0?fmtCel(v):"–")+"</td>";
   }).join("");
   corpo += "<tr class='tot'><td class='l strong'>TOTAL</td><td></td><td></td><td></td>"+totCel+
     "<td class='n strong'>"+E.fmtInt(totTon)+"</td><td class='n strong'>"+E.fmtMoneyMil(totCusto)+"</td>"+
@@ -2648,9 +2693,10 @@ function renderRankings(recs, years){
   }
 
   setHTML("rank-legend",
-    "<span class='lg'>Uma linha por colhedora &middot; uma coluna por ano de uso &middot; c&eacute;lula = <b>R$/t</b> daquela m&aacute;quina naquela idade</span>"+
-    "<span class='lg'>Vermelho mais forte = R$/t mais alto (escala comum, cortada no percentil 95 para um extremo n&atilde;o achatar o resto)</span>"+
-    "<span class='lg'>&ndash; = a m&aacute;quina n&atilde;o colheu naquela idade dentro do per&iacute;odo</span>"+
+    "<span class='lg'>Uma linha por colhedora &middot; uma coluna por "+(porIdade?"ano de uso":"safra")+
+      " &middot; c&eacute;lula = <b>"+(porT?"R$/t":"R$")+"</b> daquela m&aacute;quina "+(porIdade?"naquela idade":"naquela safra")+"</span>"+
+    "<span class='lg'>Vermelho mais forte = valor mais alto (escala comum, cortada no percentil 95 para um extremo n&atilde;o achatar o resto)</span>"+
+    "<span class='lg'>&ndash; = sem lan&ccedil;amento da m&aacute;quina "+(porIdade?"naquela idade":"naquela safra")+" dentro do per&iacute;odo</span>"+
     "<span class='lg'><b>1&ordm; corte</b> = safra em que a m&aacute;quina entrou cortando cana. "+
       "<b>"+ANO_INI+"*</b> marca as compradas antes do in&iacute;cio da base, cujos primeiros anos de vida n&atilde;o t&ecirc;m registro aqui</span>");
 
