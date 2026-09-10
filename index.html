@@ -120,6 +120,11 @@ nav.toc a.on{color:var(--gold);border-bottom-color:var(--gold)}
 .s-toggle button{font:inherit;font-size:12px;font-weight:700;padding:6px 14px;border:0;cursor:pointer;
   background:transparent;color:#C6CEE0}
 .s-toggle button.on{background:var(--gold);color:var(--navy)}
+.s-sel{font:inherit;font-size:12.5px;font-weight:700;padding:6px 12px;border:1px solid rgba(201,162,39,.5);
+  border-radius:8px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;max-width:230px}
+.s-sel:focus{outline:2px solid var(--gold)}
+.s-sel option{background:#12224A;color:#fff}
+@media(max-height:780px){.s-sel{padding:5px 10px;font-size:11.5px}}
 .s-legend{display:flex;gap:18px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:#C6CEE0}
 .s-legend .lg{display:inline-flex;align-items:center;gap:7px}
 .s-legend .lg svg{display:block;flex:none}
@@ -297,6 +302,7 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <p class="s-sub" id="idade-desc-dyn"></p>
 </div>
 <div class="s-right">
+<select class="s-sel js-unidade" aria-label="Empresa analisada"></select>
 <div class="s-chips">
 <div class="s-chip"><div class="v" id="idade-chip-novo">&ndash;</div><div class="k" id="idade-chip-novo-k">1&ordm; ano de uso</div></div>
 <div class="s-chip"><div class="v" id="idade-chip-pico">&ndash;</div><div class="k" id="idade-chip-pico-k">Pico</div></div>
@@ -382,6 +388,7 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <p class="s-sub">Em cada ano de uso, duas colunas lado a lado: o que custa <b>manter</b> a m&aacute;quina atual e o que custaria <b>renovar</b>. Enquanto a coluna de manter for menor, segurar a m&aacute;quina compensa. No ano em que ela ultrapassa a de renovar, virou preju&iacute;zo.</p>
 </div>
 <div class="s-right">
+<select class="s-sel js-unidade" aria-label="Empresa analisada"></select>
 <div class="s-toggle" id="troca-preco">
 <button type="button" data-preco="2000000">R$ 2,0 mi</button>
 <button type="button" data-preco="2500000" class="on">R$ 2,5 mi</button>
@@ -1537,6 +1544,44 @@ function ajustarTabelas(card){
 // ============================================================
 // Página 3 — custo por ano de uso da máquina
 // ============================================================
+// Escopo da análise nas páginas 3a e 3e: grupo consolidado ou uma empresa.
+// O filtro é compartilhado pelas duas, para a diretoria escolher a empresa uma
+// vez e as duas páginas seguirem juntas.
+var IDADE_UNIDADE = "GRUPO";
+function escopoIdade(idade){
+  return IDADE_UNIDADE === "GRUPO" ? idade.grupo : (idade.byUnit[IDADE_UNIDADE] || {});
+}
+function nomeEscopo(){
+  return IDADE_UNIDADE === "GRUPO" ? "Grupo — todas as unidades" : IDADE_UNIDADE;
+}
+function agesDoEscopo(escopo, maxBuckets){
+  var minN = IDADE_UNIDADE === "GRUPO" ? 3 : 2;
+  return Object.keys(escopo).map(Number)
+    .filter(function(a){ return escopo[a] && escopo[a].n >= minN && a <= maxBuckets; })
+    .sort(function(a,b){ return a-b; });
+}
+function initIdadeFiltroUI(){
+  var sels = document.querySelectorAll("select.js-unidade");
+  Array.prototype.forEach.call(sels, function(sel){
+    if(!sel.options.length){
+      var o = document.createElement("option");
+      o.value = "GRUPO"; o.textContent = "Grupo — todas as unidades";
+      sel.appendChild(o);
+      U.forEach(function(u){
+        var x = document.createElement("option");
+        x.value = u; x.textContent = u;
+        sel.appendChild(x);
+      });
+    }
+    sel.value = IDADE_UNIDADE;
+    sel.addEventListener("change", function(){
+      IDADE_UNIDADE = sel.value;
+      Array.prototype.forEach.call(document.querySelectorAll("select.js-unidade"), function(o){ o.value = IDADE_UNIDADE; });
+      if(window.replayIdade) window.replayIdade();
+    });
+  });
+}
+
 function corCusto(v, base){
   if(!isFinite(v) || !isFinite(base) || base<=0) return "#9AA1AE";
   var m = v/base;
@@ -1545,14 +1590,19 @@ function corCusto(v, base){
 
 function renderIdade(recs, years, unitAgg){
   var idade = S.idadeAggregate(recs);
-  var ages = S.activeAgeBuckets(idade, 3); // só faixas com amostra mínima de 3 máquinas
-  if(!ages.length) ages = [1];
+  // 3b e 3c comparam as unidades entre si: usam sempre a faixa do grupo
+  var agesGrupo = S.activeAgeBuckets(idade, 3);
+  if(!agesGrupo.length) agesGrupo = [1];
+  // 3a e 3e seguem o filtro de empresa
+  var escopo = escopoIdade(idade);
+  var ages = agesDoEscopo(escopo, idade.maxBuckets);
+  if(!ages.length) ages = agesGrupo;
   var lbls = ages.map(function(a){ return a+"º"; });
 
   // ---------- 3a: curva do grupo — custo por máquina x R$/t x amostra ----------
-  var custos = ages.map(function(a){ return idade.grupo[a].avgcusto/1000; });
-  var rts    = ages.map(function(a){ var v=idade.grupo[a].rt; return isFinite(v)?v:0; });
-  var amostra= ages.map(function(a){ return idade.grupo[a].n; });
+  var custos = ages.map(function(a){ return escopo[a] ? escopo[a].avgcusto/1000 : NaN; });
+  var rts    = ages.map(function(a){ var v = escopo[a] && escopo[a].rt; return isFinite(v)?v:0; });
+  var amostra= ages.map(function(a){ return escopo[a] ? escopo[a].n : 0; });
   var base = custos[0];
   var cores = custos.map(function(v){ return corCusto(v, base); });
 
@@ -1566,9 +1616,9 @@ function renderIdade(recs, years, unitAgg){
     C.miniCombo(svg, {
       W: Math.max(700, Math.round(b.width)), H: Math.max(300, Math.round(b.height)),
       escala: 1.75,
-      unit: "Grupo — todas as unidades", color: E.NAVY, lineColor: RT_COLOR,
+      unit: nomeEscopo(), color: E.NAVY, lineColor: RT_COLOR,
       barColors: cores,
-      headRight: "amostra de "+E.fmtInt(E.sum(ages, function(a){ return idade.grupo[a].n; }))+" máquina-safra",
+      headRight: "amostra de "+E.fmtInt(E.sum(amostra, function(x){ return x; }))+" máquina-safra",
       unitL: "R$ mil por máquina/ano", unitR: "R$/t",
       labels: lbls,
       bars: custos, barFmt: function(v){ return E.fmtInt(v); },
@@ -1588,9 +1638,9 @@ function renderIdade(recs, years, unitAgg){
 
   var iPico = 0;
   custos.forEach(function(v,i){ if(v > custos[iPico]) iPico = i; });
-  setText("idade-chip-novo", E.fmtMoneyMil(idade.grupo[ages[0]].avgcusto));
+  setText("idade-chip-novo", E.fmtMoneyMil(custos[0]*1000));
   setText("idade-chip-novo-k", ages[0]+"º ano de uso · por máquina");
-  setText("idade-chip-pico", E.fmtMoneyMil(idade.grupo[ages[iPico]].avgcusto));
+  setText("idade-chip-pico", E.fmtMoneyMil(custos[iPico]*1000));
   setText("idade-chip-pico-k", "Pico, no "+ages[iPico]+"º ano de uso");
   setText("idade-chip-mult", (base>0 ? E.fmtDec(custos[iPico]/base,1)+"x" : "–"));
   setText("idade-chip-mult-k", "Do "+ages[0]+"º ao "+ages[iPico]+"º ano");
@@ -1599,9 +1649,10 @@ function renderIdade(recs, years, unitAgg){
       return r.ano_de_uso>=1 && r.ano_de_uso<=idade.maxBuckets; }), function(r){ return r.frota; })+
     " colhedoras com data de aquisição conhecida no período, agrupadas pela idade que tinham em cada safra.");
 
-  var prodIni = idade.grupo[ages[0]].avgprod, prodPico = idade.grupo[ages[iPico]].avgprod;
-  var msg = "Uma colhedora custa <strong>"+E.fmtMoneyMil(idade.grupo[ages[0]].avgcusto)+"</strong> de oficina no "+
-    ages[0]+"º ano de uso e chega a <strong>"+E.fmtMoneyMil(idade.grupo[ages[iPico]].avgcusto)+"</strong> no "+
+  var prodIni = escopo[ages[0]] && escopo[ages[0]].avgprod, prodPico = escopo[ages[iPico]] && escopo[ages[iPico]].avgprod;
+  var msg = (IDADE_UNIDADE==="GRUPO" ? "" : "<strong>"+esc(IDADE_UNIDADE)+"</strong> — ")+
+    "uma colhedora custa <strong>"+E.fmtMoneyMil(custos[0]*1000)+"</strong> de oficina no "+
+    ages[0]+"º ano de uso e chega a <strong>"+E.fmtMoneyMil(custos[iPico]*1000)+"</strong> no "+
     ages[iPico]+"º — <strong>"+E.fmtDec(custos[iPico]/base,1)+" vezes mais</strong>.";
   if(isFinite(prodIni) && isFinite(prodPico) && prodIni>0){
     msg += " No mesmo intervalo a produção cai de <strong>"+E.fmtInt(prodIni)+" t</strong> para <strong>"+
@@ -1620,23 +1671,23 @@ function renderIdade(recs, years, unitAgg){
   setHTML("idade-insight", msg);
 
   // ---------- 3b: a mesma curva, por unidade ----------
-  renderIdadeUnidade(idade, ages, lbls);
+  renderIdadeUnidade(idade, agesGrupo, agesGrupo.map(function(a){ return a+"º"; }));
 
   // ---------- 3c: as duas tabelas alinhadas ----------
   function fillTable(id, valueFn, fmt, grupoLabel){
     var table = document.getElementById(id);
     if(!table) return;
     var thead = table.querySelector("thead"), tbody = table.querySelector("tbody");
-    thead.innerHTML = "<tr><th class='l'>Unidade</th>"+ages.map(function(a){ return "<th class='n'>"+a+"º ano</th>"; }).join("")+"</tr>";
+    thead.innerHTML = "<tr><th class='l'>Unidade</th>"+agesGrupo.map(function(a){ return "<th class='n'>"+a+"º ano</th>"; }).join("")+"</tr>";
     var vals = [];
-    U.forEach(function(u){ ages.forEach(function(a){
+    U.forEach(function(u){ agesGrupo.forEach(function(a){
       var c = idade.byUnit[u] && idade.byUnit[u][a];
       var v = c ? valueFn(c) : NaN;
       if(isFinite(v) && v>0) vals.push(v);
     }); });
     var maxV = vals.length ? Math.max.apply(null, vals) : 0;
     var rows = U.map(function(u){
-      var cells = ages.map(function(a){
+      var cells = agesGrupo.map(function(a){
         var c = idade.byUnit[u] && idade.byUnit[u][a];
         var v = c ? valueFn(c) : NaN;
         var st = "";
@@ -1648,16 +1699,16 @@ function renderIdade(recs, years, unitAgg){
       }).join("");
       return "<tr><td class='l' style='box-shadow:inset 4px 0 0 "+COLORS[u]+"'>"+esc(u)+"</td>"+cells+"</tr>";
     }).join("");
-    var gcells = ages.map(function(a){ var v=valueFn(idade.grupo[a]); return "<td class='n strong'>"+(isFinite(v)?fmt(v):"–")+"</td>"; }).join("");
+    var gcells = agesGrupo.map(function(a){ var v=valueFn(idade.grupo[a]); return "<td class='n strong'>"+(isFinite(v)?fmt(v):"–")+"</td>"; }).join("");
     rows += "<tr class='tot'><td class='l strong'>"+grupoLabel+"</td>"+gcells+"</tr>";
     rows += "<tr class='amostra'><td class='l'>Máquinas na amostra</td>"+
-      ages.map(function(a){ return "<td class='n muted'>"+idade.grupo[a].n+" máq.</td>"; }).join("")+"</tr>";
+      agesGrupo.map(function(a){ return "<td class='n muted'>"+idade.grupo[a].n+" máq.</td>"; }).join("")+"</tr>";
     tbody.innerHTML = rows;
   }
   fillTable("table-idade-rt", function(c){ return c.rt; }, function(v){ return E.fmtDec(v,2); }, "MÉDIA DO GRUPO");
   fillTable("table-idade-custo", function(c){ return c.avgcusto; }, function(v){ return E.fmtMoneyMil(v); }, "MÉDIA DO GRUPO");
   ajustarTabelas(document.querySelector("#idade-tabelas .s-tables"));
-  setText("idadet-chip-amostra", E.fmtInt(E.sum(ages, function(a){ return idade.grupo[a].n; })));
+  setText("idadet-chip-amostra", E.fmtInt(E.sum(agesGrupo, function(a){ return idade.grupo[a].n; })));
   setHTML("idade-tabelas-insight",
     "Leia da esquerda para a direita: o custo por máquina sobe e o R$/t acompanha. "+
     "A linha de cada unidade mostra em que ponto da curva ela opera — e quanto ainda vai subir se a frota não for renovada.");
@@ -1666,7 +1717,7 @@ function renderIdade(recs, years, unitAgg){
   renderIdadeFrota(recs, years, unitAgg);
 
   // ---------- 3e: ponto de troca da colhedora ----------
-  renderPontoTroca(idade, ages);
+  renderPontoTroca(escopo, ages);
 }
 
 // 3b — um painel por unidade: coluna = custo médio por máquina, linha = R$/t, pílula = amostra
@@ -1800,24 +1851,24 @@ function renderIdadeFrota(recs, years, unitAgg){
 // 3e — ponto de troca: até quando manter a colhedora sai mais barato que comprar nova
 var PRECO_NOVA = 2500000;
 
-function renderPontoTroca(idade, ages){
+function renderPontoTroca(escopo, ages){
   var card = document.getElementById("idade-troca-card");
   if(!card) return;
 
   // custo por tonelada de MANTER a máquina em cada ano de uso (só oficina do ano)
   var manter = ages.map(function(a){
-    var c = idade.grupo[a];
+    var c = escopo[a];
     return (c && c.avgprod>0 && isFinite(c.avgcusto)) ? c.avgcusto/c.avgprod : NaN;
   });
-  var prod = ages.map(function(a){ var c=idade.grupo[a]; return isFinite(c.avgprod)?c.avgprod:0; });
+  var prod = ages.map(function(a){ var c=escopo[a]; return (c && isFinite(c.avgprod))?c.avgprod:0; });
 
   // máquina NOVA mantida n anos: o investimento vai se diluindo na tonelada que
   // se acumula, e a oficina acumulada vai somando por cima.
   var acumC = 0, acumT = 0;
   var tonAcum = [], capitalT = [], oficinaT = [], totalT = [];
   ages.forEach(function(a, i){
-    var c = idade.grupo[a];
-    if(isFinite(c.avgcusto)) acumC += c.avgcusto;
+    var c = escopo[a];
+    if(c && isFinite(c.avgcusto)) acumC += c.avgcusto;
     acumT += prod[i];
     tonAcum.push(acumT);
     capitalT.push(acumT>0 ? PRECO_NOVA/acumT : NaN);
@@ -1873,7 +1924,7 @@ function renderPontoTroca(idade, ages){
   C.miniCombo(svg, {
     W: Math.max(700, Math.round(b.width)), H: H,
     escala: Math.max(1.1, Math.min(1.7, H/290)),
-    unit: "Custo de manter x custo de trocar", color: E.NAVY, lineColor: RT_COLOR,
+    unit: "Manter x renovar — "+nomeEscopo(), color: E.NAVY, lineColor: RT_COLOR,
     barColors: cores,
     headRight: "colhedora nova a "+E.fmtMoneyMi(PRECO_NOVA),
     unitL: "R$/t", unitR: "mil t no ano",
@@ -1886,7 +1937,7 @@ function renderPontoTroca(idade, ages){
     color2: "#12224A",
     line: prod.map(function(v){ return v/1000; }),
     lineFmt: function(v){ return E.fmtInt(v); },
-    notes: ages.map(function(a){ return {text: String(idade.grupo[a].n), color: E.NAVY}; }),
+    notes: ages.map(function(a){ return {text: String(escopo[a] ? escopo[a].n : 0), color: E.NAVY}; }),
     maxL: C.niceAxis(maxBar*1.35, 2) || 1,
     maxR: C.niceAxis(Math.max.apply(null, prod)/1000*1.12, 2) || 1,
     axisFmtL: function(v){ return E.fmtDec(v, v%1===0?0:1); },
@@ -1912,7 +1963,8 @@ function renderPontoTroca(idade, ages){
     var perdaAno = excedente * prod[iTroca];
     setText("troca-chip-perda", E.fmtMoneyMil(perdaAno));
     setText("troca-chip-perda-k", "Por máquina/ano a partir do "+ages[iTroca]+"º");
-    msg = "Acompanhe a tabela: os <strong>"+E.fmtMoneyMi(PRECO_NOVA)+"</strong> da colhedora nova vão se diluindo conforme a tonelada "+
+    msg = (IDADE_UNIDADE==="GRUPO" ? "" : "<strong>"+esc(IDADE_UNIDADE)+"</strong> — ")+
+      "acompanhe a tabela: os <strong>"+E.fmtMoneyMi(PRECO_NOVA)+"</strong> da colhedora nova vão se diluindo conforme a tonelada "+
       "se acumula — de <strong>R$ "+E.fmtDec(capitalT[0],2)+"/t</strong> no 1º ano para <strong>R$ "+
       E.fmtDec(capitalT[iCiclo],2)+"/t</strong> no "+ages[iCiclo]+"º. Só que a oficina acumulada sobe no sentido contrário, "+
       "e a soma das duas encontra o fundo no <strong>"+ages[iCiclo]+"º ano, a R$ "+E.fmtDec(ref,2)+"/t</strong>: é o melhor ciclo possível. "+
@@ -1947,6 +1999,7 @@ window.ReportSections.renderIdadeUnidade = renderIdadeUnidade;
 window.ReportSections.renderIdadeFrota = renderIdadeFrota;
 window.ReportSections.renderPontoTroca = renderPontoTroca;
 window.ReportSections.initTrocaUI = initTrocaUI;
+window.ReportSections.initIdadeFiltroUI = initIdadeFiltroUI;
 window.ReportSections.ajustarTabelas = ajustarTabelas;
 window.ReportEngine.fmtInt2 = function(v){ return isFinite(v)?E.fmtInt(v):"–"; };
 })();
@@ -2377,6 +2430,7 @@ function initFilter(){
   ate.addEventListener("change", onChange);
   initPanoramaUI();
   S.initTrocaUI();
+  S.initIdadeFiltroUI();
   var exc = E.EXCLUIDOS;
   setText("metodo-minton", E.fmtInt(exc.minTon));
   setText("metodo-excluidos", E.fmtInt(exc.registros));
