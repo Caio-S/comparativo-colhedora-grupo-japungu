@@ -14,6 +14,7 @@ nunca commitadas). Para rodar local, crie um .env (veja .env.example).
 import json
 import os
 import re
+import sys
 import threading
 import time
 from datetime import date, datetime
@@ -23,6 +24,10 @@ import pandas as pd
 import mysql.connector
 from dotenv import load_dotenv
 from flask import Flask, Response
+
+# Sem isso, print() fica no buffer do processo e so aparece nos logs do Render quando
+# o worker e reiniciado -- inutil para acompanhar uma busca em andamento.
+sys.stdout.reconfigure(line_buffering=True)
 
 load_dotenv()
 
