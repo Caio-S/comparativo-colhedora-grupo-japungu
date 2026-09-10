@@ -12,11 +12,13 @@ Credenciais do banco vem de variaveis de ambiente (configuradas no proprio Rende
 nunca commitadas). Para rodar local, crie um .env (veja .env.example).
 """
 import json
+import multiprocessing
 import os
 import re
 import sys
 import threading
 import time
+from concurrent.futures import ProcessPoolExecutor
 from datetime import date, datetime
 
 import numpy as np
@@ -250,15 +252,26 @@ def build_records(consumo_custo, consumo_marca, pesagem, abast_agg, fro):
     return records
 
 
+def compute_records():
+    """Roda inteiramente num processo filho (ver _executor abaixo) -- assim a busca
+    pesada no banco nunca disputa o GIL com a thread que atende o Gunicorn, que e o
+    que fazia o Render achar que o servico tinha travado e reiniciar o container no
+    meio da primeira carga."""
+    consumo_custo, consumo_marca, pesagem, abast_agg, fro = fetch_data()
+    return build_records(consumo_custo, consumo_marca, pesagem, abast_agg, fro)
+
+
+_executor = ProcessPoolExecutor(max_workers=1)
+
+
 def refresh_once():
     with _lock:
         if _cache["refreshing"]:
             return
         _cache["refreshing"] = True
     try:
-        consumo_custo, consumo_marca, pesagem, abast_agg, fro = fetch_data()
+        records = _executor.submit(compute_records).result()
         print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Consultas ao banco concluidas, processando...")
-        records = build_records(consumo_custo, consumo_marca, pesagem, abast_agg, fro)
         with open(HTML_TEMPLATE_PATH, "r", encoding="utf-8") as f:
             html = f.read()
         new_block = DATA_START + json.dumps(records, ensure_ascii=False, separators=(",", ":")) + DATA_END
@@ -285,7 +298,11 @@ def refresh_loop():
         time.sleep(REFRESH_SECONDS)
 
 
-threading.Thread(target=refresh_loop, daemon=True).start()
+if multiprocessing.current_process().name == "MainProcess":
+    # Evita que um processo filho do ProcessPoolExecutor (que em algumas plataformas
+    # reimporta este modulo do zero) tente iniciar sua propria thread de atualizacao
+    # e seu proprio pool de processos, numa cascata.
+    threading.Thread(target=refresh_loop, daemon=True).start()
 
 
 def _no_cache(resp):
