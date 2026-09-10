@@ -580,8 +580,6 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 O custo considera apenas quatro ordens de produção — <b>PEÇAS</b>, <b>SERVIÇOS TERCEIROS</b>, <b>MATERIAL DE USO E CONSUMO</b> e <b>LUBRIFICANTES</b> — nos tipos de documento RQE, FRO, CA, REQ, RQI e DEV. Ficam de fora: lançamentos sem ordem de produção, ordens de CAPEX (reformas de motor e caixa picador lançadas por máquina), ferramentas, EPI/EPC, pneus, IPVA/seguros, locação e a cauda de ordens administrativas — além do tipo de documento RQC.
 Esse recorte responde por <b>R$ 217,3 milhões em 558.390 lançamentos</b>, contra R$ 224,8 milhões se todas as ordens e os sete tipos fossem somados: uma diferença de <b>3,3%</b>. O critério é o mesmo em <u>todas</u> as páginas, então qualquer número do relatório fecha com o detalhamento por produto.
 Também não inclui abastecimento/combustível, mão de obra própria nem serviços de terceiros fora de requisição de material.<br><br>
-<b>Idade da m&aacute;quina:</b> o 1&ordm; ano de uso &eacute; a <b>primeira safra em que a colhedora cortou cana</b> nesta base, e n&atilde;o a data de aquisi&ccedil;&atilde;o do cadastro de frota. A data do cadastro registra a compra, n&atilde;o a entrada em opera&ccedil;&atilde;o: h&aacute; m&aacute;quina comprada no fim do corte e liberada s&oacute; na safra seguinte, e h&aacute; m&aacute;quina cujos primeiros anos s&atilde;o anteriores ao in&iacute;cio da base. Nos dois casos o ano do cadastro descreve um per&iacute;odo que este relat&oacute;rio n&atilde;o enxerga.
-Com isso toda colhedora tem 1&ordm; ano e nenhuma linha come&ccedil;a no meio da curva. Em contrapartida, m&aacute;quina comprada antes de 2020 entra no 1&ordm; ano j&aacute; com idade real maior, o que suaviza a curva de custo — <span id="metodo-idade">algumas</span> colhedoras est&atilde;o nessa condi&ccedil;&atilde;o.<br><br>
 <b>Colhedora ativa na safra:</b> a máquina só entra nos cálculos do ano em que colheu pelo menos <b><span id="metodo-minton">1.000</span> toneladas</b>. Abaixo disso a pesagem não sustenta nenhum indicador por tonelada — R$/t de máquina quase parada chega a milhares de reais e contamina médias e rankings. As frotas de código <b>46xxx</b> ficam fora em qualquer safra, por apontamento não confiável (uma delas registra 66 mil t sem nenhum custo; outra, R$ 1,6 milhão sobre 327 t).
 O critério é por <u>máquina-safra</u>, não por máquina: uma colhedora com um ano de apontamento ruim sai apenas daquele ano e permanece nos demais — a frota 62509, por exemplo, sai de 2026 (12 t) e continua em 2020–2025, quando colheu de 83 a 111 mil t por safra.
 A regra vale para <u>todos</u> os critérios: contagem de frota, custo, horas rodadas, combustível, R$/t, R$/hora, custo por máquina, idade média e rankings. Ao todo <span id="metodo-excluidos">–</span> pares máquina-safra ficam de fora, representando <span id="metodo-excluidos-custo">–</span> do custo bruto do período completo.<br><br>
@@ -635,31 +633,38 @@ function entraNaConta(r){
 }
 var RECORDS = MASTER.filter(entraNaConta);
 
-// A IDADE CONTA DA PRIMEIRA SAFRA COM CANA, NÃO DA DATA DE AQUISIÇÃO.
-// A data do cadastro de frota registra a compra, não a entrada em operação: há
-// máquina comprada no fim do corte, liberada só na safra seguinte, e há máquina
-// cujos primeiros anos são anteriores ao início da base. Nos dois casos o
-// "ano de uso" do cadastro descreve um ano que este relatório não enxerga.
-// Regra: a 1ª safra em que a colhedora cortou pelo menos MIN_TON é o 1º ano de
-// uso dela; as seguintes contam a partir daí. Assim toda máquina tem 1º ano e
-// nenhuma linha começa no meio da curva.
-// Consequência assumida: colhedora comprada antes da base entra no 1º ano já
-// com idade real maior, o que suaviza a curva — a alternativa era metade da
-// frota sem 1º ano.
-(function idadePelaPrimeiraCana(){
-  var primeira = {};
+// A COMPRA SÓ CONTA QUANDO ENTROU CANA.
+// O ano_de_uso vem da data de aquisição do cadastro de frota. Quando a máquina é
+// comprada mas praticamente não colhe na primeira safra (entrega no fim do corte,
+// liberação atrasada), esse ano vira um "1º ano" que não existiu na prática e a
+// curva de custo da máquina começa no 2º ano. Nesses casos a primeira safra com
+// cana de verdade passa a ser o 1º ano.
+// Só vale quando o ano de aquisição está DENTRO da janela de dados: máquina
+// comprada antes do início da base é legitimamente mais velha que a janela, e
+// renumerá-la faria uma colhedora de 7 anos parecer nova.
+(function corrigeIdadePelaCana(){
+  var ANO_INI = Math.min.apply(null, MASTER.map(function(r){ return r.ano; }));
+  var validosPorFrota = {}, ajustadas = 0;
   RECORDS.forEach(function(r){
-    if(primeira[r.frota] == null || r.ano < primeira[r.frota]) primeira[r.frota] = r.ano;
+    var f = validosPorFrota[r.frota];
+    if(!f) f = validosPorFrota[r.frota] = {anos:{}, min:r};
+    f.anos[r.ano] = true;
+    if(r.ano < f.min.ano) f.min = r;
   });
-  var mexidas = {};
-  MASTER.forEach(function(r){
-    var p = primeira[r.frota];
-    if(p == null) return;
-    var nova = r.ano - p + 1;
-    if(r.ano_de_uso !== nova) mexidas[r.frota] = true;
-    r.ano_de_uso = nova;   // <= 0 nas safras antes do 1º corte; os filtros já as ignoram
+  Object.keys(validosPorFrota).forEach(function(k){
+    var f = validosPorFrota[k];
+    var idade1 = f.min.ano_de_uso;
+    if(!(idade1 > 1)) return;                       // já começa no 1º ano
+    var anoAq = f.min.ano - idade1 + 1;
+    if(anoAq < ANO_INI) return;                     // 1º ano fora da base: idade real é essa mesmo
+    if(f.anos[anoAq]) return;                       // colheu no ano da compra: nada a corrigir
+    var desloca = idade1 - 1;
+    MASTER.forEach(function(r){
+      if(String(r.frota) === k && r.ano_de_uso != null) r.ano_de_uso -= desloca;
+    });
+    ajustadas++;
   });
-  IDADE_AJUSTADA = Object.keys(mexidas).length;
+  IDADE_AJUSTADA = ajustadas;
 })();
 var EXCLUIDOS = {
   registros: MASTER.length - RECORDS.length,
@@ -2640,7 +2645,7 @@ function renderRankings(recs, years){
   var teto = todos.length ? todos[Math.floor(todos.length*0.95)] : 1;
   if(!(teto > 0)) teto = 1;
 
-  var head = "<tr><th class='l'>Frota</th><th class='l'>Modelo</th><th class='l'>Unidade</th><th class='n'>1&ordf; safra</th>"+
+  var head = "<tr><th class='l'>Frota</th><th class='l'>Modelo</th><th class='l'>Unidade</th><th class='n'>1&ordm; corte</th>"+
     cols.map(function(c){ return "<th class='n'>"+rotCol(c)+"</th>"; }).join("")+
     "<th class='n'>Tonelada</th><th class='n'>Custo</th><th class='n'>R$/t</th></tr>";
 
@@ -2652,7 +2657,7 @@ function renderRankings(recs, years){
       return "<td class='n' style=\"background:rgba(192,57,43,"+(0.06+0.42*a).toFixed(3)+")\">"+
         fmtCel(v)+"</td>";
     }).join("");
-    var aqTxt = f.aq ? String(f.aq) : "–";
+    var aqTxt = f.aq ? (f.aq < ANO_INI ? "<span title='anterior ao inicio da base' style='color:#8A92A4'>"+f.aq+"*</span>" : String(f.aq)) : "–";
     return "<tr><td class='l' style=\"box-shadow:inset 4px 0 0 "+(COLORS[f.unit]||E.NAVY)+"\">"+f.frota+"</td>"+
       "<td class='l'>"+esc((f.modelo||"").replace("JOHN DEERE ","JD ").replace("COLHEDORA ",""))+"</td>"+
       "<td class='l'>"+esc(f.unit||"")+"</td>"+
@@ -2700,7 +2705,8 @@ function renderRankings(recs, years){
       " &middot; c&eacute;lula = <b>"+(porT?"R$/t":"R$")+"</b> daquela m&aacute;quina "+(porIdade?"naquela idade":"naquela safra")+"</span>"+
     "<span class='lg'>Vermelho mais forte = valor mais alto (escala comum, cortada no percentil 95 para um extremo n&atilde;o achatar o resto)</span>"+
     "<span class='lg'>&ndash; = sem lan&ccedil;amento da m&aacute;quina "+(porIdade?"naquela idade":"naquela safra")+" dentro do per&iacute;odo</span>"+
-    "<span class='lg'><b>1&ordf; safra</b> = primeira safra em que a m&aacute;quina cortou cana, e que conta como o 1&ordm; ano de uso dela</span>");
+    "<span class='lg'><b>1&ordm; corte</b> = safra em que a m&aacute;quina entrou cortando cana. "+
+      "<b>"+ANO_INI+"*</b> marca as compradas antes do in&iacute;cio da base, cujos primeiros anos de vida n&atilde;o t&ecirc;m registro aqui</span>");
 
   var msg = (IDADE_UNIDADE==="GRUPO" ? "" : "<strong>"+esc(IDADE_UNIDADE)+"</strong> — ");
   if(comRt.length >= 3){
@@ -3178,7 +3184,6 @@ function initFilter(){
   S.initRankUI();
   var exc = E.EXCLUIDOS;
   setText("metodo-minton", E.fmtInt(exc.minTon));
-  setText("metodo-idade", E.fmtInt(exc.idadeAjustada));
   setText("metodo-excluidos", E.fmtInt(exc.registros));
   setText("metodo-excluidos-custo", E.fmtDec(exc.custo/exc.custoBruto*100, 1)+"% ("+E.fmtMoneyMi(exc.custo)+")");
   renderAll(parseInt(de.value), parseInt(ate.value));
