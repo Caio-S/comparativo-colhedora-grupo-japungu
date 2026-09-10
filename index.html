@@ -140,6 +140,15 @@ table.grid-tbl td{padding:var(--tp) 6px}
 table.grid-tbl th:first-child,table.grid-tbl td:first-child{width:var(--c1);text-align:left}
 table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{width:var(--cN)}
 
+/* ponto de troca: gráfico em cima, tabela da diluição embaixo */
+.s-card.s-troca{display:flex;flex-direction:column;gap:5px;padding:8px 12px 6px;--tf:12px;--tp:2.5px;--c1:250px}
+.s-troca > svg{flex:1 1 auto;min-height:0;width:100%;height:100%;display:block;margin:0}
+.s-troca > .troca-tab{flex:0 0 auto}
+.s-troca table.grid-tbl td.destaque{background:rgba(46,125,70,.24)!important;font-weight:700;color:#1B5E2F}
+.s-troca table.grid-tbl td.acima{background:rgba(192,57,43,.18)!important;font-weight:700;color:#8E2A20}
+.s-troca table.grid-tbl tr.linha-chave td{border-top:2px solid var(--navy);border-bottom:2px solid var(--navy)}
+.s-troca table.grid-tbl td:first-child{color:var(--mut);font-size:calc(var(--tf) - 0.5px)}
+
 .s-card.s-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:1fr;gap:9px}
 .s-card.s-grid.two{grid-template-columns:repeat(2,1fr);grid-template-rows:1fr 1fr}
 .s-card.s-grid > svg{width:100%;height:100%;display:block;margin:0;min-width:0;min-height:0}
@@ -167,6 +176,8 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
   .s-toggle button{padding:5px 11px;font-size:11.5px}
   .s-insight{padding:8px 14px;font-size:12.5px}
   .s-legend{font-size:11px;gap:12px}
+  /* tela baixa: encolhe a tabela da diluição para sobrar altura ao gráfico */
+  .s-card.s-troca{--tf:10.5px;--tp:1px;--c1:210px;gap:3px;padding:6px 10px 4px}
 }
 
 @keyframes rcRise{from{transform:scaleY(0)}to{transform:scaleY(1)}}
@@ -1093,7 +1104,8 @@ function miniCombo(svg, o){
     rl.setAttribute("stroke-width",String(2.2*k)); rl.setAttribute("stroke-dasharray",(7*k)+","+(5*k));
     svg.appendChild(rl);
     if(o.ref.label){
-      var rt = txt(svg, padL+8*k, ry-7*k, o.ref.label,
+      // abaixo da linha: acima costuma colidir com os rótulos da série de linha
+      txt(svg, padL+8*k, ry+16*k, o.ref.label,
         {"font-size":String(11*k),"font-weight":"700",fill:o.ref.color,
          stroke:"#fff","stroke-width":String(3.4*k),"paint-order":"stroke"});
     }
@@ -1777,25 +1789,30 @@ function renderPontoTroca(idade, ages){
   var card = document.getElementById("idade-troca-card");
   if(!card) return;
 
-  // custo por tonelada de MANTER a máquina em cada ano de uso (só oficina)
+  // custo por tonelada de MANTER a máquina em cada ano de uso (só oficina do ano)
   var manter = ages.map(function(a){
     var c = idade.grupo[a];
     return (c && c.avgprod>0 && isFinite(c.avgcusto)) ? c.avgcusto/c.avgprod : NaN;
   });
   var prod = ages.map(function(a){ var c=idade.grupo[a]; return isFinite(c.avgprod)?c.avgprod:0; });
 
-  // custo por tonelada de uma máquina NOVA mantida n anos: (preço + oficina acumulada) / tonelada acumulada
-  var acumC = PRECO_NOVA, acumT = 0, ciclo = [];
+  // máquina NOVA mantida n anos: o investimento vai se diluindo na tonelada que
+  // se acumula, e a oficina acumulada vai somando por cima.
+  var acumC = 0, acumT = 0;
+  var tonAcum = [], capitalT = [], oficinaT = [], totalT = [];
   ages.forEach(function(a, i){
     var c = idade.grupo[a];
     if(isFinite(c.avgcusto)) acumC += c.avgcusto;
     acumT += prod[i];
-    ciclo.push(acumT>0 ? acumC/acumT : NaN);
+    tonAcum.push(acumT);
+    capitalT.push(acumT>0 ? PRECO_NOVA/acumT : NaN);
+    oficinaT.push(acumT>0 ? acumC/acumT : NaN);
+    totalT.push(acumT>0 ? (PRECO_NOVA+acumC)/acumT : NaN);
   });
-  // melhor ciclo = onde esse custo total por tonelada é mínimo
+  // melhor ciclo = onde o custo total por tonelada é mínimo
   var iCiclo = 0;
-  ciclo.forEach(function(v,i){ if(isFinite(v) && (!isFinite(ciclo[iCiclo]) || v < ciclo[iCiclo])) iCiclo = i; });
-  var ref = ciclo[iCiclo];
+  totalT.forEach(function(v,i){ if(isFinite(v) && (!isFinite(totalT[iCiclo]) || v < totalT[iCiclo])) iCiclo = i; });
+  var ref = totalT[iCiclo];
 
   // ponto de troca = primeiro ano em que manter custa mais que a referência da nova
   var iTroca = -1;
@@ -1806,15 +1823,41 @@ function renderPontoTroca(idade, ages){
     return v > ref ? "#C0392B" : (v > ref*0.75 ? "#C9A227" : "#2E7D46");
   });
 
-  card.className = "s-card";
+  card.className = "s-card s-troca";
   card.innerHTML = "";
   var svg = document.createElementNS(SVGNS, "svg");
   card.appendChild(svg);
+  var wrap = document.createElement("div");
+  wrap.className = "troca-tab";
+  card.appendChild(wrap);
+
+  // ---- tabela da diluição: como o investimento vira R$/t conforme a tonelada soma ----
+  function linha(rot, vals, fmt, cls, marca){
+    return "<tr"+(cls?" class='"+cls+"'":"")+"><td class='l'>"+rot+"</td>"+
+      vals.map(function(v,i){
+        var c = marca ? marca(v,i) : "";
+        return "<td class='n"+(c?" "+c:"")+"'>"+(isFinite(v)?fmt(v):"–")+"</td>";
+      }).join("")+"</tr>";
+  }
+  wrap.innerHTML = "<table class='tbl grid-tbl'><thead><tr><th class='l'>Máquina nova mantida até o…</th>"+
+    ages.map(function(a){ return "<th class='n'>"+a+"º ano</th>"; }).join("")+"</tr></thead><tbody>"+
+    linha("Tonelada colhida no ano", prod, E.fmtInt) +
+    linha("Tonelada acumulada", tonAcum, E.fmtInt) +
+    linha("Investimento de "+E.fmtMoneyMi(PRECO_NOVA)+" diluído (R$/t)", capitalT, function(v){ return E.fmtDec(v,2); }) +
+    linha("Oficina acumulada (R$/t)", oficinaT, function(v){ return E.fmtDec(v,2); }) +
+    linha("<b>= Custo total da máquina nova (R$/t)</b>", totalT, function(v){ return E.fmtDec(v,2); }, "linha-chave",
+      function(v,i){ return i===iCiclo ? "destaque" : ""; }) +
+    linha("Custo de manter a máquina atual (R$/t)", manter, function(v){ return E.fmtDec(v,2); }, null,
+      function(v){ return (isFinite(v) && isFinite(ref) && v>ref) ? "acima" : ""; }) +
+    "</tbody></table>";
+
+  // ---- gráfico ----
   var b = svg.getBoundingClientRect();
-  var maxBar = Math.max.apply(null, manter.filter(isFinite).concat([ref]));
+  var H = Math.max(220, Math.round(b.height));
+  var maxBar = Math.max.apply(null, manter.filter(function(v){ return isFinite(v); }).concat([ref]));
   C.miniCombo(svg, {
-    W: Math.max(700, Math.round(b.width)), H: Math.max(300, Math.round(b.height)),
-    escala: 1.75,
+    W: Math.max(700, Math.round(b.width)), H: H,
+    escala: Math.max(1.1, Math.min(1.7, H/290)),
     unit: "Custo de manter x custo de trocar", color: E.NAVY, lineColor: RT_COLOR,
     barColors: cores,
     headRight: "colhedora nova a "+E.fmtMoneyMi(PRECO_NOVA),
@@ -1835,7 +1878,7 @@ function renderPontoTroca(idade, ages){
 
   setHTML("idade-troca-legend",
     "<span class='lg'>"+C.marcadorBarras(["#2E7D46","#C9A227","#C0392B"])+
-      "Coluna: custo de oficina por tonelada ao manter a m&aacute;quina <b>(R$/t)</b> — verde folgado, ouro perto do limite, vermelho acima</span>"+
+      "Coluna: custo de oficina por tonelada ao manter a máquina <b>(R$/t)</b> — verde folgado, ouro perto do limite, vermelho acima</span>"+
     "<span class='lg'>"+C.marcadorLinha(RT_COLOR)+"Linha: tonelada colhida no ano <b>(mil t, eixo dir.)</b></span>"+
     "<span class='lg'>"+C.marcadorPilula("51", E.NAVY)+"Máquinas na amostra</span>");
 
@@ -1849,15 +1892,15 @@ function renderPontoTroca(idade, ages){
     var perdaAno = excedente * prod[iTroca];
     setText("troca-chip-perda", E.fmtMoneyMil(perdaAno));
     setText("troca-chip-perda-k", "Por máquina/ano a partir do "+ages[iTroca]+"º");
-    msg = "Uma colhedora nova a <strong>"+E.fmtMoneyMi(PRECO_NOVA)+"</strong>, com a oficina que ela consome, "+
-      "sai por <strong>R$ "+E.fmtDec(ref,2)+" por tonelada</strong> quando o investimento é diluído em "+
-      "<strong>"+ages[iCiclo]+" anos</strong> — esse é o melhor ciclo possível. "+
-      "Manter a máquina atual custa menos que isso at&eacute; o <strong>"+ages[Math.max(0,iTroca-1)]+"º ano</strong>. "+
-      "A partir do <strong>"+ages[iTroca]+"º ano de uso</strong> a oficina sozinha já cobra <strong>R$ "+
-      E.fmtDec(manter[iTroca],2)+"/t</strong>, acima do custo de operar uma máquina nova: é o <strong>ponto de troca</strong>. "+
-      "Cada colhedora mantida além dele desperdiça cerca de <strong>"+E.fmtMoneyMil(perdaAno)+" por safra</strong> "+
-      "("+E.fmtDec(excedente,2)+" R$/t sobre "+E.fmtInt(prod[iTroca]/1000)+" mil t). "+
-      "<span style='opacity:.8'>O modelo não considera o valor de revenda da máquina usada — com ele, a troca compensaria ainda antes.</span>";
+    msg = "Acompanhe a tabela: os <strong>"+E.fmtMoneyMi(PRECO_NOVA)+"</strong> da colhedora nova vão se diluindo conforme a tonelada "+
+      "se acumula — de <strong>R$ "+E.fmtDec(capitalT[0],2)+"/t</strong> no 1º ano para <strong>R$ "+
+      E.fmtDec(capitalT[iCiclo],2)+"/t</strong> no "+ages[iCiclo]+"º. Só que a oficina acumulada sobe no sentido contrário, "+
+      "e a soma das duas encontra o fundo no <strong>"+ages[iCiclo]+"º ano, a R$ "+E.fmtDec(ref,2)+"/t</strong>: é o melhor ciclo possível. "+
+      "Manter a máquina atual custa menos que isso até o <strong>"+ages[Math.max(0,iTroca-1)]+"º ano</strong>. "+
+      "A partir do <strong>"+ages[iTroca]+"º</strong> a oficina sozinha já cobra <strong>R$ "+E.fmtDec(manter[iTroca],2)+"/t</strong>, "+
+      "acima do custo de operar uma nova: é o <strong>ponto de troca</strong>. Cada colhedora mantida além dele desperdiça cerca de "+
+      "<strong>"+E.fmtMoneyMil(perdaAno)+" por safra</strong>. "+
+      "<span style='opacity:.8'>Sem considerar a revenda da usada — com ela, a troca compensaria ainda antes.</span>";
   } else {
     setText("troca-chip-perda", "–");
     msg = "Com a colhedora nova a <strong>"+E.fmtMoneyMi(PRECO_NOVA)+"</strong>, nenhum ano de uso da amostra chega a custar mais "+
