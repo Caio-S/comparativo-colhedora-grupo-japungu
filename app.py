@@ -80,21 +80,42 @@ def fetch_data():
     try:
         today = date.today().isoformat()
 
-        consumo = pd.read_sql(
-            f"""
-            SELECT a.data_lancamento, a.valor_totalFLAG, a.codigo_frota,
-                   a.descricao_marca_frota, a.descricao_modelo_frota
-            FROM vw_consumo a
-            WHERE a.id_empresa IN (1,2,3,4,5,6,7,8)
+        consumo_filter = """
+              a.id_empresa IN (1,2,3,4,5,6,7,8)
               AND a.data_lancamento BETWEEN '2020-01-01' AND '{today}'
               AND a.descricao_especialidade_frota LIKE '%COLHEDORA%CANA%'
               AND (a.codigo_tipo_documento LIKE '%RQE%'
                    OR a.descricao_tipo_documento LIKE '%FRO%'
                    OR a.descricao_tipo_documento LIKE '%CA%'
                    OR a.codigo_tipo_documento = 'CA')
+        """.format(today=today)
+
+        # Agregado no proprio banco -- evita trazer todas as linhas cruas (centenas de
+        # milhares) so para depois somar em pandas, o que era o gargalo em instancias
+        # com CPU/memoria mais limitada.
+        consumo_custo = pd.read_sql(
+            f"""
+            SELECT a.codigo_frota AS frota, YEAR(a.data_lancamento) AS ano,
+                   SUM(a.valor_totalFLAG) AS custo
+            FROM vw_consumo a
+            WHERE {consumo_filter}
+            GROUP BY a.codigo_frota, YEAR(a.data_lancamento)
             """,
             conn,
         )
+        print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] consumo_custo: {len(consumo_custo)} linhas")
+
+        consumo_marca = pd.read_sql(
+            f"""
+            SELECT a.codigo_frota AS frota, a.descricao_marca_frota AS marca,
+                   a.descricao_modelo_frota AS modelo, COUNT(*) AS n
+            FROM vw_consumo a
+            WHERE {consumo_filter}
+            GROUP BY a.codigo_frota, a.descricao_marca_frota, a.descricao_modelo_frota
+            """,
+            conn,
+        )
+        print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] consumo_marca: {len(consumo_marca)} linhas")
 
         pesagem = pd.read_sql(
             f"""
@@ -112,17 +133,24 @@ def fetch_data():
             """,
             conn,
         )
+        print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] pesagem: {len(pesagem)} linhas")
 
-        abast = pd.read_sql(
+        abast_agg = pd.read_sql(
             f"""
-            SELECT codigo_frota, data_hora_lancamento, km_hr_percorrido, quantidade
+            SELECT
+                codigo_frota AS frota,
+                YEAR(data_hora_lancamento) AS ano,
+                SUM(CASE WHEN km_hr_percorrido BETWEEN 0 AND 100 THEN km_hr_percorrido ELSE 0 END) AS horas,
+                SUM(quantidade) AS litros
             FROM vw_abastecimento a
             WHERE a.codigo_empresa IN (2,4,6,8)
               AND a.data_hora_lancamento BETWEEN '2020-01-01' AND '{today}'
               AND a.descricao_especialidade LIKE '%COLHEDORA%CANA%'
+            GROUP BY codigo_frota, YEAR(data_hora_lancamento)
             """,
             conn,
         )
+        print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] abast_agg: {len(abast_agg)} linhas")
 
         fro = pd.read_sql(
             """
@@ -132,29 +160,19 @@ def fetch_data():
             """,
             conn,
         )
+        print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] fro_frota: {len(fro)} linhas")
 
-        return consumo, pesagem, abast, fro
+        return consumo_custo, consumo_marca, pesagem, abast_agg, fro
     finally:
         conn.close()
 
 
-def build_records(consumo, pesagem, abast, fro):
+def build_records(consumo_custo, consumo_marca, pesagem, abast_agg, fro):
     current_year = date.today().year
     years = list(range(2020, current_year + 1))
 
-    consumo = consumo.copy()
-    consumo["ano"] = pd.to_datetime(consumo["data_lancamento"]).dt.year
-    consumo["valor"] = consumo["valor_totalFLAG"].astype(float)
-
-    abast = abast.copy()
-    abast["ano"] = pd.to_datetime(abast["data_hora_lancamento"]).dt.year
-    abast_clean = abast[(abast["km_hr_percorrido"] >= 0) & (abast["km_hr_percorrido"] <= 100)]
-    horas_frota_ano = (
-        abast_clean.groupby(["codigo_frota", "ano"])["km_hr_percorrido"].sum().reset_index()
-    )
-    horas_frota_ano.columns = ["frota", "ano", "horas"]
-    litros_frota_ano = abast.groupby(["codigo_frota", "ano"])["quantidade"].sum().reset_index()
-    litros_frota_ano.columns = ["frota", "ano", "litros"]
+    horas_frota_ano = abast_agg[["frota", "ano", "horas"]].copy()
+    litros_frota_ano = abast_agg[["frota", "ano", "litros"]].copy()
 
     fro = fro.copy()
     fro["unit_master"] = fro["id_empresa"].map(UNIT_MAP)
@@ -170,21 +188,20 @@ def build_records(consumo, pesagem, abast, fro):
     fro["first_year_real"] = fro["first_year_real"].fillna(fro["ano_fabricacao"].replace(0, np.nan))
     fro_idx = fro.set_index("codigo")
 
-    frota_marca = consumo.groupby("codigo_frota")["descricao_marca_frota"].agg(
-        lambda s: s.mode().iat[0] if len(s.mode()) else None
-    )
-    frota_modelo = consumo.groupby("codigo_frota")["descricao_modelo_frota"].agg(
-        lambda s: s.mode().iat[0] if len(s.mode()) else None
-    )
+    # "Moda" de marca/modelo por frota: como consumo_marca ja veio agregado
+    # (frota, marca, modelo, contagem) do banco, so pegamos a combinacao mais
+    # frequente de cada frota em vez de recalcular sobre linhas cruas.
+    best_marca_idx = consumo_marca.groupby("frota")["n"].idxmax()
+    best_marca = consumo_marca.loc[best_marca_idx].set_index("frota")
+    frota_marca = best_marca["marca"]
+    frota_modelo = best_marca["modelo"]
 
-    cons_total_year = consumo.groupby(["codigo_frota", "ano"])["valor"].sum().reset_index()
     pes_total_year = (
         pesagem.groupby(["CodFrota", "ano"])["producao"].sum().reset_index().rename(columns={"CodFrota": "frota"})
     )
 
-    cy = cons_total_year.rename(columns={"codigo_frota": "frota", "valor": "custo"})
     py = pes_total_year.rename(columns={"producao": "tonelada"})
-    fy = cy.merge(py, on=["frota", "ano"], how="outer")
+    fy = consumo_custo.merge(py, on=["frota", "ano"], how="outer")
     fy["custo"] = fy["custo"].fillna(0.0)
     fy["tonelada"] = fy["tonelada"].fillna(0.0)
     fy = fy.merge(horas_frota_ano, on=["frota", "ano"], how="left")
@@ -232,8 +249,9 @@ def refresh_once():
             return
         _cache["refreshing"] = True
     try:
-        consumo, pesagem, abast, fro = fetch_data()
-        records = build_records(consumo, pesagem, abast, fro)
+        consumo_custo, consumo_marca, pesagem, abast_agg, fro = fetch_data()
+        print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Consultas ao banco concluidas, processando...")
+        records = build_records(consumo_custo, consumo_marca, pesagem, abast_agg, fro)
         with open(HTML_TEMPLATE_PATH, "r", encoding="utf-8") as f:
             html = f.read()
         new_block = DATA_START + json.dumps(records, ensure_ascii=False, separators=(",", ":")) + DATA_END
