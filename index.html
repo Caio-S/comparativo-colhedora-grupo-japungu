@@ -178,9 +178,9 @@ table.prod-tbl th:last-child,table.prod-tbl td:last-child{width:132px}
 <div class="meta">Comparativo de custo de colhedoras &middot; safras 2020–2026 (período selecionável)</div></header>
 
 <nav class="toc">
-<a href="#capa">Capa</a><a href="#panorama">1 · Panorama do grupo</a><a href="#producao">2 · Produção</a><a href="#producao-graf">2 · Por unidade</a><a href="#unidades">3 · Comparativo por unidade</a>
-<a href="#idade">4 · Custo por ano de uso</a><a href="#marca">5 · John Deere x Case</a>
-<a href="#maquinas">6 · Ranking de máquinas</a><a href="#detalhe">7 · Detalhe por unidade</a><a href="#metodologia">8 · Metodologia</a>
+<a href="#capa">Capa</a><a href="#panorama">1 · Panorama do grupo</a><a href="#producao">2 · Produção</a><a href="#producao-graf">2 · Por unidade</a>
+<a href="#idade">3 · Custo por ano de uso</a><a href="#marca">4 · John Deere x Case</a>
+<a href="#maquinas">5 · Ranking de máquinas</a><a href="#detalhe">6 · Detalhe por unidade</a><a href="#metodologia">7 · Metodologia</a>
 </nav>
 
 <div class="deck" id="deck">
@@ -278,60 +278,9 @@ table.prod-tbl th:last-child,table.prod-tbl td:last-child{width:132px}
 </article>
 
 
-<article class="slide legacy" id="unidades" data-title="Comparativo por unidade">
-<section>
-<h2><span class="idx">3</span>Comparativo por unidade</h2>
-<p class="desc">Onde o dinheiro é gasto e com que eficiência. O ranking abaixo mostra a distância de cada unidade para a melhor do grupo no último ano do período selecionado, já convertida em reais por safra.</p>
-<p class="sub-h">Ranking de eficiência — safra <span id="table3-caption-year"></span></p>
-<div class="table-wrap"><table class="tbl">
-<thead><tr><th class="n">#</th><th class="l">Unidade</th><th class="n">Tonelada</th><th class="n">Custo (R$)</th><th class="n">R$/t</th><th class="l">Distância para a melhor</th></tr></thead>
-<tbody id="table3-body"></tbody>
-</table></div>
-<p class="sub-h">Custo por unidade e safra (R$)</p>
-<div class="table-wrap"><table class="tbl" id="table-custo"><thead></thead><tbody></tbody></table></div>
-<p class="sub-h">R$/t por unidade e safra</p>
-<div class="table-wrap"><table class="tbl" id="table-rt"><thead></thead><tbody></tbody></table></div>
-<p class="sub-h">Custo de oficina por máquina em cada safra</p>
-<div class="table-wrap"><table class="tbl" id="table-avgcusto"><thead></thead><tbody></tbody></table></div>
-<div class="alerta" id="unidades-alerta-dyn"></div>
-<svg id="chart-avgcusto" class="rc-chart" viewBox="0 0 960 400"></svg>
-
-<div class="hora-panel">
-<p class="sub-h">R$/hora — horas rodadas apuradas no abastecimento</p>
-<p class="desc" style="margin-top:-4px">Custo de oficina dividido pelas horas rodadas (horímetro lançado em cada abastecimento). Cobertura real do horímetro começa em 2024 &mdash; se o período selecionado não tiver anos com horímetro, esta seção fica em branco.</p>
-<p class="nota" id="hora-panel-empty" hidden>Sem cobertura de horímetro no período selecionado (dado real só a partir de 2024).</p>
-<div id="hora-panel-content">
-<div class="table-wrap"><table class="tbl">
-<thead><tr><th class="l">Unidade</th><th class="n">Horas rodadas</th><th class="n">Custo (R$)</th><th class="n">R$/hora</th></tr></thead>
-<tbody id="hora-table-body"></tbody>
-</table></div>
-<svg id="chart-hora" class="rc-chart" viewBox="0 0 960 380"></svg>
-<div class="hora-cols">
-<div>
-<p class="sub-h">Maior R$/hora no período — candidatas a revisão</p>
-<div class="table-wrap"><table class="tbl small">
-<thead><tr><th class="n">#</th><th class="l">Frota</th><th class="l">Unidade</th><th class="n">Horas</th><th class="n">R$/hora</th></tr></thead>
-<tbody id="hora-rank-worst-body"></tbody>
-</table></div>
-</div>
-<div>
-<p class="sub-h">Menor R$/hora no período — referência de operação</p>
-<div class="table-wrap"><table class="tbl small">
-<thead><tr><th class="n">#</th><th class="l">Frota</th><th class="l">Unidade</th><th class="n">Horas</th><th class="n">R$/hora</th></tr></thead>
-<tbody id="hora-rank-best-body"></tbody>
-</table></div>
-</div>
-</div>
-<p class="nota">Considera apenas frotas com 200h ou mais no período selecionado. Leituras de horímetro com salto acima de 100h entre abastecimentos (reset de painel) foram descartadas.</p>
-</div>
-</div>
-</section>
-</article>
-
-
 <article class="slide legacy" id="idade" data-title="Custo por ano de uso">
 <section class="alt">
-<h2><span class="idx">4</span>Custo por ano de uso da máquina</h2>
+<h2><span class="idx">3</span>Custo por ano de uso da máquina</h2>
 <p class="desc">A pergunta de fundo: quanto uma colhedora custa no 1º, 2º, 3º ano de vida — e como isso se comporta em cada unidade. Agora com a data real de aquisição de cada máquina (cadastro de frota), a análise cobre toda a frota, não só as compradas recentemente.</p>
 <p class="desc" id="idade-desc-dyn" style="margin-top:-8px"></p>
 <p class="sub-h">Idade média da frota por safra e unidade</p>
@@ -352,7 +301,7 @@ table.prod-tbl th:last-child,table.prod-tbl td:last-child{width:132px}
 
 <article class="slide legacy" id="marca" data-title="John Deere x Case">
 <section>
-<h2><span class="idx">5</span>John Deere x Case — comparação por marca</h2>
+<h2><span class="idx">4</span>John Deere x Case — comparação por marca</h2>
 <p class="desc" id="marca-desc-dyn">O grupo opera colhedoras John Deere e Case. Comparar as duas frotas diretamente induz a erro, porque as Case são majoritariamente mais novas — a comparação correta é na mesma idade.</p>
 <p class="sub-h">R$/t por marca, no mesmo ano de uso</p>
 <div class="table-wrap"><table class="tbl">
@@ -371,7 +320,7 @@ table.prod-tbl th:last-child,table.prod-tbl td:last-child{width:132px}
 
 <article class="slide legacy" id="maquinas" data-title="Ranking de máquinas">
 <section class="alt">
-<h2><span class="idx">6</span>Ranking de máquinas que mais consomem</h2>
+<h2><span class="idx">5</span>Ranking de máquinas que mais consomem</h2>
 <p class="desc">As colhedoras de maior custo acumulado e os extremos de eficiência no período (mínimo de <span id="ranking-min-ton"></span> t colhidas, escalado ao tamanho do período, para não distorcer o ranking com máquinas quase paradas).</p>
 <p class="sub-h">Top 15 — custo acumulado no período</p>
 <div class="table-wrap"><table class="tbl small">
@@ -394,7 +343,7 @@ table.prod-tbl th:last-child,table.prod-tbl td:last-child{width:132px}
 
 <article class="slide legacy" id="detalhe" data-title="Detalhe por unidade">
 <section>
-<h2><span class="idx">7</span>Detalhe por unidade</h2>
+<h2><span class="idx">6</span>Detalhe por unidade</h2>
 <p class="desc">Evolução safra a safra e as 5 colhedoras de maior custo em cada unidade, no período selecionado. Clique para expandir.</p>
 
 <details class="unidade" open><summary><div class="u-row"><span class="u-nome">Agro Rubiataba</span>
@@ -438,10 +387,10 @@ table.prod-tbl th:last-child,table.prod-tbl td:last-child{width:132px}
 
 <article class="slide legacy" id="metodologia" data-title="Metodologia">
 <section class="alt">
-<h2><span class="idx">8</span>Metodologia e limitações</h2>
+<h2><span class="idx">7</span>Metodologia e limitações</h2>
 <p class="desc" style="max-width:100%">
 <b>Fonte:</b> consulta ao vivo ao banco MariaDB do grupo — view <code>vw_consumo</code> (custo de oficina, 2020–2026), tabelas <code>pes_pesagem_capa</code>/<code>pes_pesagem_item</code> (produção colhida), view <code>vw_abastecimento</code> (horímetro, cobertura real a partir de 2024) e tabela <code>fro_frota</code> (cadastro mestre: empresa atual e data de aquisição real de cada máquina). Dados extraídos em 09/09/2026.
-O custo cobre peças, materiais e lubrificantes lançados contra ordens de frota nos tipos de documento RQE, FRO, CA, REQ, RQI, RQC e DEV; não inclui abastecimento/combustível (tratado à parte em R$/hora), mão de obra própria nem serviços de terceiros fora de requisição de material.<br><br>
+O custo cobre peças, materiais e lubrificantes lançados contra ordens de frota nos tipos de documento RQE, FRO, CA, REQ, RQI, RQC e DEV; não inclui abastecimento/combustível, mão de obra própria nem serviços de terceiros fora de requisição de material.<br><br>
 <b>Colhedora ativa na safra:</b> a máquina só entra nos cálculos do ano em que colheu pelo menos <b><span id="metodo-minton">1.000</span> toneladas</b>. Abaixo disso a pesagem não sustenta nenhum indicador por tonelada — R$/t de máquina quase parada chega a milhares de reais e contamina médias e rankings. As frotas de código <b>46xxx</b> ficam fora em qualquer safra, por apontamento não confiável (uma delas registra 66 mil t sem nenhum custo; outra, R$ 1,6 milhão sobre 327 t).
 O critério é por <u>máquina-safra</u>, não por máquina: uma colhedora com um ano de apontamento ruim sai apenas daquele ano e permanece nos demais — a frota 62509, por exemplo, sai de 2026 (12 t) e continua em 2020–2025, quando colheu de 83 a 111 mil t por safra.
 A regra vale para <u>todos</u> os critérios: contagem de frota, custo, horas rodadas, combustível, R$/t, R$/hora, custo por máquina, idade média e rankings. Ao todo <span id="metodo-excluidos">–</span> pares máquina-safra ficam de fora, representando <span id="metodo-excluidos-custo">–</span> do custo bruto do período completo.<br><br>
@@ -451,7 +400,7 @@ CRV Minas Gerais a PFCMO Minas Gerais e Uruaçu a Agro Uruaçu, resultando nas 4
 (a base de pesagem usava AGRO-RTB para a mesma unidade).<br><br>
 <b>Ano de uso:</b> calculado como o ano da safra menos o ano de início real de operação da máquina. Usa a data de aquisição (cadastro <code>fro_frota</code>) como base, mas quando a 1ª pesagem da máquina ocorre depois do ano de aquisição — comum em compras no fim de safra, que só entram em operação na safra seguinte — o ano de início é ajustado para o da 1ª pesagem. Máquinas adquiridas antes de 2020 mantêm a data de aquisição (nossa base de pesagem só cobre 2020 em diante, então "1ª pesagem" não é um sinal confiável de início de operação para elas). Cobre toda a frota, não apenas as compradas recentemente. Colunas com menos de 3 máquinas na amostra não são exibidas.<br><br>
 <b>Unidade responsável pela frota:</b> definida pela faixa numérica do código da frota, não pela empresa que registrou cada lançamento — uma colhedora pode ter custo ou produção lançados sob mais de um código de empresa ao longo do tempo, mas para todos os indicadores e filtros deste relatório ela é sempre contada na mesma unidade. Faixas: 12000–12999 PFCMO Goiás, 20000–29999 Agro Rubiataba, 50000–59999 Agro Uruaçu, 60000–69999 PFCMO Minas Gerais. As poucas frotas fora dessas faixas (12 de 113) usam a empresa atual do cadastro <code>fro_frota</code>.<br><br>
-<b>R$/hora:</b> custo dividido pelas horas rodadas apuradas no horímetro do abastecimento. Leituras com salto acima de 100h entre abastecimentos (reset de painel) são descartadas.<br><br>
+<b>Horímetro:</b> as horas rodadas por abastecimento continuam na base (cobertura real a partir de 2024, leituras com salto acima de 100h descartadas por reset de painel), mas nenhuma página do relatório apresenta R$/hora no momento.<br><br>
 <b>R$/t:</b> custo dividido pela tonelada colhida da própria máquina/unidade no período. Rankings de eficiência limitados a frotas com tonelada mínima escalada ao número de safras do período selecionado (referência: 5.000 t/safra).
 </p>
 </section>
@@ -1447,124 +1396,6 @@ function setHTML(id, html){ var el=document.getElementById(id); if(el) el.innerH
 function setText(id, t){ var el=document.getElementById(id); if(el) el.textContent = t; }
 
 // ============================================================
-// Comparativo por unidade: table3 (ranking), table4 (custo), table5 (rt), table6 (avgcusto)
-// + R$/hora summary table + chart + rankings
-// ============================================================
-function renderUnidades(recs, years, unitAgg, grupoAgg){
-  var ateY = years[years.length-1];
-  var rows = U.map(function(u){
-    var cell = unitAgg[u][ateY];
-    var rt = cell.tonelada>0 ? cell.custo/cell.tonelada : NaN;
-    return {u:u, ton:cell.tonelada, custo:cell.custo, rt:rt};
-  }).filter(function(r){ return isFinite(r.rt); });
-  rows.sort(function(a,b){ return b.rt-a.rt; }); // worst first
-  var best = rows.length ? rows[rows.length-1] : null;
-  var html = rows.map(function(r, i){
-    var isBest = best && r.u===best.u;
-    var diff = best ? r.rt-best.rt : 0;
-    var impact = diff*r.ton/1e6;
-    var obs = isBest ? "referência do grupo" : ("R$ "+E.fmtDec(diff,2)+"/t acima da melhor unidade — R$ "+E.fmtDec(impact,2)+" mi/ano");
-    var rtCls = isBest ? "n strong pos" : (i===0 ? "n strong neg" : "n strong");
-    return "<tr><td class=\"n\">"+(i+1)+"</td><td class=\"l\">"+esc(r.u)+"</td><td class=\"n\">"+E.fmtInt(r.ton)+
-      "</td><td class=\"n\">"+E.fmtMoney(r.custo)+"</td><td class=\""+rtCls+"\">"+E.fmtDec(r.rt,2)+"</td><td class=\"l obs\">"+obs+"</td></tr>";
-  }).join("");
-  setHTML("table3-body", html || "<tr><td colspan=6 style='text-align:center'>Sem dados</td></tr>");
-  setText("table3-caption-year", String(ateY));
-
-  S.renderYearMatrixTable("table-custo", years, unitAgg, grupoAgg, {
-    field:"custo", cellFmt: E.fmtInt2, totalMode:"sum", totalLabel:"Total", showGrupo:false
-  });
-  S.renderYearMatrixTable("table-rt", years, unitAgg, grupoAgg, {
-    compute: function(c){ return c.tonelada>0?c.custo/c.tonelada:NaN; },
-    cellFmt: function(v){ return isFinite(v)?E.fmtDec(v,2):"–"; },
-    totalMode:"ratioSum", numDen:["custo","tonelada"], totalLabel:"Média "+years[0].toString().slice(2)+"–"+years[years.length-1].toString().slice(2),
-    showGrupo:false
-  });
-  S.renderYearMatrixTable("table-avgcusto", years, unitAgg, grupoAgg, {
-    compute: function(c){ return c.cnt>0?c.custo/c.cnt:NaN; },
-    cellFmt: function(v){ return isFinite(v)?E.fmtMoneyMil(v):"–"; },
-    totalMode:"avgPerCount", numDen:["custo"], totalLabel:"Média", showGrupo:true,
-    grupoCompute: function(g){ return g.cnt>0?g.custo/g.cnt:NaN; },
-    grupoCellFmt: function(v){ return isFinite(v)?E.fmtMoneyMil(v):"–"; }
-  });
-
-  var deY = years[0];
-  var avgDe = grupoAgg[deY].cnt>0?grupoAgg[deY].custo/grupoAgg[deY].cnt:NaN;
-  var avgAte = grupoAgg[ateY].cnt>0?grupoAgg[ateY].custo/grupoAgg[ateY].cnt:NaN;
-  var maxUnit = U.slice().sort(function(a,b){
-    var ca=unitAgg[a][ateY], cb=unitAgg[b][ateY];
-    var va = ca.cnt>0?ca.custo/ca.cnt:0, vb = cb.cnt>0?cb.custo/cb.cnt:0;
-    return vb-va;
-  })[0];
-  var minUnit = U.slice().sort(function(a,b){
-    var ca=unitAgg[a][ateY], cb=unitAgg[b][ateY];
-    var va = ca.cnt>0?ca.custo/ca.cnt:Infinity, vb = cb.cnt>0?cb.custo/cb.cnt:Infinity;
-    return va-vb;
-  })[0];
-  var maxV = unitAgg[maxUnit][ateY].cnt>0 ? unitAgg[maxUnit][ateY].custo/unitAgg[maxUnit][ateY].cnt : NaN;
-  var minV = unitAgg[minUnit][ateY].cnt>0 ? unitAgg[minUnit][ateY].custo/unitAgg[minUnit][ateY].cnt : NaN;
-  setHTML("unidades-alerta-dyn", "<b>Visão por máquina:</b> o custo médio por colhedora saiu de "+E.fmtMoneyMil(avgDe)+" ("+deY+") para "+
-    E.fmtMoneyMil(avgAte)+" ("+ateY+") no grupo. "+esc(maxUnit)+" lidera em custo por máquina ("+E.fmtMoneyMil(maxV)+"), "+
-    (isFinite(minV)&&minV>0 ? E.fmtDec(maxV/minV,1)+"x" : "acima de")+" "+esc(minUnit)+" ("+E.fmtMoneyMil(minV)+") — parte explicada pela idade da frota, parte pelo padrão de manutenção.");
-
-  // chart4: custo por maquina line
-  C.lineChart(q("#chart-avgcusto"), {
-    title:"Custo de oficina por máquina em cada safra", yLabel:"R$ mil por máquina/safra",
-    xs: years.map(String), endLabels:true,
-    series: U.map(function(u){ return {name:u, color:COLORS[u], values: years.map(function(y){ var c=unitAgg[u][y]; return c.cnt>0?c.custo/c.cnt/1000:0; })}; })
-      .concat([{name:"Média do grupo", color:GRAY, dash:true, values: years.map(function(y){ var g=grupoAgg[y]; return g.cnt>0?g.custo/g.cnt/1000:0; })}]),
-    axisFmt: function(v){ return E.fmtInt(v); }, valueFmt: function(v){ return E.fmtInt(v); }
-  });
-
-  renderHoraPanel(recs, years);
-}
-
-function renderHoraPanel(recs, years){
-  var agg = {}; U.forEach(function(u){ agg[u]={horas:0,custo:0}; });
-  var totH=0, totC=0;
-  recs.forEach(function(r){
-    if(!agg[r.unit]) return;
-    agg[r.unit].horas += r.horas; agg[r.unit].custo += r.custo;
-  });
-  var rowsHtml = U.map(function(u){
-    var a = agg[u]; totH+=a.horas; totC+=a.custo;
-    var rt = a.horas>0? a.custo/a.horas : NaN;
-    return "<tr><td class='l'>"+esc(u)+"</td><td class='n'>"+E.fmtInt(a.horas)+"</td><td class='n'>"+E.fmtMoney(a.custo)+"</td><td class='n strong'>"+(isFinite(rt)?E.fmtDec(rt,2):"–")+"</td></tr>";
-  }).join("");
-  var grt = totH>0?totC/totH:NaN;
-  rowsHtml += "<tr class='tot'><td class='l strong'>GRUPO</td><td class='n strong'>"+E.fmtInt(totH)+"</td><td class='n strong'>"+E.fmtMoney(totC)+"</td><td class='n strong'>"+(isFinite(grt)?E.fmtDec(grt,2):"–")+"</td></tr>";
-  setHTML("hora-table-body", rowsHtml);
-  var hasHoras = totH>0;
-  document.getElementById("hora-panel-empty").hidden = hasHoras;
-  document.getElementById("hora-panel-content").hidden = !hasHoras;
-  if(!hasHoras) return;
-
-  C.singleBarChart(q("#chart-hora"), {
-    title:"R$/hora por unidade no período selecionado", yLabel:"R$/hora",
-    categories: U, colors: U.map(function(u){return COLORS[u];}),
-    values: U.map(function(u){ var a=agg[u]; return a.horas>0?a.custo/a.horas:0; }),
-    axisFmt: function(v){return E.fmtInt(v);}, valueFmt: function(v){return E.fmtDec(v,2);}
-  });
-
-  var byFrota = {};
-  recs.forEach(function(r){
-    if(r.horas<=0 && r.custo<=0) return;
-    if(!byFrota[r.frota]) byFrota[r.frota] = {frota:r.frota, unit:r.unit, horas:0, custo:0};
-    byFrota[r.frota].horas += r.horas; byFrota[r.frota].custo += r.custo; byFrota[r.frota].unit = r.unit;
-  });
-  var list = Object.values(byFrota).filter(function(x){ return x.horas>=200; });
-  list.forEach(function(x){ x.rt = x.custo/x.horas; });
-  var worst = list.slice().sort(function(a,b){return b.rt-a.rt;}).slice(0,8);
-  var best = list.slice().sort(function(a,b){return a.rt-b.rt;}).slice(0,8);
-  function fill(id, arr){
-    var html = arr.map(function(x,i){
-      return "<tr><td class='n'>"+(i+1)+"</td><td class='l'>"+x.frota+"</td><td class='l'>"+esc(x.unit)+"</td><td class='n'>"+E.fmtInt(x.horas)+"</td><td class='n strong'>"+E.fmtDec(x.rt,2)+"</td></tr>";
-    }).join("");
-    setHTML(id, html || "<tr><td colspan=5 style='text-align:center;color:var(--mut)'>Sem frotas com 200h+ no período</td></tr>");
-  }
-  fill("hora-rank-worst-body", worst);
-  fill("hora-rank-best-body", best);
-}
 
 // ============================================================
 // Idade da maquina (table7 rt, table8 avgcusto) + charts
@@ -1671,7 +1502,6 @@ function renderIdade(recs, years){
   }
 }
 
-window.ReportSections.renderUnidades = renderUnidades;
 window.ReportSections.renderIdade = renderIdade;
 window.ReportEngine.fmtInt2 = function(v){ return isFinite(v)?E.fmtInt(v):"–"; };
 })();
@@ -2074,7 +1904,6 @@ function renderAll(de, ate){
   S.renderKPIs(recs, years, unitAgg, grupoAgg);
   renderPanorama(years, unitAgg, grupoAgg, recs);
   S.renderProducao(recs, years, unitAgg, grupoAgg);
-  S.renderUnidades(recs, years, unitAgg, grupoAgg);
   S.renderIdade(recs, years);
   S.renderMarca(recs, years);
   S.renderRankings(recs, years);
