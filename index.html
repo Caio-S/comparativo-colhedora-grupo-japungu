@@ -149,6 +149,10 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 .s-card.s-troca{display:flex;flex-direction:column;gap:5px;padding:8px 12px 6px;--tf:12px;--tp:2.5px;--c1:250px}
 .s-troca > svg{flex:1 1 auto;min-height:0;width:100%;height:100%;display:block;margin:0}
 .s-troca > .troca-tab{flex:0 0 auto}
+/* variante com mais espaço para a tabela: o gráfico recebe altura fixa em JS
+   e a tabela fica com o resto, com as linhas crescendo para preencher */
+.s-troca.tabela-grande > svg{flex:0 0 auto}
+.s-troca.tabela-grande > .troca-tab{flex:1 1 auto;min-height:0;overflow:hidden}
 .s-troca table.grid-tbl td.destaque{background:rgba(46,125,70,.24)!important;font-weight:700;color:#1B5E2F}
 .s-troca table.grid-tbl td.acima{background:rgba(192,57,43,.18)!important;font-weight:700;color:#8E2A20}
 .s-troca table.grid-tbl tr.linha-chave td{border-top:2px solid var(--navy);border-bottom:2px solid var(--navy)}
@@ -196,7 +200,7 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <nav class="toc">
 <a href="#capa">Capa</a><a href="#panorama">1 · Panorama do grupo</a><a href="#producao">2 · Produção</a><a href="#producao-graf">2 · Por unidade</a>
 <a href="#idade">3 · Custo por ano de uso</a><a href="#idade-unidade">3 · Por unidade</a><a href="#idade-tabelas">3 · Detalhe</a><a href="#idade-frota">3 · Idade média da frota</a><a href="#idade-troca">3 · Ponto de troca</a><a href="#idade-compra">3 · Compra na conta</a><a href="#produtos">3 · Onde o dinheiro é gasto</a><a href="#marca">4 · John Deere x Case</a>
-<a href="#maquinas">5 · Ranking de máquinas</a><a href="#detalhe">6 · Detalhe por unidade</a><a href="#metodologia">7 · Metodologia</a>
+<a href="#maquinas">5 · Ranking de máquinas</a><a href="#metodologia">6 · Metodologia</a>
 </nav>
 
 <div class="deck" id="deck">
@@ -484,76 +488,35 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 </article>
 
 
-<article class="slide legacy" id="maquinas" data-title="Ranking de máquinas">
-<section class="alt">
-<h2><span class="idx">5</span>Ranking de máquinas que mais consomem</h2>
-<p class="desc">As colhedoras de maior custo acumulado e os extremos de eficiência no período (mínimo de <span id="ranking-min-ton"></span> t colhidas, escalado ao tamanho do período, para não distorcer o ranking com máquinas quase paradas).</p>
-<p class="sub-h">Top 15 — custo acumulado no período</p>
-<div class="table-wrap"><table class="tbl small">
-<thead><tr><th class="n">#</th><th class="l">Frota</th><th class="l">Modelo</th><th class="l">Unidade</th><th class="n">Custo acumulado</th><th class="n">R$/t</th><th></th></tr></thead>
-<tbody id="table11-body"></tbody>
-</table></div>
-<p class="sub-h">Maior R$/t no período — candidatas a revisão ou substituição</p>
-<div class="table-wrap"><table class="tbl small">
-<thead><tr><th class="n">#</th><th class="l">Frota</th><th class="l">Modelo</th><th class="l">Unidade</th><th class="n">Tonelada</th><th class="n">Custo</th><th class="n">R$/t</th></tr></thead>
-<tbody id="table12-body"></tbody>
-</table></div>
-<p class="sub-h">Menor R$/t no período — referência de operação</p>
-<div class="table-wrap"><table class="tbl small">
-<thead><tr><th class="n">#</th><th class="l">Frota</th><th class="l">Modelo</th><th class="l">Unidade</th><th class="n">Tonelada</th><th class="n">Custo</th><th class="n">R$/t</th></tr></thead>
-<tbody id="table13-body"></tbody>
-</table></div>
-</section>
-</article>
-
-
-<article class="slide legacy" id="detalhe" data-title="Detalhe por unidade">
-<section>
-<h2><span class="idx">6</span>Detalhe por unidade</h2>
-<p class="desc">Evolução safra a safra e as 5 colhedoras de maior custo em cada unidade, no período selecionado. Clique para expandir.</p>
-
-<details class="unidade" open><summary><div class="u-row"><span class="u-nome">Agro Rubiataba</span>
-<span class="u-tag">R$/t (último ano): <span id="detail-rub-rt"></span></span>
-<span class="u-custo">R$ <span id="detail-rub-acum"></span> mi acumulados &middot; <span id="detail-rub-ton"></span> mi t colhidas</span></div></summary>
-<div class="u-body">
-<div class="table-wrap"><table class="tbl small" id="detail-rub-safra"><thead></thead><tbody></tbody></table></div>
-<p class="sub-h">5 colhedoras de maior custo acumulado</p>
-<div class="table-wrap"><table class="tbl small" id="detail-rub-top5"><thead><tr><th class="l">Frota</th><th class="l">Modelo</th><th class="n">Custo acumulado</th><th class="n">R$/t</th></tr></thead><tbody></tbody></table></div>
-</div></details>
-
-<details class="unidade"><summary><div class="u-row"><span class="u-nome">PFCMO Goiás</span>
-<span class="u-tag">R$/t (último ano): <span id="detail-go-rt"></span></span>
-<span class="u-custo">R$ <span id="detail-go-acum"></span> mi acumulados &middot; <span id="detail-go-ton"></span> mi t colhidas</span></div></summary>
-<div class="u-body">
-<div class="table-wrap"><table class="tbl small" id="detail-go-safra"><thead></thead><tbody></tbody></table></div>
-<p class="sub-h">5 colhedoras de maior custo acumulado</p>
-<div class="table-wrap"><table class="tbl small" id="detail-go-top5"><thead><tr><th class="l">Frota</th><th class="l">Modelo</th><th class="n">Custo acumulado</th><th class="n">R$/t</th></tr></thead><tbody></tbody></table></div>
-</div></details>
-
-<details class="unidade"><summary><div class="u-row"><span class="u-nome">PFCMO Minas Gerais</span>
-<span class="u-tag">R$/t (último ano): <span id="detail-mg-rt"></span></span>
-<span class="u-custo">R$ <span id="detail-mg-acum"></span> mi acumulados &middot; <span id="detail-mg-ton"></span> mi t colhidas</span></div></summary>
-<div class="u-body">
-<div class="table-wrap"><table class="tbl small" id="detail-mg-safra"><thead></thead><tbody></tbody></table></div>
-<p class="sub-h">5 colhedoras de maior custo acumulado</p>
-<div class="table-wrap"><table class="tbl small" id="detail-mg-top5"><thead><tr><th class="l">Frota</th><th class="l">Modelo</th><th class="n">Custo acumulado</th><th class="n">R$/t</th></tr></thead><tbody></tbody></table></div>
-</div></details>
-
-<details class="unidade"><summary><div class="u-row"><span class="u-nome">Agro Uruaçu</span>
-<span class="u-tag">R$/t (último ano): <span id="detail-uru-rt"></span></span>
-<span class="u-custo">R$ <span id="detail-uru-acum"></span> mi acumulados &middot; <span id="detail-uru-ton"></span> mi t colhidas</span></div></summary>
-<div class="u-body">
-<div class="table-wrap"><table class="tbl small" id="detail-uru-safra"><thead></thead><tbody></tbody></table></div>
-<p class="sub-h">5 colhedoras de maior custo acumulado</p>
-<div class="table-wrap"><table class="tbl small" id="detail-uru-top5"><thead><tr><th class="l">Frota</th><th class="l">Modelo</th><th class="n">Custo acumulado</th><th class="n">R$/t</th></tr></thead><tbody></tbody></table></div>
-</div></details>
-</section>
+<article class="slide slide-dark" id="maquinas" data-title="Ranking de máquinas">
+<div class="s-head">
+<div>
+<div class="s-eyebrow">05 &middot; Ranking de m&aacute;quinas</div>
+<h2 class="s-title" style="border:0;color:#fff;padding:0">Cada colhedora, R$/t em cada ano de uso</h2>
+<p class="s-sub">Listagem completa da frota: uma linha por m&aacute;quina, uma coluna por ano de uso. A cor acompanha o R$/t — quanto mais forte, mais cara aquela m&aacute;quina saiu naquela idade.</p>
+</div>
+<div class="s-right">
+<select class="s-sel js-unidade" aria-label="Empresa analisada"></select>
+<div class="s-toggle" id="rank-ordem">
+<button type="button" data-ord="rt" class="on">Pior R$/t</button>
+<button type="button" data-ord="custo">Maior custo</button>
+<button type="button" data-ord="frota">N&ordm; da frota</button>
+</div>
+<div class="s-chips">
+<div class="s-chip"><div class="v" id="rank-chip-n">&ndash;</div><div class="k" id="rank-chip-n-k">Colhedoras</div></div>
+<div class="s-chip"><div class="v" id="rank-chip-pior">&ndash;</div><div class="k" id="rank-chip-pior-k">Pior R$/t</div></div>
+</div>
+</div>
+</div>
+<div class="s-legend" id="rank-legend"></div>
+<div class="s-card s-tables" id="maquinas-card"></div>
+<div class="s-insight" id="maquinas-insight">carregando&hellip;</div>
 </article>
 
 
 <article class="slide legacy" id="metodologia" data-title="Metodologia">
 <section class="alt">
-<h2><span class="idx">7</span>Metodologia e limitações</h2>
+<h2><span class="idx">6</span>Metodologia e limitações</h2>
 <p class="desc" style="max-width:100%">
 <b>Fonte:</b> consulta ao vivo ao banco MariaDB do grupo — view <code>vw_consumo</code> (custo de oficina, 2020–2026), tabelas <code>pes_pesagem_capa</code>/<code>pes_pesagem_item</code> (produção colhida), view <code>vw_abastecimento</code> (horímetro, cobertura real a partir de 2024) e tabela <code>fro_frota</code> (cadastro mestre: empresa atual e data de aquisição real de cada máquina). Dados extraídos em 09/09/2026.
 O custo considera apenas quatro ordens de produção — <b>PEÇAS</b>, <b>SERVIÇOS TERCEIROS</b>, <b>MATERIAL DE USO E CONSUMO</b> e <b>LUBRIFICANTES</b> — nos tipos de documento RQE, FRO, CA, REQ, RQI e DEV. Ficam de fora: lançamentos sem ordem de produção, ordens de CAPEX (reformas de motor e caixa picador lançadas por máquina), ferramentas, EPI/EPC, pneus, IPVA/seguros, locação e a cauda de ordens administrativas — além do tipo de documento RQC.
@@ -1160,6 +1123,21 @@ function miniCombo(svg, o){
   svg.appendChild(vg);
 
   // linha R$/t
+  // rótulo acima de cada categoria (ex.: diferença percentual entre as duas colunas)
+  if(o.topos && o.topos.length){
+    var tg = ns("g"); tg.setAttribute("style","animation:rcFade .5s ease .6s both");
+    o.topos.forEach(function(t, i){
+      if(!t || !t.text) return;
+      var alto = (o.bars[i]||0);
+      if(pareado && (o.bars2[i]||0) > alto) alto = o.bars2[i];
+      if(!(alto > 0)) return;
+      txt(tg, cx(i), yL(alto) - 13*k, t.text,
+        {"text-anchor":"middle","font-size":String(12.5*k),"font-weight":"700",
+         fill:t.color||E.NAVY, stroke:"#fff","stroke-width":String(3.4*k),"paint-order":"stroke"});
+    });
+    svg.appendChild(tg);
+  }
+
   var temLinha = !!(o.line && o.line.length);
   var lg=ns("g"); lg.setAttribute("style","animation:rcFade .6s ease .55s both");
   if(temLinha){
@@ -1644,6 +1622,7 @@ function initIdadeFiltroUI(){
       Array.prototype.forEach.call(document.querySelectorAll("select.js-unidade"), function(o){ o.value = IDADE_UNIDADE; });
       if(window.replayIdade) window.replayIdade();
       if(window.replayProdutos) window.replayProdutos();
+      if(window.replayRankings) window.replayRankings();
     });
   });
 }
@@ -2428,6 +2407,152 @@ function initProdutosUI(){
   liga("prod-eixo",   "data-eixo",   function(v){ PROD_EIXO   = v; });
 }
 
+// ============================================================
+// Ranking: uma linha por colhedora, uma coluna por ano de uso, celula = R$/t.
+// Filtra por empresa e ordena por pior R$/t, maior custo ou numero de frota.
+// ============================================================
+var RANK_ORDEM = "rt";
+
+function renderRankings(recs, years){
+  var card = document.getElementById("maquinas-card");
+  if(!card) return;
+
+  var escopo = recs.filter(function(r){
+    return IDADE_UNIDADE === "GRUPO" || r.unit === IDADE_UNIDADE;
+  });
+
+  // uma linha por frota; as colunas sao os anos de uso presentes no escopo
+  var porFrota = {}, idades = {};
+  escopo.forEach(function(r){
+    var f = porFrota[r.frota];
+    if(!f) f = porFrota[r.frota] = {frota:r.frota, modelo:r.modelo, marca:r.marca,
+                                    unidades:{}, custo:0, tonelada:0, cel:{}};
+    if(r.modelo) f.modelo = r.modelo;
+    f.unidades[r.unit] = (f.unidades[r.unit] || 0) + r.custo;
+    f.custo += r.custo; f.tonelada += r.tonelada;
+    var a = r.ano_de_uso;
+    if(a >= 1){
+      var k = a > IDADE_TETO ? (IDADE_TETO + 1) : a;
+      idades[k] = true;
+      if(!f.cel[k]) f.cel[k] = {custo:0, tonelada:0};
+      f.cel[k].custo += r.custo; f.cel[k].tonelada += r.tonelada;
+    }
+  });
+
+  var cols = Object.keys(idades).map(Number).sort(function(a,b){ return a-b; });
+  function rotIdade(c){ return c > IDADE_TETO ? (IDADE_TETO+1)+"º+" : c+"º"; }
+
+  var lista = Object.keys(porFrota).map(function(k){
+    var f = porFrota[k];
+    f.unit = Object.keys(f.unidades).sort(function(a,b){ return f.unidades[b]-f.unidades[a]; })[0];
+    f.rt = f.tonelada > 0 ? f.custo/f.tonelada : NaN;
+    return f;
+  });
+
+  if(RANK_ORDEM === "custo") lista.sort(function(a,b){ return b.custo - a.custo; });
+  else if(RANK_ORDEM === "frota") lista.sort(function(a,b){ return a.frota - b.frota; });
+  else lista.sort(function(a,b){
+    var x = isFinite(a.rt)?a.rt:-1, y = isFinite(b.rt)?b.rt:-1;
+    return y - x;
+  });
+
+  // escala de cor comum a todas as celulas, ignorando os extremos que achatariam o resto
+  var todos = [];
+  lista.forEach(function(f){ cols.forEach(function(c){
+    var cel = f.cel[c];
+    if(cel && cel.tonelada > 0) todos.push(cel.custo/cel.tonelada);
+  }); });
+  todos.sort(function(a,b){ return a-b; });
+  var teto = todos.length ? todos[Math.floor(todos.length*0.95)] : 1;
+  if(!(teto > 0)) teto = 1;
+
+  var head = "<tr><th class='l'>Frota</th><th class='l'>Modelo</th><th class='l'>Unidade</th>"+
+    cols.map(function(c){ return "<th class='n'>"+rotIdade(c)+"</th>"; }).join("")+
+    "<th class='n'>Tonelada</th><th class='n'>Custo</th><th class='n'>R$/t</th></tr>";
+
+  var corpo = lista.map(function(f){
+    var cells = cols.map(function(c){
+      var cel = f.cel[c];
+      if(!cel || !(cel.tonelada > 0)) return "<td class='n muted'>–</td>";
+      var v = cel.custo/cel.tonelada;
+      var a = Math.min(1, v/teto);
+      return "<td class='n' style=\"background:rgba(192,57,43,"+(0.06+0.42*a).toFixed(3)+")\">"+
+        E.fmtDec(v,2)+"</td>";
+    }).join("");
+    return "<tr><td class='l' style=\"box-shadow:inset 4px 0 0 "+(COLORS[f.unit]||E.NAVY)+"\">"+f.frota+"</td>"+
+      "<td class='l'>"+esc((f.modelo||"").replace("JOHN DEERE ","JD ").replace("COLHEDORA ",""))+"</td>"+
+      "<td class='l'>"+esc(f.unit||"")+"</td>"+cells+
+      "<td class='n'>"+E.fmtInt(f.tonelada)+"</td>"+
+      "<td class='n'>"+E.fmtMoneyMil(f.custo)+"</td>"+
+      "<td class='n strong'>"+(isFinite(f.rt)?E.fmtDec(f.rt,2):"–")+"</td></tr>";
+  }).join("");
+
+  var totTon = lista.reduce(function(s,f){ return s+f.tonelada; }, 0);
+  var totCusto = lista.reduce(function(s,f){ return s+f.custo; }, 0);
+  var totCel = cols.map(function(c){
+    var cu=0, to=0;
+    lista.forEach(function(f){ var cel=f.cel[c]; if(cel){ cu+=cel.custo; to+=cel.tonelada; } });
+    return "<td class='n strong'>"+(to>0?E.fmtDec(cu/to,2):"–")+"</td>";
+  }).join("");
+  corpo += "<tr class='tot'><td class='l strong'>TOTAL</td><td></td><td></td>"+totCel+
+    "<td class='n strong'>"+E.fmtInt(totTon)+"</td><td class='n strong'>"+E.fmtMoneyMil(totCusto)+"</td>"+
+    "<td class='n strong'>"+(totTon>0?E.fmtDec(totCusto/totTon,2):"–")+"</td></tr>";
+
+  card.className = "s-card s-tables";
+  card.innerHTML = "<table class='tbl grid-tbl tem-total' id='table-ranking'><thead>"+head+
+    "</thead><tbody>"+corpo+"</tbody></table>";
+  card.style.setProperty("--c1", "78px");
+  card.style.setProperty("--cN", "72px");
+  // Listagem completa: 100 colhedoras nao cabem numa tela, e cortar seria mentir.
+  // Se couber, cresce a linha como nas outras paginas; se nao couber, mantem um
+  // tamanho legivel e rola — melhor que espremer tudo em 9px e rolar do mesmo jeito.
+  card.style.setProperty("--tf", "12px");
+  card.style.setProperty("--tp", "3px");
+  if(card.scrollHeight <= card.clientHeight) ajustarTabelas(card);
+
+  setText("rank-chip-n", String(lista.length));
+  setText("rank-chip-n-k", "Colhedoras" + (IDADE_UNIDADE==="GRUPO" ? " no grupo" : " na unidade"));
+  var comRt = lista.filter(function(f){ return isFinite(f.rt); })
+                   .sort(function(a,b){ return b.rt - a.rt; });
+  if(comRt.length){
+    setText("rank-chip-pior", "R$ "+E.fmtDec(comRt[0].rt,2)+"/t");
+    setText("rank-chip-pior-k", "Frota "+comRt[0].frota+" — pior R$/t");
+  }
+
+  setHTML("rank-legend",
+    "<span class='lg'>Uma linha por colhedora &middot; uma coluna por ano de uso &middot; c&eacute;lula = <b>R$/t</b> daquela m&aacute;quina naquela idade</span>"+
+    "<span class='lg'>Vermelho mais forte = R$/t mais alto (escala comum, cortada no percentil 95 para um extremo n&atilde;o achatar o resto)</span>"+
+    "<span class='lg'>&ndash; = a m&aacute;quina n&atilde;o colheu naquela idade dentro do per&iacute;odo</span>");
+
+  var msg = (IDADE_UNIDADE==="GRUPO" ? "" : "<strong>"+esc(IDADE_UNIDADE)+"</strong> — ");
+  if(comRt.length >= 3){
+    var p1=comRt[0], p2=comRt[1], p3=comRt[2];
+    var mediana = comRt[Math.floor(comRt.length/2)].rt;
+    msg += "são <strong>"+lista.length+"</strong> colhedoras no recorte. A pior é a <strong>frota "+p1.frota+
+      "</strong> ("+esc(p1.unit)+"), a <strong>R$ "+E.fmtDec(p1.rt,2)+"/t</strong> — <strong>"+
+      E.fmtDec(p1.rt/mediana,1)+"x</strong> a mediana da frota (R$ "+E.fmtDec(mediana,2)+"/t). "+
+      "Depois vêm a <strong>"+p2.frota+"</strong> (R$ "+E.fmtDec(p2.rt,2)+") e a <strong>"+p3.frota+
+      "</strong> (R$ "+E.fmtDec(p3.rt,2)+"). "+
+      "Lendo a linha da esquerda para a direita dá para ver em que idade cada máquina começou a encarecer — "+
+      "e se foi um ano isolado ou uma piora que ficou.";
+  } else {
+    msg += "sem máquinas suficientes no recorte para ranquear.";
+  }
+  setHTML("maquinas-insight", msg);
+}
+
+function initRankUI(){
+  var box = document.getElementById("rank-ordem");
+  if(!box) return;
+  box.addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest("button[data-ord]") : null;
+    if(!b) return;
+    RANK_ORDEM = b.getAttribute("data-ord");
+    Array.prototype.forEach.call(box.querySelectorAll("button"), function(x){ x.classList.toggle("on", x===b); });
+    if(window.replayRankings) window.replayRankings();
+  });
+}
+
 function initTrocaUI(){
   var box = document.getElementById("troca-preco");
   if(!box) return;
@@ -2450,6 +2575,8 @@ window.ReportSections.renderCompraNaConta = renderCompraNaConta;
 window.ReportSections.initCompraUI = initCompraUI;
 window.ReportSections.renderProdutos = renderProdutos;
 window.ReportSections.initProdutosUI = initProdutosUI;
+window.ReportSections.renderRankings = renderRankings;
+window.ReportSections.initRankUI = initRankUI;
 window.ReportSections.ajustarTabelas = ajustarTabelas;
 window.ReportEngine.fmtInt2 = function(v){ return isFinite(v)?E.fmtInt(v):"–"; };
 })();
@@ -2511,13 +2638,16 @@ function renderMarca(recs, years){
     "O grupo opera <b>"+totJD+"</b> John Deere e <b>"+totCS+"</b> Case no período. Comparar as duas frotas inteiras "+
     "induz a erro, porque as Case são bem mais novas — só vale confrontar máquinas da mesma idade.");
 
-  card.className = "s-card s-troca";
+  card.className = "s-card s-troca tabela-grande";
   card.innerHTML = "";
   var svg = document.createElementNS(SVGNS, "svg");
   card.appendChild(svg);
   var wrap = document.createElement("div");
   wrap.className = "troca-tab";
   card.appendChild(wrap);
+  // o gráfico tem poucas colunas e não precisa de altura: fica com metade e a
+  // tabela leva o resto, com linhas maiores
+  svg.style.flex = "0 0 " + Math.round(card.clientHeight * 0.5) + "px";
 
   // tabela: composição da frota por unidade
   wrap.innerHTML = "<table class='tbl grid-tbl tem-total'><thead><tr><th class='l'>Composição da frota</th>"+
@@ -2531,8 +2661,9 @@ function renderMarca(recs, years){
     "<tr class='tot'><td class='l strong'>TOTAL</td>"+
       U.map(function(u){ return "<td class='n strong'>"+((byUnit[u][JD]||0)+(byUnit[u][CS]||0))+"</td>"; }).join("")+
       "<td class='n strong'>"+(totJD+totCS)+"</td></tr></tbody></table>";
-  card.style.setProperty("--c1", "190px");
-  card.style.setProperty("--cN", "90px");
+  wrap.style.setProperty("--c1", "210px");
+  wrap.style.setProperty("--cN", "100px");
+  S.ajustarTabelas(wrap);
 
   if(!ages.length){
     svg.innerHTML = "";
@@ -2565,6 +2696,13 @@ function renderMarca(recs, years){
     notes: ages.map(function(a, i){
       return {text: jdN[i]+" x "+csN[i], color: csN[i] < 5 ? "#C0392B" : E.NAVY};
     }),
+    // quanto a Case difere da John Deere naquela idade
+    topos: ages.map(function(a, i){
+      if(!isFinite(jdRt[i]) || !isFinite(csRt[i]) || jdRt[i] <= 0) return null;
+      var p = (csRt[i]/jdRt[i] - 1) * 100;
+      return {text: "Case " + (p>0?"+":"") + E.fmtDec(p,0) + "%",
+              color: p > 0 ? "#C0392B" : "#2E7D46"};
+    }),
     maxL: C.niceAxis(Math.max.apply(null, jdRt.concat(csRt).filter(function(v){ return isFinite(v); }))*1.35, 2) || 1,
     maxR: 1,
     axisFmtL: function(v){ return E.fmtDec(v, v%1===0?0:1); },
@@ -2575,7 +2713,9 @@ function renderMarca(recs, years){
     "<span class='lg'>"+C.marcadorBarras([E.NAVY])+"<b>John Deere</b> — R$/t naquele ano de uso</span>"+
     "<span class='lg'>"+C.marcadorBarras([CSCOR])+"<b>Case</b> — R$/t no mesmo ano de uso</span>"+
     "<span class='lg'>"+C.marcadorPilula("42 x 9", E.NAVY)+"Máquinas na amostra (JD x Case)"+
-      " — <b style='color:#C0392B'>vermelho</b> quando a Case tem menos de 5</span>");
+      " — <b style='color:#C0392B'>vermelho</b> quando a Case tem menos de 5</span>"+
+    "<span class='lg'>Acima das colunas: quanto a Case custa a <b>mais</b> "+
+      "(<b style='color:#C0392B'>+</b>) ou a <b>menos</b> (<b style='color:#2E7D46'>&minus;</b>) que a John Deere</span>");
 
   // leitura: quem ganha, e o quanto a amostra permite afirmar
   var favCase = 0, favJD = 0;
@@ -2605,92 +2745,9 @@ function renderMarca(recs, years){
 // ============================================================
 // Ranking de maquinas: table11 (cumulative top15), table12/13 (efficiency)
 // ============================================================
-function renderRankings(recs, years){
-  var byFrota = {};
-  recs.forEach(function(r){
-    if(!byFrota[r.frota]) byFrota[r.frota] = {frota:r.frota, custo:0, tonelada:0, modelo:r.modelo, unitCusto:{}};
-    var f = byFrota[r.frota];
-    f.custo += r.custo; f.tonelada += r.tonelada;
-    f.unitCusto[r.unit] = (f.unitCusto[r.unit]||0) + r.custo;
-    if(r.modelo) f.modelo = r.modelo;
-  });
-  var list = Object.values(byFrota).map(function(f){
-    var bestUnit = Object.keys(f.unitCusto).sort(function(a,b){return f.unitCusto[b]-f.unitCusto[a];})[0];
-    return {frota:f.frota, modelo:f.modelo, unit:bestUnit, custo:f.custo, tonelada:f.tonelada, rt: f.tonelada>0?f.custo/f.tonelada:NaN};
-  });
-  var top15 = list.slice().sort(function(a,b){return b.custo-a.custo;}).slice(0,15);
-  var maxCusto = top15.length?top15[0].custo:1;
-  var rows11 = top15.map(function(r,i){
-    var pct = r.custo/maxCusto*100;
-    return "<tr><td class='n'>"+(i+1)+"</td><td class='l'>"+r.frota+"</td><td class='l'>"+esc(r.modelo||"")+"</td><td class='l'>"+esc(r.unit)+
-      "</td><td class='n'>"+E.fmtMoney(r.custo)+"</td><td class='n'>"+(isFinite(r.rt)?E.fmtDec(r.rt,2):"–")+
-      "</td><td class='bar'><div class='bar-track'><div class='bar-fill' style='width:"+pct.toFixed(1)+"%;background:#C0392B'></div></div></td></tr>";
-  }).join("");
-  setHTML("table11-body", rows11);
-
-  var nYears = years.length;
-  var minTon = Math.max(1000, Math.round(800*nYears/500)*500);
-  var eligible = list.filter(function(r){ return r.tonelada>=minTon; });
-  var worst15 = eligible.slice().sort(function(a,b){return b.rt-a.rt;}).slice(0,15);
-  var best15 = eligible.slice().sort(function(a,b){return a.rt-b.rt;}).slice(0,15);
-  function effRow(r,i){
-    return "<tr><td class='n'>"+(i+1)+"</td><td class='l'>"+r.frota+"</td><td class='l'>"+esc(r.modelo||"")+"</td><td class='l'>"+esc(r.unit)+
-      "</td><td class='n'>"+E.fmtInt(r.tonelada)+"</td><td class='n'>"+E.fmtMoney(r.custo)+"</td><td class='n strong'>"+E.fmtDec(r.rt,2)+"</td></tr>";
-  }
-  setHTML("table12-body", worst15.map(effRow).join("") || "<tr><td colspan=7 style='text-align:center'>Sem frotas acima do mínimo de tonelada no período</td></tr>");
-  setHTML("table13-body", best15.map(effRow).join("") || "<tr><td colspan=7 style='text-align:center'>Sem frotas acima do mínimo de tonelada no período</td></tr>");
-  setText("ranking-min-ton", E.fmtInt(minTon));
-}
-
-// ============================================================
-// Detalhe por unidade: 4x (safra dynamic table + top5 cumulative)
-// ============================================================
-var DETAIL_IDS = {
-  "Agro Rubiataba": {safra:"detail-rub-safra", top5:"detail-rub-top5", rt:"detail-rub-rt", acum:"detail-rub-acum", ton:"detail-rub-ton"},
-  "PFCMO Goiás": {safra:"detail-go-safra", top5:"detail-go-top5", rt:"detail-go-rt", acum:"detail-go-acum", ton:"detail-go-ton"},
-  "PFCMO Minas Gerais": {safra:"detail-mg-safra", top5:"detail-mg-top5", rt:"detail-mg-rt", acum:"detail-mg-acum", ton:"detail-mg-ton"},
-  "Agro Uruaçu": {safra:"detail-uru-safra", top5:"detail-uru-top5", rt:"detail-uru-rt", acum:"detail-uru-acum", ton:"detail-uru-ton"}
-};
-function renderDetalhe(recs, years, unitAgg){
-  U.forEach(function(u){
-    var ids = DETAIL_IDS[u];
-    var table = document.getElementById(ids.safra);
-    var thead = table.querySelector("thead"), tbody = table.querySelector("tbody");
-    thead.innerHTML = "<tr><th class='l'>Safra</th><th class='n'>Colhedoras</th><th class='n'>Custo (R$)</th><th class='n'>Tonelada</th><th class='n'>R$/t</th></tr>";
-    var totC=0, totT=0;
-    var rows = years.map(function(y){
-      var c = unitAgg[u][y];
-      totC+=c.custo; totT+=c.tonelada;
-      var rt = c.tonelada>0?c.custo/c.tonelada:NaN;
-      return "<tr><td class='l'>"+y+"</td><td class='n'>"+c.cnt+"</td><td class='n'>"+E.fmtMoney(c.custo)+"</td><td class='n'>"+E.fmtInt(c.tonelada)+"</td><td class='n'>"+(isFinite(rt)?E.fmtDec(rt,2):"–")+"</td></tr>";
-    }).join("");
-    tbody.innerHTML = rows;
-    var lastY = years[years.length-1];
-    var lastCell = unitAgg[u][lastY];
-    var lastRt = lastCell.tonelada>0?lastCell.custo/lastCell.tonelada:NaN;
-    setText(ids.rt, isFinite(lastRt)?E.fmtDec(lastRt,2):"–");
-    setText(ids.acum, E.fmtDec(totC/1e6,1));
-    setText(ids.ton, E.fmtDec(totT/1e6,1));
-
-    var byFrota = {};
-    recs.forEach(function(r){
-      if(r.unit!==u) return;
-      if(!byFrota[r.frota]) byFrota[r.frota] = {frota:r.frota, modelo:r.modelo, custo:0, tonelada:0};
-      byFrota[r.frota].custo += r.custo; byFrota[r.frota].tonelada += r.tonelada;
-    });
-    var top5 = Object.values(byFrota).sort(function(a,b){return b.custo-a.custo;}).slice(0,5);
-    var t5html = top5.map(function(f){
-      var rt = f.tonelada>0?f.custo/f.tonelada:NaN;
-      return "<tr><td class='l'>"+f.frota+"</td><td class='l'>"+esc(f.modelo||"")+"</td><td class='n'>"+E.fmtMoney(f.custo)+"</td><td class='n'>"+(isFinite(rt)?E.fmtDec(rt,2):"–")+"</td></tr>";
-    }).join("");
-    document.getElementById(ids.top5).querySelector("tbody").innerHTML = t5html;
-  });
-}
 
 window.ReportSections.renderMarca = renderMarca;
 window.ReportSections.renderRankings = renderRankings;
-window.ReportSections.renderDetalhe = renderDetalhe;
-window.ReportSections.DETAIL_IDS = DETAIL_IDS;
 })();
 </script>
 <script>(function(){
@@ -2872,6 +2929,8 @@ window.replayProducaoTabelas = function(){ S.ajustarTabelasProducao(); };
 // a página 3 mede o cartão em pixel real: precisa refazer ao reentrar e ao redimensionar
 window.replayIdade = function(){ if(LAST) S.renderIdade(LAST.recs, LAST.years, LAST.unitAgg); };
 window.replayProdutos = function(){ if(LAST) S.renderProdutos(LAST.recs, LAST.years); };
+window.replayMarca = function(){ if(LAST) S.renderMarca(LAST.recs, LAST.years); };
+window.replayRankings = function(){ if(LAST) S.renderRankings(LAST.recs, LAST.years); };
 
 function initPanoramaUI(){
   var box = document.getElementById("pan-modo");
@@ -2891,7 +2950,7 @@ function initPanoramaUI(){
     clearTimeout(t);
     t = setTimeout(function(){
       window.replayPanorama(); window.replayProducao(); window.replayProducaoTabelas();
-      window.replayIdade(); window.replayProdutos();
+      window.replayIdade(); window.replayProdutos(); window.replayMarca(); window.replayRankings();
     }, 220);
   });
 }
@@ -2914,7 +2973,6 @@ function renderAll(de, ate){
   S.renderProdutos(recs, years);
   S.renderMarca(recs, years);
   S.renderRankings(recs, years);
-  S.renderDetalhe(recs, years, unitAgg);
 }
 window.renderAll = renderAll;
 
@@ -2939,6 +2997,7 @@ function initFilter(){
   S.initIdadeFiltroUI();
   S.initCompraUI();
   S.initProdutosUI();
+  S.initRankUI();
   var exc = E.EXCLUIDOS;
   setText("metodo-minton", E.fmtInt(exc.minTon));
   setText("metodo-excluidos", E.fmtInt(exc.registros));
@@ -3006,6 +3065,8 @@ function go(i, skipHash){
   if(id==="producao" && window.replayProducaoTabelas) window.replayProducaoTabelas();
   if(id.indexOf("idade")===0 && window.replayIdade) window.replayIdade();
   if(id==="produtos" && window.replayProdutos) window.replayProdutos();
+  if(id==="marca" && window.replayMarca) window.replayMarca();
+  if(id==="maquinas" && window.replayRankings) window.replayRankings();
 }
 function next(){ go(cur+1); }
 function prev(){ go(cur-1); }
