@@ -114,7 +114,17 @@ nav.toc a.on{color:var(--gold);border-bottom-color:var(--gold)}
 .s-eyebrow{font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:700}
 .s-title{font-size:25px;font-weight:700;margin:3px 0 0;line-height:1.15}
 .s-sub{font-size:13px;color:#AEBBD8;margin:5px 0 0;max-width:760px;line-height:1.45}
-.s-chips{margin-left:auto;display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end}
+.s-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.s-chips{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end}
+.s-toggle{display:flex;gap:0;border:1px solid rgba(201,162,39,.5);border-radius:8px;overflow:hidden}
+.s-toggle button{font:inherit;font-size:12px;font-weight:700;padding:6px 14px;border:0;cursor:pointer;
+  background:transparent;color:#C6CEE0}
+.s-toggle button.on{background:var(--gold);color:var(--navy)}
+.s-legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:#C6CEE0}
+.s-legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.s-card.s-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:1fr;gap:9px}
+.s-card.s-grid.two{grid-template-columns:repeat(2,1fr);grid-template-rows:1fr 1fr}
+.s-card.s-grid > svg{width:100%;height:100%;display:block;margin:0;min-width:0;min-height:0}
 .s-chip{background:rgba(255,255,255,.07);border:1px solid rgba(201,162,39,.45);border-radius:10px;
   padding:8px 14px;min-width:126px}
 .s-chip .v{color:var(--gold);font-size:17.5px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
@@ -126,6 +136,20 @@ nav.toc a.on{color:var(--gold);border-bottom-color:var(--gold)}
   border-left:4px solid var(--gold);border-radius:0 8px 8px 0;padding:10px 16px;
   font-size:13.5px;line-height:1.55;color:#EAF0FF}
 .s-insight strong{color:var(--gold)}
+
+/* telas baixas (janela larga e curta): compacta o cabeçalho e dá altura ao gráfico */
+@media(max-height:780px){
+  .slide-dark{padding:13px 24px 11px;gap:8px}
+  .s-title{font-size:21px}
+  .s-sub{display:none}
+  .s-eyebrow{font-size:10.5px}
+  .s-chip{padding:5px 11px;min-width:0}
+  .s-chip .v{font-size:15px}
+  .s-chip .k{font-size:9.5px}
+  .s-toggle button{padding:5px 11px;font-size:11.5px}
+  .s-insight{padding:8px 14px;font-size:12.5px}
+  .s-legend{font-size:11px;gap:12px}
+}
 
 @keyframes rcRise{from{transform:scaleY(0)}to{transform:scaleY(1)}}
 @keyframes rcFade{from{opacity:0}to{opacity:1}}
@@ -170,13 +194,20 @@ nav.toc a.on{color:var(--gold);border-bottom-color:var(--gold)}
 <h2 class="s-title" style="border:0;color:#fff;padding:0">Quanto o grupo gastou — e quanto isso custou por tonelada</h2>
 <p class="s-sub" id="panorama-desc-dyn">Barras: custo de oficina do ano, empilhado por unidade. Linha: R$ por tonelada colhida do grupo. Abaixo de cada safra, a idade média da frota naquele ano.</p>
 </div>
+<div class="s-right">
+<div class="s-toggle" id="pan-modo">
+<button type="button" data-modo="unidade" class="on">Por empresa</button>
+<button type="button" data-modo="grupo">Grupo consolidado</button>
+</div>
 <div class="s-chips">
 <div class="s-chip"><div class="v" id="pan-chip-custo">–</div><div class="k" id="pan-chip-custo-k">Custo no período</div></div>
 <div class="s-chip"><div class="v" id="pan-chip-rt">–</div><div class="k" id="pan-chip-rt-k">R$/t</div></div>
 <div class="s-chip"><div class="v" id="pan-chip-idade">–</div><div class="k" id="pan-chip-idade-k">Idade média da frota</div></div>
 </div>
 </div>
-<div class="s-card"><svg id="chart-panorama-combo" class="rc-chart"></svg></div>
+</div>
+<div class="s-legend" id="pan-legend"></div>
+<div class="s-card" id="panorama-card"></div>
 <div class="s-insight" id="panorama-insight">carregando…</div>
 </article>
 
@@ -713,10 +744,11 @@ function niceAxis(v, ticks){
 
 function comboBarLine(svg, opts){
   svg.innerHTML = "";
-  var W=1480, H=600, padL=92, padR=104, padT=78, padB=126;
+  var W=opts.W||1480, H=opts.H||600, padL=92, padR=104, padT=78, padB=126;
   svg.setAttribute("viewBox","0 0 "+W+" "+H);
   svg.setAttribute("preserveAspectRatio","xMidYMid meet");
 
+  if(H<490){ padT=64; padB=104; }
   var labels=opts.labels, stacks=opts.stacks, line=opts.line, notes=opts.notes||[];
   var n=labels.length, plotW=W-padL-padR, plotH=H-padT-padB, base=padT+plotH;
   var totals = labels.map(function(_,i){ return stacks.reduce(function(a,s){ return a+(s.values[i]||0); }, 0); });
@@ -848,7 +880,98 @@ function comboBarLine(svg, opts){
   txt(svg, lx+26, 57.5, line.name, {"font-size":"12.5","font-weight":"700",fill:line.color});
 }
 
-window.ReportCharts = { groupedBarChart: groupedBarChart, lineChart: lineChart, singleBarChart: singleBarChart, comboBarLine: comboBarLine, niceMax: niceMax };
+// ---- painel compacto por empresa (small multiple): mesmas escalas em todos os painéis
+//      barras = custo do ano · linha = R$/t da unidade · pílula = idade média da frota ----
+function miniCombo(svg, o){
+  svg.innerHTML = "";
+  var W=o.W, H=o.H;
+  svg.setAttribute("viewBox","0 0 "+W+" "+H);
+  svg.setAttribute("preserveAspectRatio","xMidYMid meet");
+
+  var padL=38, padR=32, padT=38, padB=54;
+  var n=o.labels.length, plotW=W-padL-padR, plotH=H-padT-padB, base=padT+plotH;
+  if(plotW<40 || plotH<40) return;
+  var slot=plotW/n, barW=Math.min(slot*0.62, 30);
+  function yL(v){ return base-(v/o.maxL)*plotH; }
+  function yR(v){ return base-(v/o.maxR)*plotH; }
+  function cx(i){ return padL+i*slot+slot/2; }
+  function txt(parent,x,y,s,a){ var t=ns("text"); t.setAttribute("x",x); t.setAttribute("y",y);
+    Object.keys(a||{}).forEach(function(k){ t.setAttribute(k,a[k]); }); t.textContent=s;
+    parent.appendChild(t); return t; }
+
+  // cabeçalho do painel
+  var sw=ns("rect"); sw.setAttribute("x",padL-4); sw.setAttribute("y",8); sw.setAttribute("width",12);
+  sw.setAttribute("height",12); sw.setAttribute("rx",2.5); sw.setAttribute("fill",o.color);
+  svg.appendChild(sw);
+  txt(svg, padL+13, 18, o.unit, {"font-size":"13","font-weight":"700",fill:E.NAVY});
+  txt(svg, W-padR+10, 18, o.headRight, {"text-anchor":"end","font-size":"11.5","font-weight":"700",fill:"#5A6072"});
+
+  // grade
+  for(var i=0;i<=2;i++){
+    var f=i/2, y=base-f*plotH;
+    var gl=ns("line"); gl.setAttribute("x1",padL); gl.setAttribute("x2",W-padR);
+    gl.setAttribute("y1",y); gl.setAttribute("y2",y);
+    gl.setAttribute("stroke", i===0?"#B9C0CE":"#E7EAF0"); svg.appendChild(gl);
+    txt(svg, padL-6, y+3.5, o.axisFmtL(o.maxL*f), {"text-anchor":"end","font-size":"9.5",fill:"#8A92A4"});
+    txt(svg, W-padR+6, y+3.5, o.axisFmtR(o.maxR*f), {"text-anchor":"start","font-size":"9.5",fill:o.lineColor});
+  }
+
+  // barras
+  var g=ns("g");
+  g.setAttribute("style","transform-origin:0px "+base+"px;animation:rcRise .72s cubic-bezier(.2,.85,.3,1)");
+  o.bars.forEach(function(v,i){
+    if(!(v>0)) return;
+    var h=(v/o.maxL)*plotH, y=yL(v), x=cx(i)-barW/2;
+    var r=ns("rect"); r.setAttribute("x",x); r.setAttribute("y",y);
+    r.setAttribute("width",barW); r.setAttribute("height",h); r.setAttribute("rx",3);
+    r.setAttribute("fill",o.color); g.appendChild(r);
+  });
+  svg.appendChild(g);
+
+  // linha R$/t
+  var lg=ns("g"); lg.setAttribute("style","animation:rcFade .6s ease .55s both");
+  var pts=o.line.map(function(v,i){ return [cx(i), yR(v)]; });
+  var d=pts.map(function(p,i){ return (i===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1); }).join(" ");
+  var halo=ns("path"); halo.setAttribute("d",d); halo.setAttribute("fill","none");
+  halo.setAttribute("stroke","#fff"); halo.setAttribute("stroke-width","5"); halo.setAttribute("stroke-linejoin","round");
+  lg.appendChild(halo);
+  var lp=ns("path"); lp.setAttribute("d",d); lp.setAttribute("fill","none"); lp.setAttribute("stroke",o.lineColor);
+  lp.setAttribute("stroke-width","2.4"); lp.setAttribute("stroke-linejoin","round"); lp.setAttribute("stroke-linecap","round");
+  lg.appendChild(lp);
+  pts.forEach(function(p,i){
+    var c=ns("circle"); c.setAttribute("cx",p[0]); c.setAttribute("cy",p[1]); c.setAttribute("r",3.6);
+    c.setAttribute("fill","#fff"); c.setAttribute("stroke",o.lineColor); c.setAttribute("stroke-width","2.1");
+    lg.appendChild(c);
+    // só rotula o primeiro e o último para não poluir o painel
+    if(i===0 || i===pts.length-1){
+      txt(lg, p[0], p[1]-9, o.lineFmt(o.line[i]),
+        {"text-anchor":"middle","font-size":"10.5","font-weight":"700",fill:o.lineColor,
+         stroke:"#fff","stroke-width":"3","paint-order":"stroke"});
+    }
+  });
+  svg.appendChild(lg);
+
+  // rótulos de ano + pílula de idade
+  o.labels.forEach(function(lab,i){
+    txt(svg, cx(i), base+15, lab, {"text-anchor":"middle","font-size":"10",fill:"#5A6072"});
+    var nt=o.notes[i];
+    if(!nt || !nt.text) return;
+    var fs = slot<40 ? 8.5 : 9.5;
+    var w = Math.max(20, nt.text.length*fs*0.62 + 10), x = cx(i)-w/2, y = base+23;
+    if(w <= slot-1){
+      var pill=ns("rect"); pill.setAttribute("x",x); pill.setAttribute("y",y);
+      pill.setAttribute("width",w); pill.setAttribute("height",17); pill.setAttribute("rx",8.5);
+      pill.setAttribute("fill","#fff"); pill.setAttribute("stroke",nt.color); pill.setAttribute("stroke-width","1.4");
+      svg.appendChild(pill);
+    }
+    // sem espaço para a pílula, mantém o número colorido — a informação nunca some
+    txt(svg, cx(i), y+12, nt.text,
+      {"text-anchor":"middle","font-size":String(fs),"font-weight":"700",fill:nt.color});
+  });
+}
+
+window.ReportCharts = { groupedBarChart: groupedBarChart, lineChart: lineChart, singleBarChart: singleBarChart,
+  comboBarLine: comboBarLine, miniCombo: miniCombo, niceAxis: niceAxis, niceMax: niceMax };
 })();
 </script>
 <script>(function(){
@@ -1508,65 +1631,177 @@ function corIdade(a){ return !isFinite(a) ? "#8A92A4" : a<3.5 ? "#2E7D46" : (a<5
 // PÁGINA 1 — Panorama: custo anual (barras empilhadas por unidade)
 // + R$/t do grupo (linha) + idade média da frota como observação de cada safra
 // ============================================================
+var SVGNS = "http://www.w3.org/2000/svg";
+var PAN_MODO = "unidade"; // "unidade" (por empresa) | "grupo"
+
+function fmtIdade(a){ return isFinite(a) ? (E.fmtDec(a,1)+" anos") : "–"; }
+function legendaIdade(){
+  return "<span><b style='color:#2E7D46'>&#9679;</b> até 3,5 anos</span>"+
+         "<span><b style='color:#C9A227'>&#9679;</b> 3,5 a 5,5</span>"+
+         "<span><b style='color:#C0392B'>&#9679;</b> acima de 5,5</span>";
+}
+
 function renderPanorama(years, unitAgg, grupoAgg, recs){
+  var card = document.getElementById("panorama-card");
+  if(!card) return;
+
   var idadeF = E.idadeFrotaAgg(recs, years);
-  var idades = years.map(function(y){ return idadeF.avg(idadeF.grupo[y]); });
-  var rts = years.map(function(y){ var g=grupoAgg[y]; return g.tonelada>0 ? g.custo/g.tonelada : 0; });
-
-  C.comboBarLine(q("#chart-panorama-combo"), {
-    title: "Custo de oficina por safra, R$/t do grupo e idade da frota",
-    labels: years.map(String),
-    stacks: U.map(function(u){
-      return {name:u, color:COLORS[u], values: years.map(function(y){ return unitAgg[u][y].custo/1e6; })};
-    }),
-    line: {name:"R$/t do grupo", color: RT_COLOR, values: rts},
-    notes: idades.map(function(a){
-      return {text: isFinite(a) ? (E.fmtDec(a,1)+" anos") : "–", color: corIdade(a)};
-    }),
-    notesLabel1: "Idade média", notesLabel2: "da frota",
-    yLabelL: "R$ milhões", yLabelR: "R$/t",
-    highlightLast: true,
-    axisFmtL: function(v){ return E.fmtDec(v, v%1===0?0:1); },
-    axisFmtR: function(v){ return E.fmtDec(v, v%1===0?0:1); },
-    totalFmt: function(v){ return "R$ "+E.fmtDec(v,1)+" mi"; },
-    lineFmt:  function(v){ return E.fmtDec(v,2); }
-  });
-
-  var deY=years[0], ateY=years[years.length-1];
+  var deY = years[0], ateY = years[years.length-1];
+  var rtG = years.map(function(y){ var g=grupoAgg[y]; return g.tonelada>0 ? g.custo/g.tonelada : 0; });
+  var idG = years.map(function(y){ return idadeF.avg(idadeF.grupo[y]); });
   var custoTotal = E.sum(years, function(y){ return grupoAgg[y].custo; });
-  var rtDe=rts[0], rtAte=rts[rts.length-1];
-  var idDe=idades[0], idAte=idades[idades.length-1];
 
   setText("pan-chip-custo", E.fmtMoneyMi(custoTotal));
   setText("pan-chip-custo-k", "Custo de oficina · "+(years.length>1 ? deY+"–"+ateY : deY));
-  setText("pan-chip-rt", "R$ "+E.fmtDec(rtAte,2));
+  setText("pan-chip-rt", "R$ "+E.fmtDec(rtG[rtG.length-1],2));
   setText("pan-chip-rt-k", "R$/t do grupo em "+ateY);
-  setText("pan-chip-idade", isFinite(idAte) ? (E.fmtDec(idAte,1)+" anos") : "–");
+  setText("pan-chip-idade", fmtIdade(idG[idG.length-1]));
   setText("pan-chip-idade-k", "Idade média da frota em "+ateY);
 
-  var msg;
-  if(years.length>1 && rtDe>0){
-    var mult = rtAte/rtDe;
-    msg = "De <strong>"+deY+"</strong> a <strong>"+ateY+"</strong> o custo de oficina do grupo foi de "+
-      "<strong>"+E.fmtMoneyMi(grupoAgg[deY].custo)+"</strong> para <strong>"+E.fmtMoneyMi(grupoAgg[ateY].custo)+"</strong> "+
-      "e o R$/t multiplicou <strong>"+E.fmtDec(mult,1)+"x</strong> (R$ "+E.fmtDec(rtDe,2)+" → R$ "+E.fmtDec(rtAte,2)+"). "+
-      "No mesmo intervalo a frota envelheceu de <strong>"+E.fmtDec(idDe,1)+"</strong> para <strong>"+E.fmtDec(idAte,1)+" anos</strong>.";
-    if(isFinite(idDe) && isFinite(idAte) && idAte-idDe > 0.2){
-      msg += " Ou seja: cada ano a mais de idade da frota custou, em média, <strong>R$ "+
-        E.fmtDec((rtAte-rtDe)/(idAte-idDe),2)+" por tonelada colhida</strong>.";
+  setText("panorama-desc-dyn", PAN_MODO==="grupo"
+    ? "Grupo consolidado: barras empilhadas por unidade e linha de R$/t do grupo."
+    : "Um painel por empresa, com a mesma escala nos quatro — comparação direta entre as unidades.");
+
+  var lbls = years.map(function(y){ return years.length>7 ? ("'"+String(y).slice(2)) : String(y); });
+  var box = card.getBoundingClientRect();
+  var cw = Math.round(box.width);
+
+  if(PAN_MODO === "grupo"){
+    card.className = "s-card";
+    card.innerHTML = "";
+    var svg = document.createElementNS(SVGNS, "svg");
+    card.appendChild(svg);
+    var b = svg.getBoundingClientRect();
+    C.comboBarLine(svg, {
+      W: Math.max(700, Math.round(b.width)), H: Math.max(330, Math.round(b.height)),
+      title: "Custo de oficina por safra, R$/t do grupo e idade da frota",
+      labels: years.map(String),
+      stacks: U.map(function(u){
+        return {name:u, color:COLORS[u], values: years.map(function(y){ return unitAgg[u][y].custo/1e6; })};
+      }),
+      line: {name:"R$/t do grupo", color: RT_COLOR, values: rtG},
+      notes: idG.map(function(a){ return {text: fmtIdade(a), color: corIdade(a)}; }),
+      notesLabel1:"Idade média", notesLabel2:"da frota",
+      yLabelL:"R$ milhões", yLabelR:"R$/t", highlightLast:true,
+      axisFmtL: function(v){ return E.fmtDec(v, v%1===0?0:1); },
+      axisFmtR: function(v){ return E.fmtDec(v, v%1===0?0:1); },
+      totalFmt: function(v){ return "R$ "+E.fmtDec(v,1)+" mi"; },
+      lineFmt:  function(v){ return E.fmtDec(v,2); }
+    });
+
+    setHTML("pan-legend", "<span>Barras: custo de oficina do ano, empilhado por unidade</span>"+
+      "<span><b style='color:"+RT_COLOR+"'>&#9472;</b> R$/t do grupo</span>"+
+      "<span>Pílula = idade média da frota:</span>"+legendaIdade());
+
+    var msg;
+    if(years.length>1 && rtG[0]>0){
+      var mult = rtG[rtG.length-1]/rtG[0], idDe=idG[0], idAte=idG[idG.length-1];
+      msg = "De <strong>"+deY+"</strong> a <strong>"+ateY+"</strong> o custo de oficina do grupo foi de "+
+        "<strong>"+E.fmtMoneyMi(grupoAgg[deY].custo)+"</strong> para <strong>"+E.fmtMoneyMi(grupoAgg[ateY].custo)+"</strong> "+
+        "e o R$/t multiplicou <strong>"+E.fmtDec(mult,1)+"x</strong> (R$ "+E.fmtDec(rtG[0],2)+" → R$ "+E.fmtDec(rtG[rtG.length-1],2)+"). "+
+        "No mesmo intervalo a frota envelheceu de <strong>"+E.fmtDec(idDe,1)+"</strong> para <strong>"+E.fmtDec(idAte,1)+" anos</strong>.";
+      if(isFinite(idDe) && isFinite(idAte) && idAte-idDe > 0.2){
+        msg += " Ou seja: cada ano a mais de idade da frota custou, em média, <strong>R$ "+
+          E.fmtDec((rtG[rtG.length-1]-rtG[0])/(idAte-idDe),2)+" por tonelada colhida</strong>.";
+      }
+    } else {
+      msg = "Safra <strong>"+ateY+"</strong>: <strong>"+E.fmtMoneyMi(custoTotal)+"</strong> de custo de oficina, "+
+        "<strong>R$ "+E.fmtDec(rtG[0],2)+"/t</strong> e frota com <strong>"+fmtIdade(idG[0])+"</strong> de idade média.";
     }
-  } else {
-    msg = "Safra <strong>"+ateY+"</strong>: <strong>"+E.fmtMoneyMi(custoTotal)+"</strong> de custo de oficina, "+
-      "<strong>R$ "+E.fmtDec(rtAte,2)+"/t</strong> e frota com idade média de <strong>"+E.fmtDec(idAte,1)+" anos</strong>. "+
-      "Selecione um período maior no topo para ver a evolução.";
+    setHTML("panorama-insight", msg);
+    return;
   }
-  setHTML("panorama-insight", msg);
+
+  // ---------- modo "por empresa": um painel por unidade, escalas compartilhadas ----------
+  card.className = "s-card s-grid" + (cw < 1180 ? " two" : "");
+  card.innerHTML = "";
+  var svgs = U.map(function(){ var s=document.createElementNS(SVGNS,"svg"); card.appendChild(s); return s; });
+
+  var maxCusto=0, maxRt=0;
+  U.forEach(function(u){
+    years.forEach(function(y){
+      var c = unitAgg[u][y];
+      if(c.custo/1e6 > maxCusto) maxCusto = c.custo/1e6;
+      if(c.tonelada>0 && c.custo/c.tonelada > maxRt) maxRt = c.custo/c.tonelada;
+    });
+  });
+  var maxL = C.niceAxis(maxCusto*1.42, 2) || 1;
+  var maxR = C.niceAxis(maxRt*1.12, 2) || 1;
+
+  U.forEach(function(u, k){
+    var b = svgs[k].getBoundingClientRect();
+    var custoU = E.rowTotal(unitAgg, u, years, "custo");
+    C.miniCombo(svgs[k], {
+      W: Math.max(200, Math.round(b.width)), H: Math.max(150, Math.round(b.height)),
+      unit: u, color: COLORS[u], lineColor: RT_COLOR,
+      headRight: E.fmtMoneyMi(custoU),
+      labels: lbls,
+      bars: years.map(function(y){ return unitAgg[u][y].custo/1e6; }),
+      line: years.map(function(y){ var c=unitAgg[u][y]; return c.tonelada>0 ? c.custo/c.tonelada : 0; }),
+      notes: years.map(function(y){
+        var a = idadeF.avg(idadeF.byUnit[u][y]);
+        return {text: isFinite(a) ? E.fmtDec(a,1) : "–", color: corIdade(a)};
+      }),
+      maxL: maxL, maxR: maxR,
+      axisFmtL: function(v){ return E.fmtDec(v, v%1===0?0:1); },
+      axisFmtR: function(v){ return E.fmtDec(v, v%1===0?0:1); },
+      lineFmt: function(v){ return E.fmtDec(v,2); }
+    });
+  });
+
+  setHTML("pan-legend",
+    "<span>Barras: custo de oficina do ano (R$ mi, eixo esq.)</span>"+
+    "<span><b style='color:"+RT_COLOR+"'>&#9472;</b> R$/t da unidade (eixo dir.)</span>"+
+    "<span>Mesma escala nos 4 painéis</span>"+
+    "<span>Pílula = idade média da frota:</span>"+legendaIdade());
+
+  // achado por empresa: melhor x pior no último ano do período
+  var linhas = U.map(function(u){
+    var c = unitAgg[u][ateY];
+    return {u:u, rt: c.tonelada>0 ? c.custo/c.tonelada : NaN, ton: c.tonelada,
+            idade: idadeF.avg(idadeF.byUnit[u][ateY])};
+  }).filter(function(r){ return isFinite(r.rt) && r.ton>0; });
+  linhas.sort(function(a,b){ return a.rt - b.rt; });
+
+  if(linhas.length >= 2){
+    var best = linhas[0], worst = linhas[linhas.length-1];
+    var ganho = (worst.rt - best.rt) * worst.ton / 1e6;
+    var m = "Em <strong>"+ateY+"</strong> a <strong>"+esc(worst.u)+"</strong> opera a <strong>R$ "+E.fmtDec(worst.rt,2)+"/t</strong>"+
+      (isFinite(worst.idade) ? " com frota de <strong>"+E.fmtDec(worst.idade,1)+" anos</strong>" : "")+
+      "; a <strong>"+esc(best.u)+"</strong>, a <strong>R$ "+E.fmtDec(best.rt,2)+"/t</strong>"+
+      (isFinite(best.idade) ? " com <strong>"+E.fmtDec(best.idade,1)+" anos</strong>" : "")+". "+
+      "São <strong>R$ "+E.fmtDec(worst.rt-best.rt,2)+"/t</strong> de diferença — fechar essa distância só na "+esc(worst.u)+
+      " valeria <strong>R$ "+E.fmtDec(ganho,1)+" milhões</strong> na safra.";
+    setHTML("panorama-insight", m);
+  } else {
+    setHTML("panorama-insight", "Sem tonelada suficiente em "+ateY+" para comparar as unidades no período selecionado.");
+  }
 }
 
 var LAST = null;
 window.replayPanorama = function(){
   if(LAST) renderPanorama(LAST.years, LAST.unitAgg, LAST.grupoAgg, LAST.recs);
 };
+
+function initPanoramaUI(){
+  var box = document.getElementById("pan-modo");
+  if(box){
+    box.addEventListener("click", function(e){
+      var b = e.target.closest ? e.target.closest("button[data-modo]") : null;
+      if(!b) return;
+      PAN_MODO = b.getAttribute("data-modo");
+      Array.prototype.forEach.call(box.querySelectorAll("button"), function(x){
+        x.classList.toggle("on", x===b);
+      });
+      window.replayPanorama();
+    });
+  }
+  var t = null;
+  window.addEventListener("resize", function(){
+    clearTimeout(t);
+    t = setTimeout(function(){ window.replayPanorama(); }, 220);
+  });
+}
 
 function renderAll(de, ate){
   E.STATE.de = de; E.STATE.ate = ate;
@@ -1606,6 +1841,7 @@ function initFilter(){
   }
   de.addEventListener("change", onChange);
   ate.addEventListener("change", onChange);
+  initPanoramaUI();
   renderAll(parseInt(de.value), parseInt(ate.value));
 }
 
