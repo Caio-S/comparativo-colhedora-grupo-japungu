@@ -232,7 +232,7 @@ table.prod-tbl th:last-child,table.prod-tbl td:last-child{width:132px}
 <div>
 <div class="s-eyebrow">02 &middot; Produção</div>
 <h2 class="s-title" style="border:0;color:#fff;padding:0">Quanto o grupo colheu — e com quantas máquinas</h2>
-<p class="s-sub" id="producao-desc-dyn">Mesma grade nas três tabelas — cada safra fica sob a mesma safra. A intensidade da cor acompanha o valor: quanto mais forte, maior o número na sua tabela.</p>
+<p class="s-sub" id="producao-desc-dyn">Só entram as colhedoras que tiveram entrada de cana na safra. Mesma grade nas três tabelas — cada safra sob a mesma safra — e a cor acompanha o valor.</p>
 </div>
 <div class="s-right">
 <div class="s-chips">
@@ -439,6 +439,8 @@ table.prod-tbl th:last-child,table.prod-tbl td:last-child{width:132px}
 <p class="desc" style="max-width:100%">
 <b>Fonte:</b> consulta ao vivo ao banco MariaDB do grupo — view <code>vw_consumo</code> (custo de oficina, 2020–2026), tabelas <code>pes_pesagem_capa</code>/<code>pes_pesagem_item</code> (produção colhida), view <code>vw_abastecimento</code> (horímetro, cobertura real a partir de 2024) e tabela <code>fro_frota</code> (cadastro mestre: empresa atual e data de aquisição real de cada máquina). Dados extraídos em 09/09/2026.
 O custo cobre peças, materiais e lubrificantes lançados contra ordens de frota nos tipos de documento RQE, FRO, CA, REQ, RQI, RQC e DEV; não inclui abastecimento/combustível (tratado à parte em R$/hora), mão de obra própria nem serviços de terceiros fora de requisição de material.<br><br>
+<b>Colhedora ativa na safra:</b> uma máquina só entra nos cálculos do ano em que teve entrada de cana registrada na pesagem. Sem tonelada na safra, a colhedora fica fora daquele ano em <u>todos</u> os critérios — contagem de frota, custo, horas rodadas, combustível, R$/t, R$/hora, custo por máquina, idade média e rankings.
+Isso evita contar como frota ativa máquina parada, vendida ou ainda não liberada — distorção maior justamente em 2026, safra parcial, onde <span id="metodo-excluidos">alguns</span> pares máquina-safra ficaram de fora. O custo assim excluído representa <span id="metodo-excluidos-custo">–</span> do total do período completo.<br><br>
 <b>Filtro de período:</b> o seletor "De/Até" no topo do relatório reprocessa todas as tabelas e gráficos para o intervalo de safras escolhido — inclusive KPIs, rankings e a curva de idade da máquina. 2026 é um ano parcial (dados até 09/09/2026).<br><br>
 <b>Consolidação de unidades:</b> as bases traziam 7 códigos de empresa. Conforme a estrutura real do grupo, CRV Goiás foi somada a PFCMO Goiás,
 CRV Minas Gerais a PFCMO Minas Gerais e Uruaçu a Agro Uruaçu, resultando nas 4 unidades deste relatório. Agro Rubiataba corresponde ao código AGRO-RUB
@@ -471,7 +473,16 @@ var UNIT_ORDER = ["Agro Rubiataba","PFCMO Goiás","PFCMO Minas Gerais","Agro Uru
 var COLORS = {"Agro Rubiataba":"#12224A","PFCMO Goiás":"#C9A227","PFCMO Minas Gerais":"#2E86C1","Agro Uruaçu":"#2E7D46"};
 var GRAY = "#9AA1AE";
 var NAVY = "#12224A";
-var RECORDS = window.MASTER_RECORDS;
+// REGRA DO GRUPO: uma colhedora só entra nos cálculos da safra em que teve
+// entrada de cana. Sem tonelada no ano, a máquina fica fora de tudo naquele ano
+// — contagem de frota, custo, horas e combustível. Vale para todos os critérios
+// do relatório (R$/t, R$/hora, custo por máquina, idade média, rankings).
+var MASTER = window.MASTER_RECORDS;
+var RECORDS = MASTER.filter(function(r){ return r.tonelada > 0; });
+var EXCLUIDOS = {
+  registros: MASTER.length - RECORDS.length,
+  custo: MASTER.reduce(function(a,r){ return a + (r.tonelada>0 ? 0 : r.custo); }, 0)
+};
 var ALL_YEARS = Array.from(new Set(RECORDS.map(function(r){return r.ano;}))).sort();
 
 // ---------------- formatters ----------------
@@ -552,7 +563,7 @@ function idadeFrotaAgg(recs, years){
 
 window.ReportEngine = {
   UNIT_ORDER: UNIT_ORDER, COLORS: COLORS, GRAY: GRAY, NAVY: NAVY,
-  RECORDS: RECORDS, ALL_YEARS: ALL_YEARS, STATE: STATE,
+  RECORDS: RECORDS, ALL_YEARS: ALL_YEARS, STATE: STATE, EXCLUIDOS: EXCLUIDOS,
   fmtInt: fmtInt, fmtMoney: fmtMoney, fmtMoneyMil: fmtMoneyMil, fmtMoneyMi: fmtMoneyMi, fmtDec: fmtDec, esc: esc,
   yearsInRange: yearsInRange, filterRecords: filterRecords,
   groupBy: groupBy, sum: sum, nunique: nunique,
@@ -2040,6 +2051,9 @@ function initFilter(){
   de.addEventListener("change", onChange);
   ate.addEventListener("change", onChange);
   initPanoramaUI();
+  var exc = E.EXCLUIDOS, custoBruto = exc.custo + E.sum(E.RECORDS, function(r){ return r.custo; });
+  setText("metodo-excluidos", E.fmtInt(exc.registros));
+  setText("metodo-excluidos-custo", E.fmtDec(exc.custo/custoBruto*100, 1)+"% ("+E.fmtMoneyMi(exc.custo)+")");
   renderAll(parseInt(de.value), parseInt(ate.value));
 }
 
