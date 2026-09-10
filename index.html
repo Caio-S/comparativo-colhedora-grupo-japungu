@@ -195,7 +195,7 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 
 <nav class="toc">
 <a href="#capa">Capa</a><a href="#panorama">1 · Panorama do grupo</a><a href="#producao">2 · Produção</a><a href="#producao-graf">2 · Por unidade</a>
-<a href="#idade">3 · Custo por ano de uso</a><a href="#idade-unidade">3 · Por unidade</a><a href="#idade-tabelas">3 · Detalhe</a><a href="#idade-frota">3 · Idade média da frota</a><a href="#idade-troca">3 · Ponto de troca</a><a href="#marca">4 · John Deere x Case</a>
+<a href="#idade">3 · Custo por ano de uso</a><a href="#idade-unidade">3 · Por unidade</a><a href="#idade-tabelas">3 · Detalhe</a><a href="#idade-frota">3 · Idade média da frota</a><a href="#idade-troca">3 · Ponto de troca</a><a href="#idade-compra">3 · Compra na conta</a><a href="#marca">4 · John Deere x Case</a>
 <a href="#maquinas">5 · Ranking de máquinas</a><a href="#detalhe">6 · Detalhe por unidade</a><a href="#metodologia">7 · Metodologia</a>
 </nav>
 
@@ -404,6 +404,33 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <div class="s-legend" id="idade-troca-legend"></div>
 <div class="s-card" id="idade-troca-card"></div>
 <div class="s-insight" id="idade-troca-insight">carregando&hellip;</div>
+</article>
+
+
+<article class="slide slide-dark" id="idade-compra" data-title="Com a compra das duas na conta">
+<div class="s-head">
+<div>
+<div class="s-eyebrow">03 &middot; Com a compra das duas na conta</div>
+<h2 class="s-title" style="border:0;color:#fff;padding:0">A m&aacute;quina atual tamb&eacute;m foi comprada</h2>
+<p class="s-sub">Na p&aacute;gina anterior s&oacute; a colhedora nova carrega o investimento. Aqui a m&aacute;quina atual carrega o dela, pelo pre&ccedil;o estimado da &eacute;poca em que foi adquirida — as duas na mesma base de compara&ccedil;&atilde;o.</p>
+</div>
+<div class="s-right">
+<select class="s-sel js-unidade" aria-label="Empresa analisada"></select>
+<div class="s-toggle" id="compra-taxa">
+<button type="button" data-taxa="0">Pre&ccedil;o fixo</button>
+<button type="button" data-taxa="0.04">+4% a.a.</button>
+<button type="button" data-taxa="0.06" class="on">+6% a.a.</button>
+<button type="button" data-taxa="0.10">+10% a.a.</button>
+</div>
+<div class="s-chips">
+<div class="s-chip"><div class="v" id="compra-chip-cruza">&ndash;</div><div class="k">Empata com a nova no</div></div>
+<div class="s-chip"><div class="v" id="compra-chip-ref">&ndash;</div><div class="k" id="compra-chip-ref-k">Nova hoje</div></div>
+</div>
+</div>
+</div>
+<div class="s-legend" id="idade-compra-legend"></div>
+<div class="s-card s-troca" id="idade-compra-card"></div>
+<div class="s-insight" id="idade-compra-insight">carregando&hellip;</div>
 </article>
 
 
@@ -1589,6 +1616,7 @@ function corCusto(v, base){
 }
 
 function renderIdade(recs, years, unitAgg){
+  var ateY = years[years.length-1];
   var idade = S.idadeAggregate(recs);
   // 3b e 3c comparam as unidades entre si: usam sempre a faixa do grupo
   var agesGrupo = S.activeAgeBuckets(idade, 3);
@@ -1718,6 +1746,9 @@ function renderIdade(recs, years, unitAgg){
 
   // ---------- 3e: ponto de troca da colhedora ----------
   renderPontoTroca(escopo, ages);
+
+  // ---------- 3f: com a compra das duas na conta ----------
+  renderCompraNaConta(escopo, ages, ateY);
 }
 
 // 3b — um painel por unidade: coluna = custo médio por máquina, linha = R$/t, pílula = amostra
@@ -1982,6 +2013,138 @@ function renderPontoTroca(escopo, ages){
   setHTML("idade-troca-insight", msg);
 }
 
+// 3f — manter x renovar com a compra das DUAS máquinas na conta.
+// A base só começa em 2020 e 49 das 100 colhedoras foram compradas antes disso,
+// então o histórico real de cada uma é incompleto: o custo acumulado vem da
+// curva média por ano de uso, que cobre todas as idades.
+var TAXA_PRECO = 0.06; // valorização anual assumida do preço da colhedora
+
+function renderCompraNaConta(escopo, ages, ateY){
+  var card = document.getElementById("idade-compra-card");
+  if(!card) return;
+
+  var prod  = ages.map(function(a){ var c=escopo[a]; return (c && isFinite(c.avgprod))?c.avgprod:0; });
+  var custo = ages.map(function(a){ var c=escopo[a]; return (c && isFinite(c.avgcusto))?c.avgcusto:0; });
+
+  // a colhedora que hoje está no Nº ano de uso foi comprada há N-1 anos
+  var anoAq      = ages.map(function(a){ return ateY - a + 1; });
+  var precoEpoca = ages.map(function(a){ return PRECO_NOVA / Math.pow(1+TAXA_PRECO, a-1); });
+
+  // custo total por tonelada da máquina atual, já com a compra da época
+  var acumC=0, acumT=0, tco=[], oficAcum=[], tonAcum=[];
+  ages.forEach(function(a,i){
+    acumC += custo[i]; acumT += prod[i];
+    oficAcum.push(acumC); tonAcum.push(acumT);
+    tco.push(acumT>0 ? (precoEpoca[i]+acumC)/acumT : NaN);
+  });
+
+  // referência: colhedora nova ao preço de hoje, rodada no melhor ciclo
+  var aC=0, aT=0, cicloHoje=[];
+  ages.forEach(function(a,i){ aC += custo[i]; aT += prod[i]; cicloHoje.push(aT>0 ? (PRECO_NOVA+aC)/aT : NaN); });
+  var iCiclo = 0;
+  cicloHoje.forEach(function(v,i){ if(isFinite(v) && (!isFinite(cicloHoje[iCiclo]) || v < cicloHoje[iCiclo])) iCiclo = i; });
+  var ref = cicloHoje[iCiclo];
+
+  // onde o custo já realizado da máquina atual alcança o da nova
+  var iCruza = -1;
+  tco.forEach(function(v,i){ if(iCruza<0 && isFinite(v) && isFinite(ref) && v <= ref) iCruza = i; });
+
+  var cores = tco.map(function(v){
+    if(!isFinite(v) || !isFinite(ref)) return "#9AA1AE";
+    return v <= ref ? "#2E7D46" : (v <= ref*1.35 ? "#C9A227" : "#C0392B");
+  });
+
+  card.className = "s-card s-troca";
+  card.innerHTML = "";
+  var svg = document.createElementNS(SVGNS, "svg");
+  card.appendChild(svg);
+  var wrap = document.createElement("div");
+  wrap.className = "troca-tab";
+  card.appendChild(wrap);
+
+  function linha(rot, vals, fmt, cls, marca){
+    return "<tr"+(cls?" class='"+cls+"'":"")+"><td class='l'>"+rot+"</td>"+
+      vals.map(function(v,i){
+        var c = marca ? marca(v,i) : "";
+        return "<td class='n"+(c?" "+c:"")+"'>"+(isFinite(v)?fmt(v):"–")+"</td>";
+      }).join("")+"</tr>";
+  }
+  wrap.innerHTML = "<table class='tbl grid-tbl'><thead><tr><th class='l'>Colhedora hoje no…</th>"+
+    ages.map(function(a){ return "<th class='n'>"+a+"º ano</th>"; }).join("")+"</tr></thead><tbody>"+
+    linha("Comprada em", anoAq, function(v){ return String(Math.round(v)); }) +
+    linha("Preço estimado na época", precoEpoca, function(v){ return E.fmtMoneyMi(v); }) +
+    linha("Oficina acumulada até hoje", oficAcum, function(v){ return E.fmtMoneyMil(v); }) +
+    linha("Tonelada acumulada", tonAcum, E.fmtInt) +
+    linha("<b>= Custo total com a compra (R$/t)</b>", tco, function(v){ return E.fmtDec(v,2); }, "linha-chave",
+      function(v){ return (isFinite(v) && isFinite(ref) && v<=ref) ? "destaque" : "acima"; }) +
+    "</tbody></table>";
+
+  var b = svg.getBoundingClientRect();
+  var H = Math.max(220, Math.round(b.height));
+  var maxBar = Math.max.apply(null, tco.filter(function(v){ return isFinite(v); }).concat([ref]));
+  C.miniCombo(svg, {
+    W: Math.max(700, Math.round(b.width)), H: H,
+    escala: Math.max(1.1, Math.min(1.7, H/290)),
+    unit: "Custo total com a compra — "+nomeEscopo(), color: E.NAVY, lineColor: RT_COLOR,
+    barColors: cores,
+    headRight: "nova hoje a "+E.fmtMoneyMi(PRECO_NOVA)+" · preço +"+E.fmtDec(TAXA_PRECO*100,0)+"% a.a.",
+    unitL: "R$/t", unitR: "R$ mi na compra",
+    labels: ages.map(function(a){ return a+"º"; }),
+    bars: tco.map(function(v){ return isFinite(v)?v:0; }),
+    barFmt: function(v){ return E.fmtDec(v,2); },
+    bars2: ages.map(function(){ return isFinite(ref)?ref:0; }),
+    color2: "#12224A",
+    line: precoEpoca.map(function(v){ return v/1e6; }),
+    lineFmt: function(v){ return E.fmtDec(v,2); },
+    notes: anoAq.map(function(y){ return {text: String(Math.round(y)), color: E.NAVY}; }),
+    maxL: C.niceAxis(maxBar*1.35, 2) || 1,
+    maxR: C.niceAxis(Math.max.apply(null, precoEpoca)/1e6*1.15, 2) || 1,
+    axisFmtL: function(v){ return E.fmtDec(v, v%1===0?0:1); },
+    axisFmtR: function(v){ return E.fmtDec(v,1); }
+  });
+
+  setHTML("idade-compra-legend",
+    "<span class='lg'>"+C.marcadorBarras(["#2E7D46","#C9A227","#C0392B"])+
+      "<b>Máquina atual</b>: compra da época + oficina acumulada, por tonelada já colhida</span>"+
+    "<span class='lg'>"+C.marcadorBarras(["#12224A"])+
+      "<b>Nova hoje</b> a "+E.fmtMoneyMi(PRECO_NOVA)+" no melhor ciclo — R$ "+E.fmtDec(ref,2)+"/t</span>"+
+    "<span class='lg'>"+C.marcadorLinha(RT_COLOR)+"Linha: preço estimado da compra <b>(R$ mi, eixo dir.)</b></span>"+
+    "<span class='lg'>"+C.marcadorPilula("2020", E.NAVY)+"Ano da compra</span>");
+
+  setText("compra-chip-ref", isFinite(ref) ? ("R$ "+E.fmtDec(ref,2)+"/t") : "–");
+  setText("compra-chip-ref-k", "Nova a "+E.fmtMoneyMi(PRECO_NOVA)+", ciclo de "+ages[iCiclo]+" anos");
+  setText("compra-chip-cruza", iCruza>=0 ? (ages[iCruza]+"º ano") : "não alcança");
+
+  var msg = (IDADE_UNIDADE==="GRUPO" ? "" : "<strong>"+esc(IDADE_UNIDADE)+"</strong> — ");
+  if(isFinite(ref) && iCruza >= 0){
+    msg += "com a compra das duas na conta, a colhedora que hoje está no <strong>"+ages[iCruza]+"º ano</strong> "+
+      "— adquirida em <strong>"+Math.round(anoAq[iCruza])+"</strong> por cerca de <strong>"+E.fmtMoneyMi(precoEpoca[iCruza])+
+      "</strong> — já entregou a tonelada dela a <strong>R$ "+E.fmtDec(tco[iCruza],2)+"/t</strong>, "+
+      "abaixo dos <strong>R$ "+E.fmtDec(ref,2)+"/t</strong> que uma nova conseguiria hoje. "+
+      "Antes disso a compra ainda não tinha se pagado em tonelada; a partir daí, pagou. ";
+  } else {
+    msg += "com a compra das duas na conta, nenhuma safra de aquisição da amostra chegou a bater os <strong>R$ "+
+      E.fmtDec(ref,2)+"/t</strong> de uma máquina nova de hoje. ";
+  }
+  msg += "<span style='opacity:.85'>Esta página olha para trás: mostra o que cada máquina já custou de verdade, compra incluída. "+
+    "Ela <u>não</u> muda a decisão de trocar — o dinheiro da compra antiga já saiu e não volta, então o que decide é só o que ainda "+
+    "vai ser gasto, que é a página anterior. Preço da época estimado a partir de "+E.fmtMoneyMi(PRECO_NOVA)+
+    " de hoje, corrigido "+(TAXA_PRECO>0 ? E.fmtDec(TAXA_PRECO*100,0)+"% ao ano para trás" : "sem correção")+".</span>";
+  setHTML("idade-compra-insight", msg);
+}
+
+function initCompraUI(){
+  var box = document.getElementById("compra-taxa");
+  if(!box) return;
+  box.addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest("button[data-taxa]") : null;
+    if(!b) return;
+    TAXA_PRECO = parseFloat(b.getAttribute("data-taxa"));
+    Array.prototype.forEach.call(box.querySelectorAll("button"), function(x){ x.classList.toggle("on", x===b); });
+    if(window.replayIdade) window.replayIdade();
+  });
+}
+
 function initTrocaUI(){
   var box = document.getElementById("troca-preco");
   if(!box) return;
@@ -2000,6 +2163,8 @@ window.ReportSections.renderIdadeFrota = renderIdadeFrota;
 window.ReportSections.renderPontoTroca = renderPontoTroca;
 window.ReportSections.initTrocaUI = initTrocaUI;
 window.ReportSections.initIdadeFiltroUI = initIdadeFiltroUI;
+window.ReportSections.renderCompraNaConta = renderCompraNaConta;
+window.ReportSections.initCompraUI = initCompraUI;
 window.ReportSections.ajustarTabelas = ajustarTabelas;
 window.ReportEngine.fmtInt2 = function(v){ return isFinite(v)?E.fmtInt(v):"–"; };
 })();
@@ -2431,6 +2596,7 @@ function initFilter(){
   initPanoramaUI();
   S.initTrocaUI();
   S.initIdadeFiltroUI();
+  S.initCompraUI();
   var exc = E.EXCLUIDOS;
   setText("metodo-minton", E.fmtInt(exc.minTon));
   setText("metodo-excluidos", E.fmtInt(exc.registros));
