@@ -239,6 +239,8 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 .sim-bar .sim-reset{font:inherit;font-size:11.5px;font-weight:700;color:#C6CEE0;cursor:pointer;
   background:transparent;border:1px solid rgba(198,206,224,.45);border-radius:8px;padding:6px 12px}
 .sim-bar .sim-reset:hover{color:var(--gold);border-color:var(--gold)}
+.s-rotulo{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);
+  font-weight:700;line-height:1.25;text-align:right;align-self:center}
 .sim-nota{font-size:11px;color:#AEBBD8;align-self:center;margin-left:2px;max-width:300px;line-height:1.35}
 .sim-bar .sim-legend{margin-left:auto;justify-content:flex-end;padding-bottom:6px;gap:14px;flex:1 1 420px}
 /* uma linha a mais que a 3e (revenda): aperta um pouco a tabela */
@@ -522,8 +524,14 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 </div>
 <div class="s-right">
 <select class="s-sel js-unidade" aria-label="Empresa analisada"></select>
+<div class="s-rotulo">M&aacute;quina<br>atual</div>
+<div class="s-toggle" id="troca-din-atual">
+<button type="button" data-atual="ano" class="on">Do ano</button>
+<button type="button" data-atual="depre">Com deprecia&ccedil;&atilde;o</button>
+<button type="button" data-atual="acum">Acumulado</button>
+</div>
 <div class="s-chips">
-<div class="s-chip"><div class="v" id="simd-chip-ano">&ndash;</div><div class="k">Ponto de troca simulado</div></div>
+<div class="s-chip"><div class="v" id="simd-chip-ano">&ndash;</div><div class="k" id="simd-chip-ano-k">Ponto de troca simulado</div></div>
 <div class="s-chip"><div class="v" id="simd-chip-parcela">&ndash;</div><div class="k" id="simd-chip-parcela-k">Parcela anual</div></div>
 <div class="s-chip"><div class="v" id="simd-chip-juros">&ndash;</div><div class="k" id="simd-chip-juros-k">Juros no prazo</div></div>
 </div>
@@ -2400,6 +2408,7 @@ function renderPontoTroca(escopo, ages){
 // o financiamento (juros e prazo) e a descontar a revenda da própria máquina.
 // Os quatro parâmetros são digitados pela diretoria; nada aqui altera a 3e.
 // ============================================================
+var SIM_ATUAL = "ano";   // "ano" | "depre" | "acum" — como ler a maquina da frota
 var SIM_PADRAO = { preco: 2500000, entrada: 0, juros: 12, prazo: 5, residual: 1000000 };
 var SIM = { preco: SIM_PADRAO.preco, entrada: SIM_PADRAO.entrada, juros: SIM_PADRAO.juros,
             prazo: SIM_PADRAO.prazo, residual: SIM_PADRAO.residual };
@@ -2450,11 +2459,25 @@ function renderTrocaDinamica(escopo, ages){
   var P = SIM.preco;
   var fin = financiamento(P, SIM.entrada, SIM.juros, SIM.prazo, SIM.residual);
 
-  // manter: só a oficina do ano, por tonelada do ano — igual à página 3e
-  var manter = ages.map(function(a){
+  // Três leituras do que custa a colhedora que já está na frota:
+  //   ano   — só a oficina daquele ano, na tonelada do ano (é o critério da 3e)
+  //   depre — a oficina mais o valor de revenda que o ano queima: segurar a
+  //           máquina consome patrimônio, e isso é custo de verdade
+  //   acum  — o que a máquina custou até ali, já descontado o que ela vale hoje,
+  //           diluído em toda a tonelada que ela já colheu. O fundo dessa curva
+  //           é o momento em que vendê-la rende mais por tonelada.
+  // O "acum" supõe que a atual custou o mesmo valor digitado no campo do preço —
+  // a base não guarda o valor de compra de cada frota. Fica escrito na página.
+  var manterAno = ages.map(function(a){
     var c = escopo[a];
     return (c && c.avgprod > 0 && isFinite(c.avgcusto)) ? c.avgcusto / c.avgprod : NaN;
   });
+  var manterDep = ages.map(function(a){
+    var c = escopo[a];
+    if(!(c && c.avgprod > 0 && isFinite(c.avgcusto))) return NaN;
+    return (c.avgcusto + (fin.revenda(a - 1) - fin.revenda(a))) / c.avgprod;
+  });
+  var manterAcum = [];
   var prod = ages.map(function(a){ var c = escopo[a]; return (c && isFinite(c.avgprod)) ? c.avgprod : 0; });
 
   // renovar: parcelas pagas + saldo devedor (= principal + juros incorridos),
@@ -2469,10 +2492,14 @@ function renderTrocaDinamica(escopo, ages){
     var rv = fin.revenda(a);
     tonAno.push(prod[idx]); tonAcum.push(acumT);
     desemb.push(pago); revend.push(rv);
+    manterAcum.push(acumT > 0 ? (P + acumC - rv) / acumT : NaN);
     capT.push(acumT > 0 ? (pago - rv) / acumT : NaN);
     ofiT.push(acumT > 0 ? acumC / acumT : NaN);
     totT.push(acumT > 0 ? (pago - rv + acumC) / acumT : NaN);
   });
+
+  var manter = SIM_ATUAL === "depre" ? manterDep
+             : SIM_ATUAL === "acum"  ? manterAcum : manterAno;
 
   var iCiclo = 0;
   totT.forEach(function(v, i){
@@ -2480,15 +2507,19 @@ function renderTrocaDinamica(escopo, ages){
   });
   var ref = totT[iCiclo];
 
+  // no acumulado a comparação é contra o piso da nova, que é uma linha fixa;
+  // nos outros modos é ano a ano contra a coluna da nova daquele ano
+  var alvo = SIM_ATUAL === "acum" ? ages.map(function(){ return ref; }) : totT;
+
   var iTroca = -1;
   manter.forEach(function(v, i){
-    if(iTroca < 0 && isFinite(v) && isFinite(totT[i]) && v > totT[i]) iTroca = i;
+    if(iTroca < 0 && isFinite(v) && isFinite(alvo[i]) && v > alvo[i]) iTroca = i;
   });
 
   var cores = manter.map(function(v, i){
-    var alvo = totT[i];
-    if(!isFinite(v) || !isFinite(alvo)) return "#9AA1AE";
-    return v > alvo ? "#C0392B" : (v > alvo * 0.75 ? "#C9A227" : "#2E7D46");
+    var t = alvo[i];
+    if(!isFinite(v) || !isFinite(t)) return "#9AA1AE";
+    return v > t ? "#C0392B" : (v > t * 0.75 ? "#C9A227" : "#2E7D46");
   });
 
   card.className = "s-card s-troca s-troca-din";
@@ -2515,12 +2546,15 @@ function renderTrocaDinamica(escopo, ages){
     linha("Tonelada acumulada", tonAcum, E.fmtInt) +
     linha(fin.entrada > 0 ? "Entrada + parcelas + saldo devedor (R$ mil)"
                           : "Parcelas pagas + saldo devedor (R$ mil)", desemb, mil) +
-    linha("(&minus;) Revenda estimada da m&aacute;quina (R$ mil)", revend, mil) +
+    linha(SIM_ATUAL === "ano" ? "(&minus;) Revenda estimada da m&aacute;quina (R$ mil)"
+        : "Valor de venda da colhedora no ano (R$ mil)", revend, mil) +
     linha("Capital l&iacute;quido diluído (R$/t)", capT, d2) +
     linha("Oficina acumulada (R$/t)", ofiT, d2) +
     linha("<b>= Custo total da colhedora nova (R$/t)</b> &mdash; verde: o piso", totT, d2, "linha-chave",
       function(v, i){ return i === iCiclo ? "destaque" : ""; }) +
-    linha("Custo de manter a m&aacute;quina atual (R$/t)", manter, d2, null,
+    linha(SIM_ATUAL === "depre" ? "Manter a atual: oficina + deprecia&ccedil;&atilde;o do ano (R$/t)"
+        : SIM_ATUAL === "acum"  ? "Custo acumulado da atual, j&aacute; descontada a venda (R$/t)"
+        :                         "Custo de manter a m&aacute;quina atual (R$/t)", manter, d2, null,
       function(v){ return (isFinite(v) && isFinite(ref) && v > ref) ? "acima" : ""; }) +
     "</tbody></table>";
 
@@ -2547,24 +2581,35 @@ function renderTrocaDinamica(escopo, ages){
     maxR: C.niceAxis(Math.max.apply(null, prod) / 1000 * 1.12, 2) || 1,
     axisFmtL: function(v){ return E.fmtDec(v, v % 1 === 0 ? 0 : 1); },
     axisFmtR: function(v){ return E.fmtInt(v); },
+    ref: SIM_ATUAL === "acum" && isFinite(ref)
+      ? { value: ref, color: "#12224A", label: "piso da nova: R$ " + E.fmtDec(ref, 2) + "/t" } : null,
     onBar: function(i, si){
       if(si === 1) return;   // a coluna azul e a simulacao da maquina nova
       var a = ages[i];
-      E.abrirFrotas(nomeEscopo() + " — manter no " + a + "º ano de uso",
-        "colhedoras que compoem esse R$/t",
+      var acumulado = SIM_ATUAL === "acum";
+      E.abrirFrotas(nomeEscopo() + (acumulado ? " — até o " : " — manter no ") + a + "º ano de uso",
+        acumulado ? "todas as safras até esse ano de uso — a coluna segue a média por ano de uso, "+
+            "então este R$/t, do conjunto inteiro, não é o mesmo número"
+        : SIM_ATUAL === "depre" ? "oficina do ano; a depreciação somada na coluna é da simulação"
+        : "colhedoras que compoem esse R$/t",
         LISTA_IDADE, function(r){
-          if(r.ano_de_uso !== a) return false;
+          if(acumulado ? (r.ano_de_uso < 1 || r.ano_de_uso > a) : r.ano_de_uso !== a) return false;
           return IDADE_UNIDADE === "GRUPO" || r.unit === IDADE_UNIDADE;
         });
     }
   });
 
+  var legManter = SIM_ATUAL === "depre"
+    ? "<b>Manter</b>: oficina do ano <b>mais a revenda que o ano queima</b>, por tonelada"
+    : SIM_ATUAL === "acum"
+    ? "<b>Vender</b>: o que a atual custou at&eacute; ali menos o que vale hoje, na tonelada acumulada"
+    : "<b>Manter</b> a m&aacute;quina atual: oficina do ano por tonelada";
   setHTML("troca-din-legend",
-    "<span class='lg'>" + C.marcadorBarras(["#2E7D46", "#C9A227", "#C0392B"]) +
-      "<b>Manter</b> a m&aacute;quina atual: oficina do ano por tonelada</span>" +
+    "<span class='lg'>" + C.marcadorBarras(["#2E7D46", "#C9A227", "#C0392B"]) + legManter + "</span>" +
     "<span class='lg'>" + C.marcadorBarras(["#12224A"]) +
       "<b>Renovar</b>: parcela, juros e saldo devedor <b>menos a revenda</b>, diluídos na tonelada</span>" +
-    "<span class='lg'>Piso da nova: <b>R$ " + E.fmtDec(ref, 2) + "/t</b> (" + ages[iCiclo] + "º ano)</span>" +
+    "<span class='lg'>Piso da nova: <b>R$ " + E.fmtDec(ref, 2) + "/t</b> (" + ages[iCiclo] + "º ano)" +
+      (SIM_ATUAL === "acum" ? " — a linha tracejada do gr&aacute;fico" : "") + "</span>" +
     "<span class='lg'>" + C.marcadorLinha(RT_COLOR) + "Linha: tonelada colhida no ano <b>(mil t, eixo dir.)</b></span>" +
     "<span class='lg'>" + C.marcadorPilula("51", E.NAVY) + "Amostra</span>");
 
@@ -2573,6 +2618,7 @@ function renderTrocaDinamica(escopo, ages){
     E.fmtMoneyMi(P) + " no ato e " + din(fin.Rv) + " no " + fin.N + "º ano.");
 
   setText("simd-chip-ano", iTroca >= 0 ? (ages[iTroca] + "º ano") : "não atingido");
+  setText("simd-chip-ano-k", SIM_ATUAL === "acum" ? "Vender a partir daqui" : "Ponto de troca simulado");
   setText("simd-chip-parcela", din(fin.pmt));
   setText("simd-chip-parcela-k", fin.financiado <= 0 ? "Compra à vista, sem parcela"
     : ("Parcela anual em " + fin.N + " anos" + (fin.entrada > 0 ? " sobre " + din(fin.financiado) : "")));
@@ -2592,14 +2638,29 @@ function renderTrocaDinamica(escopo, ages){
       " em <strong>" + fin.N + " anos a " + E.fmtDec(SIM.juros, 2) + "% a.a.</strong>: parcela de <strong>" +
       din(fin.pmt) + "</strong> por ano e <strong>" + din(fin.juros) + "</strong> de juros no prazo. ";
   }
-  if(isFinite(ref) && iTroca >= 0){
+  if(SIM_ATUAL === "acum"){
+    msg = quem + "Cada coluna &eacute; o que a colhedora custou por tonelada <strong>at&eacute; aquele ano</strong> &mdash; " +
+      "compra mais oficina, menos o que ela vale se vendida ali. " +
+      (iTroca >= 0
+        ? "No <strong>" + ages[iTroca] + "º ano</strong> a curva cruza o piso da nova (<strong>R$ " +
+          E.fmtDec(ref, 2) + "/t</strong>, tracejada): da&iacute; em diante a atual j&aacute; custou mais por tonelada " +
+          "do que uma nova custaria &mdash; <strong>&eacute; o sinal de venda</strong>. "
+        : "Nenhum ano cruza o piso da nova (<strong>R$ " + E.fmtDec(ref, 2) + "/t</strong>, tracejada): por esse " +
+          "crit&eacute;rio a frota ainda n&atilde;o justifica a venda. ") +
+      "<span style='opacity:.8'>Sup&otilde;e que a atual custou os mesmos " + E.fmtMoneyMi(P) +
+      "; a base n&atilde;o guarda o valor de compra de cada frota.</span>";
+  } else if(isFinite(ref) && iTroca >= 0){
     var perdaAno = (manter[iTroca] - totT[iTroca]) * prod[iTroca];
     msg = cab + "Descontada a revenda de <strong>" + din(fin.Rv) + "</strong>, o mais barato que a nova entrega &eacute; <strong>R$ " +
       E.fmtDec(ref, 2) + "/t</strong> (" + ages[iCiclo] + "º ano). Manter a m&aacute;quina atual ainda compensa at&eacute; o <strong>" +
-      ages[Math.max(0, iTroca - 1)] + "º ano</strong>; no <strong>" + ages[iTroca] + "º</strong> a oficina sozinha cobra <strong>R$ " +
+      ages[Math.max(0, iTroca - 1)] + "º ano</strong>; no <strong>" + ages[iTroca] + "º</strong> " +
+      (SIM_ATUAL === "depre" ? "a oficina mais a deprecia&ccedil;&atilde;o cobram" : "a oficina sozinha cobra") + " <strong>R$ " +
       E.fmtDec(manter[iTroca], 2) + "/t</strong> contra <strong>R$ " + E.fmtDec(totT[iTroca], 2) +
       "/t</strong> da nova financiada — cerca de <strong>" + E.fmtMoneyMil(perdaAno) +
-      " por safra</strong> de diferen&ccedil;a em cada colhedora mantida al&eacute;m desse ponto.";
+      " por safra</strong> de diferen&ccedil;a em cada colhedora mantida al&eacute;m desse ponto." +
+      (SIM_ATUAL === "depre"
+        ? " <span style='opacity:.8'>A barra da atual j&aacute; inclui a revenda que cada ano queima, "+
+          "n&atilde;o s&oacute; a oficina &mdash; por isso a troca antecipa.</span>" : "");
   } else {
     msg = cab + "Com esses par&acirc;metros, nenhum ano de uso da amostra chega a custar mais que operar uma colhedora nova " +
       "(<strong>R$ " + E.fmtDec(ref, 2) + "/t</strong> no melhor ano, o " + ages[iCiclo] + "º). " +
@@ -2654,6 +2715,17 @@ function initTrocaDinUI(){
     el.addEventListener("change", aplica);
     el.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); el.blur(); } });
     el.addEventListener("focus", function(){ el.select(); });
+  });
+
+  var caixaAtual = document.getElementById("troca-din-atual");
+  if(caixaAtual) caixaAtual.addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest("button[data-atual]") : null;
+    if(!b) return;
+    SIM_ATUAL = b.getAttribute("data-atual");
+    Array.prototype.forEach.call(caixaAtual.querySelectorAll("button"), function(x){
+      x.classList.toggle("on", x === b);
+    });
+    if(window.replayIdade) window.replayIdade();
   });
 
   var reset = document.getElementById("sim-reset");
