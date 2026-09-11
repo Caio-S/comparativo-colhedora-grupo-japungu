@@ -233,7 +233,7 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 .sim-f .campo:focus-within{border-color:var(--gold);box-shadow:0 0 0 2px rgba(201,162,39,.45)}
 .sim-f .campo span{font-size:11.5px;color:#AEBBD8;font-weight:700;flex:none}
 .sim-f .campo input{font:inherit;font-size:14.5px;font-weight:700;border:0;background:transparent;
-  color:#fff;width:100px;text-align:right;font-variant-numeric:tabular-nums;padding:0}
+  color:#fff;width:92px;text-align:right;font-variant-numeric:tabular-nums;padding:0}
 .sim-f .campo input:focus{outline:none}
 .sim-f .campo input::selection{background:var(--gold);color:var(--navy)}
 .sim-bar .sim-reset{font:inherit;font-size:11.5px;font-weight:700;color:#C6CEE0;cursor:pointer;
@@ -247,7 +247,7 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
   .sim-bar{gap:7px}
   .sim-f > label{font-size:9px}
   .sim-f .campo{padding:3px 8px}
-  .sim-f .campo input{font-size:13px;width:86px}
+  .sim-f .campo input{font-size:13px;width:78px}
   .sim-nota{display:none}
   .s-card.s-troca-din{--tf:10px;--tp:0.5px;--c1:228px}
 }
@@ -518,7 +518,7 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <div>
 <div class="s-eyebrow">03 &middot; Simulador &middot; troca financiada</div>
 <h2 class="s-title" style="border:0;color:#fff;padding:0">Simule a troca com financiamento</h2>
-<p class="s-sub">A mesma compara&ccedil;&atilde;o da p&aacute;gina anterior, agora com os n&uacute;meros na m&atilde;o: mude o <b>valor da m&aacute;quina</b>, a <b>taxa de juros</b>, o <b>prazo</b> e o <b>residual de venda</b> &mdash; o gr&aacute;fico e a tabela refazem na hora. O custo da colhedora nova passa a incluir os juros e a descontar o que ela vale na revenda.</p>
+<p class="s-sub">A mesma compara&ccedil;&atilde;o da p&aacute;gina anterior, agora com os n&uacute;meros na m&atilde;o: mude o <b>valor da m&aacute;quina</b>, a <b>entrada</b>, a <b>taxa de juros</b>, o <b>prazo</b> e o <b>residual de venda</b> &mdash; o gr&aacute;fico e a tabela refazem na hora. O custo da colhedora nova passa a incluir os juros e a descontar o que ela vale na revenda.</p>
 </div>
 <div class="s-right">
 <select class="s-sel js-unidade" aria-label="Empresa analisada"></select>
@@ -532,6 +532,8 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <div class="sim-bar" id="sim-bar">
 <div class="sim-f"><label for="sim-preco">Valor da m&aacute;quina</label>
 <div class="campo"><span>R$</span><input id="sim-preco" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="2.500.000"></div></div>
+<div class="sim-f"><label for="sim-entrada">Entrada</label>
+<div class="campo"><span>R$</span><input id="sim-entrada" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="0"></div></div>
 <div class="sim-f"><label for="sim-juros">Taxa de juros</label>
 <div class="campo"><input id="sim-juros" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="12,00" style="width:58px"><span>% a.a.</span></div></div>
 <div class="sim-f"><label for="sim-prazo">Financiamento</label>
@@ -2398,8 +2400,8 @@ function renderPontoTroca(escopo, ages){
 // o financiamento (juros e prazo) e a descontar a revenda da própria máquina.
 // Os quatro parâmetros são digitados pela diretoria; nada aqui altera a 3e.
 // ============================================================
-var SIM_PADRAO = { preco: 2500000, juros: 12, prazo: 5, residual: 1000000 };
-var SIM = { preco: SIM_PADRAO.preco, juros: SIM_PADRAO.juros,
+var SIM_PADRAO = { preco: 2500000, entrada: 0, juros: 12, prazo: 5, residual: 1000000 };
+var SIM = { preco: SIM_PADRAO.preco, entrada: SIM_PADRAO.entrada, juros: SIM_PADRAO.juros,
             prazo: SIM_PADRAO.prazo, residual: SIM_PADRAO.residual };
 
 // aceita 2.500.000, 2500000 ou 12,5 — o ponto só é separador de milhar quando
@@ -2413,23 +2415,30 @@ function numBR(txt){
 }
 
 // Tabela Price: parcela anual, saldo devedor e revenda estimada ano a ano.
+// A entrada sai do caixa no ato e não entra no financiamento — só o resto do
+// preço é parcelado. Entrada igual ao preço é a compra à vista: parcela e juros
+// zerados, e o capital vira só a depreciação.
 // A revenda informada vale para o fim do prazo; entre um ano e outro ela cai no
 // mesmo ritmo constante — a tabela mostra essa curva, não a esconde.
-function financiamento(P, jurosPct, N, Rv){
+function financiamento(P, entrada, jurosPct, N, Rv){
   var i = (jurosPct || 0) / 100;
   N = Math.max(1, Math.round(N || 1));
   Rv = Math.max(0, Math.min(Rv, P));
-  var pmt = i > 0 ? P * i / (1 - Math.pow(1 + i, -N)) : P / N;
+  var ent = Math.max(0, Math.min(entrada || 0, P));
+  var fin = P - ent;
+  var pmt = fin <= 0 ? 0 : (i > 0 ? fin * i / (1 - Math.pow(1 + i, -N)) : fin / N);
   var resto = Rv <= 0 ? 0 : Math.pow(Rv / P, 1 / N);
   return {
-    pmt: pmt, N: N, i: i, Rv: Rv,
-    juros: pmt * N - P,
+    pmt: pmt, N: N, i: i, Rv: Rv, entrada: ent, financiado: fin,
+    juros: pmt * N - fin,
     dep: 1 - resto,
     // quitado do ano N em diante
     saldo: function(a){
       if(a >= N) return 0;
       return i > 0 ? pmt * (1 - Math.pow(1 + i, -(N - a))) / i : pmt * (N - a);
     },
+    // tudo o que a máquina já custou até o fim do ano a, antes da revenda
+    pago: function(a){ return ent + pmt * Math.min(a, N) + this.saldo(a); },
     revenda: function(a){ return P * Math.pow(resto, a); }
   };
 }
@@ -2439,7 +2448,7 @@ function renderTrocaDinamica(escopo, ages){
   if(!card) return;
 
   var P = SIM.preco;
-  var fin = financiamento(P, SIM.juros, SIM.prazo, SIM.residual);
+  var fin = financiamento(P, SIM.entrada, SIM.juros, SIM.prazo, SIM.residual);
 
   // manter: só a oficina do ano, por tonelada do ano — igual à página 3e
   var manter = ages.map(function(a){
@@ -2456,7 +2465,7 @@ function renderTrocaDinamica(escopo, ages){
     var c = escopo[a];
     if(c && isFinite(c.avgcusto)) acumC += c.avgcusto;
     acumT += prod[idx];
-    var pago = fin.pmt * Math.min(a, fin.N) + fin.saldo(a);
+    var pago = fin.pago(a);
     var rv = fin.revenda(a);
     tonAno.push(prod[idx]); tonAcum.push(acumT);
     desemb.push(pago); revend.push(rv);
@@ -2504,7 +2513,8 @@ function renderTrocaDinamica(escopo, ages){
   wrap.innerHTML = "<table class='tbl grid-tbl'><thead><tr><th class='l'>Colhedora nova mantida at&eacute; o&hellip;</th>" +
     ages.map(function(a){ return "<th class='n'>" + a + "º ano</th>"; }).join("") + "</tr></thead><tbody>" +
     linha("Tonelada acumulada", tonAcum, E.fmtInt) +
-    linha("Parcelas pagas + saldo devedor (R$ mil)", desemb, mil) +
+    linha(fin.entrada > 0 ? "Entrada + parcelas + saldo devedor (R$ mil)"
+                          : "Parcelas pagas + saldo devedor (R$ mil)", desemb, mil) +
     linha("(&minus;) Revenda estimada da m&aacute;quina (R$ mil)", revend, mil) +
     linha("Capital l&iacute;quido diluído (R$/t)", capT, d2) +
     linha("Oficina acumulada (R$/t)", ofiT, d2) +
@@ -2558,20 +2568,30 @@ function renderTrocaDinamica(escopo, ages){
     "<span class='lg'>" + C.marcadorLinha(RT_COLOR) + "Linha: tonelada colhida no ano <b>(mil t, eixo dir.)</b></span>" +
     "<span class='lg'>" + C.marcadorPilula("51", E.NAVY) + "Amostra</span>");
 
-  setText("sim-nota", "Depreciação implícita de " + E.fmtDec(fin.dep * 100, 1) + "% ao ano: " +
+  setText("sim-nota", (fin.entrada > 0 ? "Financia " + din(fin.financiado) + " dos " + E.fmtMoneyMi(P) + ". " : "") +
+    "Depreciação implícita de " + E.fmtDec(fin.dep * 100, 1) + "% ao ano: " +
     E.fmtMoneyMi(P) + " no ato e " + din(fin.Rv) + " no " + fin.N + "º ano.");
 
   setText("simd-chip-ano", iTroca >= 0 ? (ages[iTroca] + "º ano") : "não atingido");
   setText("simd-chip-parcela", din(fin.pmt));
-  setText("simd-chip-parcela-k", "Parcela anual em " + fin.N + " anos");
+  setText("simd-chip-parcela-k", fin.financiado <= 0 ? "Compra à vista, sem parcela"
+    : ("Parcela anual em " + fin.N + " anos" + (fin.entrada > 0 ? " sobre " + din(fin.financiado) : "")));
   setText("simd-chip-juros", din(fin.juros));
-  setText("simd-chip-juros-k", "Juros no prazo (" + E.fmtDec(fin.juros / P * 100, 0) + "% do valor)");
+  setText("simd-chip-juros-k", fin.financiado <= 0 ? "Sem financiamento"
+    : ("Juros no prazo (" + E.fmtDec(fin.juros / fin.financiado * 100, 0) + "% do financiado)"));
 
   var msg;
-  var cab = (IDADE_UNIDADE === "GRUPO" ? "" : "<strong>" + esc(IDADE_UNIDADE) + "</strong> — ") +
-    "colhedora de <strong>" + E.fmtMoneyMi(P) + "</strong> financiada em <strong>" + fin.N +
-    " anos a " + E.fmtDec(SIM.juros, 2) + "% a.a.</strong>: parcela de <strong>" + din(fin.pmt) +
-    "</strong> por ano e <strong>" + din(fin.juros) + "</strong> de juros no prazo. ";
+  var quem = (IDADE_UNIDADE === "GRUPO" ? "" : "<strong>" + esc(IDADE_UNIDADE) + "</strong> — ");
+  var cab;
+  if(fin.financiado <= 0){
+    cab = quem + "colhedora de <strong>" + E.fmtMoneyMi(P) + "</strong> comprada <strong>&agrave; vista</strong>, sem juros. ";
+  } else {
+    cab = quem + "colhedora de <strong>" + E.fmtMoneyMi(P) + "</strong>" +
+      (fin.entrada > 0 ? " com <strong>" + din(fin.entrada) + " de entrada</strong> e <strong>" +
+         din(fin.financiado) + "</strong> financiados" : " financiada") +
+      " em <strong>" + fin.N + " anos a " + E.fmtDec(SIM.juros, 2) + "% a.a.</strong>: parcela de <strong>" +
+      din(fin.pmt) + "</strong> por ano e <strong>" + din(fin.juros) + "</strong> de juros no prazo. ";
+  }
   if(isFinite(ref) && iTroca >= 0){
     var perdaAno = (manter[iTroca] - totT[iTroca]) * prod[iTroca];
     msg = cab + "Descontada a revenda de <strong>" + din(fin.Rv) + "</strong>, o mais barato que a nova entrega &eacute; <strong>R$ " +
@@ -2583,13 +2603,14 @@ function renderTrocaDinamica(escopo, ages){
   } else {
     msg = cab + "Com esses par&acirc;metros, nenhum ano de uso da amostra chega a custar mais que operar uma colhedora nova " +
       "(<strong>R$ " + E.fmtDec(ref, 2) + "/t</strong> no melhor ano, o " + ages[iCiclo] + "º). " +
-      "Baixe o pre&ccedil;o, os juros ou o prazo para ver em que ponto a conta vira.";
+      "Baixe o pre&ccedil;o ou os juros, ou aumente a entrada, para ver em que ponto a conta vira.";
   }
   setHTML("troca-din-insight", msg);
 }
 
 var SIM_CAMPOS = [
   { id: "sim-preco",    k: "preco",    min: 50000, max: 20000000, casas: 0 },
+  { id: "sim-entrada",  k: "entrada",  min: 0,     max: 20000000, casas: 0 },
   { id: "sim-juros",    k: "juros",    min: 0,     max: 60,       casas: 2 },
   { id: "sim-prazo",    k: "prazo",    min: 1,     max: 15,       casas: 0 },
   { id: "sim-residual", k: "residual", min: 0,     max: 20000000, casas: 0 }
@@ -2620,7 +2641,8 @@ function initTrocaDinUI(){
   function aplica(){
     var mudou = false;
     SIM_CAMPOS.forEach(function(c){ if(leCampo(c)) mudou = true; });
-    // a revenda não pode passar o preço da máquina
+    // nem a entrada nem a revenda podem passar o preço da máquina
+    if(SIM.entrada > SIM.preco){ SIM.entrada = SIM.preco; mudou = true; }
     if(SIM.residual > SIM.preco){ SIM.residual = SIM.preco; mudou = true; }
     simMostra();
     if(mudou && window.replayIdade) window.replayIdade();
@@ -2636,7 +2658,8 @@ function initTrocaDinUI(){
 
   var reset = document.getElementById("sim-reset");
   if(reset) reset.addEventListener("click", function(){
-    SIM.preco = SIM_PADRAO.preco; SIM.juros = SIM_PADRAO.juros;
+    SIM.preco = SIM_PADRAO.preco; SIM.entrada = SIM_PADRAO.entrada;
+    SIM.juros = SIM_PADRAO.juros;
     SIM.prazo = SIM_PADRAO.prazo; SIM.residual = SIM_PADRAO.residual;
     simMostra();
     if(window.replayIdade) window.replayIdade();
