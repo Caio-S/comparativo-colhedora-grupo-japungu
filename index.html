@@ -223,6 +223,35 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
   .s-card.s-troca{--tf:10.5px;--tp:1px;--c1:210px;gap:3px;padding:6px 10px 4px}
 }
 
+/* simulador de troca financiada: os quatro parametros ficam numa barra propria,
+   acima da legenda, para nao disputar espaco com os chips do cabecalho */
+.sim-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;flex:0 0 auto}
+.sim-f{display:flex;flex-direction:column;gap:3px}
+.sim-f > label{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.sim-f .campo{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.1);
+  border:1px solid rgba(201,162,39,.55);border-radius:8px;padding:5px 10px}
+.sim-f .campo:focus-within{border-color:var(--gold);box-shadow:0 0 0 2px rgba(201,162,39,.45)}
+.sim-f .campo span{font-size:11.5px;color:#AEBBD8;font-weight:700;flex:none}
+.sim-f .campo input{font:inherit;font-size:14.5px;font-weight:700;border:0;background:transparent;
+  color:#fff;width:100px;text-align:right;font-variant-numeric:tabular-nums;padding:0}
+.sim-f .campo input:focus{outline:none}
+.sim-f .campo input::selection{background:var(--gold);color:var(--navy)}
+.sim-bar .sim-reset{font:inherit;font-size:11.5px;font-weight:700;color:#C6CEE0;cursor:pointer;
+  background:transparent;border:1px solid rgba(198,206,224,.45);border-radius:8px;padding:6px 12px}
+.sim-bar .sim-reset:hover{color:var(--gold);border-color:var(--gold)}
+.sim-nota{font-size:11px;color:#AEBBD8;align-self:center;margin-left:2px;max-width:300px;line-height:1.35}
+.sim-bar .sim-legend{margin-left:auto;justify-content:flex-end;padding-bottom:6px;gap:14px;flex:1 1 420px}
+/* uma linha a mais que a 3e (revenda): aperta um pouco a tabela */
+.s-card.s-troca-din{--tf:11.5px;--tp:2px;--c1:266px}
+@media(max-height:780px){
+  .sim-bar{gap:7px}
+  .sim-f > label{font-size:9px}
+  .sim-f .campo{padding:3px 8px}
+  .sim-f .campo input{font-size:13px;width:86px}
+  .sim-nota{display:none}
+  .s-card.s-troca-din{--tf:10px;--tp:0.5px;--c1:228px}
+}
+
 /* painel de detalhe: quais frotas compõem o número que foi clicado */
 .mf{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:28px}
 .mf[hidden]{display:none!important}
@@ -259,7 +288,7 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <a href="#capa">Capa</a>
 <a href="#panorama"><b>1</b> Panorama</a>
 <a href="#producao"><b>2</b> Produção</a><a href="#producao-graf">Produtividade</a>
-<a href="#idade"><b>3</b> Curva de custo</a><a href="#idade-unidade">Curva por empresa</a><a href="#idade-tabelas">Tabelas da curva</a><a href="#idade-frota">Idade da frota</a><a href="#idade-troca">Ponto de troca</a><a href="#produtos">Onde o dinheiro vai</a>
+<a href="#idade"><b>3</b> Curva de custo</a><a href="#idade-unidade">Curva por empresa</a><a href="#idade-tabelas">Tabelas da curva</a><a href="#idade-frota">Idade da frota</a><a href="#idade-troca">Ponto de troca</a><a href="#idade-troca-din">Simulador de troca</a><a href="#produtos">Onde o dinheiro vai</a>
 <a href="#marca"><b>4</b> Deere x Case</a>
 <a href="#maquinas"><b>5</b> Máquina a máquina</a>
 
@@ -481,6 +510,40 @@ table.grid-tbl.tem-total th:last-child,table.grid-tbl.tem-total td:last-child{wi
 <div class="s-legend" id="idade-troca-legend"></div>
 <div class="s-card" id="idade-troca-card"></div>
 <div class="s-insight" id="idade-troca-insight">carregando&hellip;</div>
+</article>
+
+
+<article class="slide slide-dark" id="idade-troca-din" data-title="Simulador de troca financiada">
+<div class="s-head">
+<div>
+<div class="s-eyebrow">03 &middot; Simulador &middot; troca financiada</div>
+<h2 class="s-title" style="border:0;color:#fff;padding:0">Simule a troca com financiamento</h2>
+<p class="s-sub">A mesma compara&ccedil;&atilde;o da p&aacute;gina anterior, agora com os n&uacute;meros na m&atilde;o: mude o <b>valor da m&aacute;quina</b>, a <b>taxa de juros</b>, o <b>prazo</b> e o <b>residual de venda</b> &mdash; o gr&aacute;fico e a tabela refazem na hora. O custo da colhedora nova passa a incluir os juros e a descontar o que ela vale na revenda.</p>
+</div>
+<div class="s-right">
+<select class="s-sel js-unidade" aria-label="Empresa analisada"></select>
+<div class="s-chips">
+<div class="s-chip"><div class="v" id="simd-chip-ano">&ndash;</div><div class="k">Ponto de troca simulado</div></div>
+<div class="s-chip"><div class="v" id="simd-chip-parcela">&ndash;</div><div class="k" id="simd-chip-parcela-k">Parcela anual</div></div>
+<div class="s-chip"><div class="v" id="simd-chip-juros">&ndash;</div><div class="k" id="simd-chip-juros-k">Juros no prazo</div></div>
+</div>
+</div>
+</div>
+<div class="sim-bar" id="sim-bar">
+<div class="sim-f"><label for="sim-preco">Valor da m&aacute;quina</label>
+<div class="campo"><span>R$</span><input id="sim-preco" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="2.500.000"></div></div>
+<div class="sim-f"><label for="sim-juros">Taxa de juros</label>
+<div class="campo"><input id="sim-juros" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="12,00" style="width:58px"><span>% a.a.</span></div></div>
+<div class="sim-f"><label for="sim-prazo">Financiamento</label>
+<div class="campo"><input id="sim-prazo" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" value="5" style="width:34px"><span>anos</span></div></div>
+<div class="sim-f"><label for="sim-residual">Residual de venda</label>
+<div class="campo"><span>R$</span><input id="sim-residual" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="1.000.000"></div></div>
+<button type="button" class="sim-reset" id="sim-reset">Restaurar padr&atilde;o</button>
+<div class="sim-nota" id="sim-nota"></div>
+<div class="s-legend sim-legend" id="troca-din-legend"></div>
+</div>
+<div class="s-card" id="troca-din-card"></div>
+<div class="s-insight" id="troca-din-insight">carregando&hellip;</div>
 </article>
 
 
@@ -2035,6 +2098,9 @@ function renderIdade(recs, years, unitAgg){
 
   // ---------- 3e: ponto de troca da colhedora ----------
   renderPontoTroca(escopo, ages);
+
+  // ---------- 3f: o mesmo raciocínio, com os parâmetros na mão ----------
+  renderTrocaDinamica(escopo, ages);
 }
 
 // 3b — um painel por unidade: coluna = custo médio por máquina, linha = R$/t, pílula = amostra
@@ -2323,6 +2389,260 @@ function renderPontoTroca(escopo, ages){
       "Pelo critério de custo, a frota atual ainda não atingiu o ponto de troca.";
   }
   setHTML("idade-troca-insight", msg);
+}
+
+
+// ============================================================
+// 3f — simulador de troca financiada
+// A mesma comparação da página 3e, mas o custo da colhedora nova passa a incluir
+// o financiamento (juros e prazo) e a descontar a revenda da própria máquina.
+// Os quatro parâmetros são digitados pela diretoria; nada aqui altera a 3e.
+// ============================================================
+var SIM_PADRAO = { preco: 2500000, juros: 12, prazo: 5, residual: 1000000 };
+var SIM = { preco: SIM_PADRAO.preco, juros: SIM_PADRAO.juros,
+            prazo: SIM_PADRAO.prazo, residual: SIM_PADRAO.residual };
+
+// aceita 2.500.000, 2500000 ou 12,5 — o ponto só é separador de milhar quando
+// fecha grupos de três dígitos até o fim
+function numBR(txt){
+  var s = String(txt).replace(/[^\d.,-]/g, "");
+  if(s.indexOf(",") >= 0) s = s.replace(/\./g, "").replace(",", ".");
+  else if(/\.\d{3}(\.\d{3})*$/.test(s)) s = s.replace(/\./g, "");
+  var v = parseFloat(s);
+  return isFinite(v) ? v : NaN;
+}
+
+// Tabela Price: parcela anual, saldo devedor e revenda estimada ano a ano.
+// A revenda informada vale para o fim do prazo; entre um ano e outro ela cai no
+// mesmo ritmo constante — a tabela mostra essa curva, não a esconde.
+function financiamento(P, jurosPct, N, Rv){
+  var i = (jurosPct || 0) / 100;
+  N = Math.max(1, Math.round(N || 1));
+  Rv = Math.max(0, Math.min(Rv, P));
+  var pmt = i > 0 ? P * i / (1 - Math.pow(1 + i, -N)) : P / N;
+  var resto = Rv <= 0 ? 0 : Math.pow(Rv / P, 1 / N);
+  return {
+    pmt: pmt, N: N, i: i, Rv: Rv,
+    juros: pmt * N - P,
+    dep: 1 - resto,
+    // quitado do ano N em diante
+    saldo: function(a){
+      if(a >= N) return 0;
+      return i > 0 ? pmt * (1 - Math.pow(1 + i, -(N - a))) / i : pmt * (N - a);
+    },
+    revenda: function(a){ return P * Math.pow(resto, a); }
+  };
+}
+
+function renderTrocaDinamica(escopo, ages){
+  var card = document.getElementById("troca-din-card");
+  if(!card) return;
+
+  var P = SIM.preco;
+  var fin = financiamento(P, SIM.juros, SIM.prazo, SIM.residual);
+
+  // manter: só a oficina do ano, por tonelada do ano — igual à página 3e
+  var manter = ages.map(function(a){
+    var c = escopo[a];
+    return (c && c.avgprod > 0 && isFinite(c.avgcusto)) ? c.avgcusto / c.avgprod : NaN;
+  });
+  var prod = ages.map(function(a){ var c = escopo[a]; return (c && isFinite(c.avgprod)) ? c.avgprod : 0; });
+
+  // renovar: parcelas pagas + saldo devedor (= principal + juros incorridos),
+  // menos o que a máquina vale na revenda, tudo diluído na tonelada acumulada
+  var acumC = 0, acumT = 0;
+  var tonAno = [], tonAcum = [], desemb = [], revend = [], capT = [], ofiT = [], totT = [];
+  ages.forEach(function(a, idx){
+    var c = escopo[a];
+    if(c && isFinite(c.avgcusto)) acumC += c.avgcusto;
+    acumT += prod[idx];
+    var pago = fin.pmt * Math.min(a, fin.N) + fin.saldo(a);
+    var rv = fin.revenda(a);
+    tonAno.push(prod[idx]); tonAcum.push(acumT);
+    desemb.push(pago); revend.push(rv);
+    capT.push(acumT > 0 ? (pago - rv) / acumT : NaN);
+    ofiT.push(acumT > 0 ? acumC / acumT : NaN);
+    totT.push(acumT > 0 ? (pago - rv + acumC) / acumT : NaN);
+  });
+
+  var iCiclo = 0;
+  totT.forEach(function(v, i){
+    if(isFinite(v) && (!isFinite(totT[iCiclo]) || v < totT[iCiclo])) iCiclo = i;
+  });
+  var ref = totT[iCiclo];
+
+  var iTroca = -1;
+  manter.forEach(function(v, i){
+    if(iTroca < 0 && isFinite(v) && isFinite(totT[i]) && v > totT[i]) iTroca = i;
+  });
+
+  var cores = manter.map(function(v, i){
+    var alvo = totT[i];
+    if(!isFinite(v) || !isFinite(alvo)) return "#9AA1AE";
+    return v > alvo ? "#C0392B" : (v > alvo * 0.75 ? "#C9A227" : "#2E7D46");
+  });
+
+  card.className = "s-card s-troca s-troca-din";
+  card.innerHTML = "";
+  var svg = document.createElementNS(SVGNS, "svg");
+  card.appendChild(svg);
+  var wrap = document.createElement("div");
+  wrap.className = "troca-tab";
+  card.appendChild(wrap);
+
+  function linha(rot, vals, fmt, cls, marca){
+    return "<tr" + (cls ? " class='" + cls + "'" : "") + "><td class='l'>" + rot + "</td>" +
+      vals.map(function(v, i){
+        var c = marca ? marca(v, i) : "";
+        return "<td class='n" + (c ? " " + c : "") + "'>" + (isFinite(v) ? fmt(v) : "–") + "</td>";
+      }).join("") + "</tr>";
+  }
+  var mil = function(v){ return E.fmtInt(v / 1000); };
+  // R$ 1.000 mil nao se escreve: acima de um milhao a escala muda
+  var din = function(v){ return v === 0 ? "R$ 0" : (Math.abs(v) >= 1e6 ? E.fmtMoneyMi(v) : E.fmtMoneyMil(v)); };
+  var d2 = function(v){ return E.fmtDec(v, 2); };
+  wrap.innerHTML = "<table class='tbl grid-tbl'><thead><tr><th class='l'>Colhedora nova mantida at&eacute; o&hellip;</th>" +
+    ages.map(function(a){ return "<th class='n'>" + a + "º ano</th>"; }).join("") + "</tr></thead><tbody>" +
+    linha("Tonelada acumulada", tonAcum, E.fmtInt) +
+    linha("Parcelas pagas + saldo devedor (R$ mil)", desemb, mil) +
+    linha("(&minus;) Revenda estimada da m&aacute;quina (R$ mil)", revend, mil) +
+    linha("Capital l&iacute;quido diluído (R$/t)", capT, d2) +
+    linha("Oficina acumulada (R$/t)", ofiT, d2) +
+    linha("<b>= Custo total da colhedora nova (R$/t)</b> &mdash; verde: o piso", totT, d2, "linha-chave",
+      function(v, i){ return i === iCiclo ? "destaque" : ""; }) +
+    linha("Custo de manter a m&aacute;quina atual (R$/t)", manter, d2, null,
+      function(v){ return (isFinite(v) && isFinite(ref) && v > ref) ? "acima" : ""; }) +
+    "</tbody></table>";
+
+  var b = svg.getBoundingClientRect();
+  var H = Math.max(200, Math.round(b.height));
+  var maxBar = Math.max.apply(null, manter.filter(function(v){ return isFinite(v); })
+                 .concat(totT.filter(function(v){ return isFinite(v) && v > 0; })));
+  C.miniCombo(svg, {
+    W: Math.max(700, Math.round(b.width)), H: H,
+    escala: Math.max(0.95, Math.min(1.7, H / 290)),
+    unit: "Manter x renovar financiado — " + nomeEscopo(), color: E.NAVY, lineColor: RT_COLOR,
+    barColors: cores,
+    headRight: E.fmtMoneyMi(P) + " em " + fin.N + "x a " + E.fmtDec(SIM.juros, 2) + "% a.a.",
+    unitL: "R$/t", unitR: "mil t no ano",
+    labels: ages.map(function(a){ return a + "º"; }),
+    bars: manter.map(function(v){ return isFinite(v) ? v : 0; }),
+    barFmt: d2,
+    bars2: totT.map(function(v){ return isFinite(v) && v > 0 ? v : 0; }),
+    color2: "#12224A",
+    line: prod.map(function(v){ return v / 1000; }),
+    lineFmt: function(v){ return E.fmtInt(v); },
+    notes: ages.map(function(a){ return { text: String(escopo[a] ? escopo[a].n : 0), color: E.NAVY }; }),
+    maxL: C.niceAxis(maxBar * 1.18, 2) || 1,
+    maxR: C.niceAxis(Math.max.apply(null, prod) / 1000 * 1.12, 2) || 1,
+    axisFmtL: function(v){ return E.fmtDec(v, v % 1 === 0 ? 0 : 1); },
+    axisFmtR: function(v){ return E.fmtInt(v); },
+    onBar: function(i, si){
+      if(si === 1) return;   // a coluna azul e a simulacao da maquina nova
+      var a = ages[i];
+      E.abrirFrotas(nomeEscopo() + " — manter no " + a + "º ano de uso",
+        "colhedoras que compoem esse R$/t",
+        LISTA_IDADE, function(r){
+          if(r.ano_de_uso !== a) return false;
+          return IDADE_UNIDADE === "GRUPO" || r.unit === IDADE_UNIDADE;
+        });
+    }
+  });
+
+  setHTML("troca-din-legend",
+    "<span class='lg'>" + C.marcadorBarras(["#2E7D46", "#C9A227", "#C0392B"]) +
+      "<b>Manter</b> a m&aacute;quina atual: oficina do ano por tonelada</span>" +
+    "<span class='lg'>" + C.marcadorBarras(["#12224A"]) +
+      "<b>Renovar</b>: parcela, juros e saldo devedor <b>menos a revenda</b>, diluídos na tonelada</span>" +
+    "<span class='lg'>Piso da nova: <b>R$ " + E.fmtDec(ref, 2) + "/t</b> (" + ages[iCiclo] + "º ano)</span>" +
+    "<span class='lg'>" + C.marcadorLinha(RT_COLOR) + "Linha: tonelada colhida no ano <b>(mil t, eixo dir.)</b></span>" +
+    "<span class='lg'>" + C.marcadorPilula("51", E.NAVY) + "Amostra</span>");
+
+  setText("sim-nota", "Depreciação implícita de " + E.fmtDec(fin.dep * 100, 1) + "% ao ano: " +
+    E.fmtMoneyMi(P) + " no ato e " + din(fin.Rv) + " no " + fin.N + "º ano.");
+
+  setText("simd-chip-ano", iTroca >= 0 ? (ages[iTroca] + "º ano") : "não atingido");
+  setText("simd-chip-parcela", din(fin.pmt));
+  setText("simd-chip-parcela-k", "Parcela anual em " + fin.N + " anos");
+  setText("simd-chip-juros", din(fin.juros));
+  setText("simd-chip-juros-k", "Juros no prazo (" + E.fmtDec(fin.juros / P * 100, 0) + "% do valor)");
+
+  var msg;
+  var cab = (IDADE_UNIDADE === "GRUPO" ? "" : "<strong>" + esc(IDADE_UNIDADE) + "</strong> — ") +
+    "colhedora de <strong>" + E.fmtMoneyMi(P) + "</strong> financiada em <strong>" + fin.N +
+    " anos a " + E.fmtDec(SIM.juros, 2) + "% a.a.</strong>: parcela de <strong>" + din(fin.pmt) +
+    "</strong> por ano e <strong>" + din(fin.juros) + "</strong> de juros no prazo. ";
+  if(isFinite(ref) && iTroca >= 0){
+    var perdaAno = (manter[iTroca] - totT[iTroca]) * prod[iTroca];
+    msg = cab + "Descontada a revenda de <strong>" + din(fin.Rv) + "</strong>, o mais barato que a nova entrega &eacute; <strong>R$ " +
+      E.fmtDec(ref, 2) + "/t</strong> (" + ages[iCiclo] + "º ano). Manter a m&aacute;quina atual ainda compensa at&eacute; o <strong>" +
+      ages[Math.max(0, iTroca - 1)] + "º ano</strong>; no <strong>" + ages[iTroca] + "º</strong> a oficina sozinha cobra <strong>R$ " +
+      E.fmtDec(manter[iTroca], 2) + "/t</strong> contra <strong>R$ " + E.fmtDec(totT[iTroca], 2) +
+      "/t</strong> da nova financiada — cerca de <strong>" + E.fmtMoneyMil(perdaAno) +
+      " por safra</strong> de diferen&ccedil;a em cada colhedora mantida al&eacute;m desse ponto.";
+  } else {
+    msg = cab + "Com esses par&acirc;metros, nenhum ano de uso da amostra chega a custar mais que operar uma colhedora nova " +
+      "(<strong>R$ " + E.fmtDec(ref, 2) + "/t</strong> no melhor ano, o " + ages[iCiclo] + "º). " +
+      "Baixe o pre&ccedil;o, os juros ou o prazo para ver em que ponto a conta vira.";
+  }
+  setHTML("troca-din-insight", msg);
+}
+
+var SIM_CAMPOS = [
+  { id: "sim-preco",    k: "preco",    min: 50000, max: 20000000, casas: 0 },
+  { id: "sim-juros",    k: "juros",    min: 0,     max: 60,       casas: 2 },
+  { id: "sim-prazo",    k: "prazo",    min: 1,     max: 15,       casas: 0 },
+  { id: "sim-residual", k: "residual", min: 0,     max: 20000000, casas: 0 }
+];
+
+function simMostra(){
+  SIM_CAMPOS.forEach(function(c){
+    var el = document.getElementById(c.id);
+    if(el) el.value = c.casas ? E.fmtDec(SIM[c.k], c.casas) : E.fmtInt(SIM[c.k]);
+  });
+}
+
+function initTrocaDinUI(){
+  var box = document.getElementById("sim-bar");
+  if(!box) return;
+
+  function leCampo(c){
+    var el = document.getElementById(c.id);
+    if(!el) return false;
+    var v = numBR(el.value);
+    if(!isFinite(v)) v = SIM[c.k];                       // lixo digitado: mantém o anterior
+    v = Math.min(c.max, Math.max(c.min, v));
+    if(c.casas === 0) v = Math.round(v);
+    var mudou = v !== SIM[c.k];
+    SIM[c.k] = v;
+    return mudou;
+  }
+  function aplica(){
+    var mudou = false;
+    SIM_CAMPOS.forEach(function(c){ if(leCampo(c)) mudou = true; });
+    // a revenda não pode passar o preço da máquina
+    if(SIM.residual > SIM.preco){ SIM.residual = SIM.preco; mudou = true; }
+    simMostra();
+    if(mudou && window.replayIdade) window.replayIdade();
+  }
+
+  SIM_CAMPOS.forEach(function(c){
+    var el = document.getElementById(c.id);
+    if(!el) return;
+    el.addEventListener("change", aplica);
+    el.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); el.blur(); } });
+    el.addEventListener("focus", function(){ el.select(); });
+  });
+
+  var reset = document.getElementById("sim-reset");
+  if(reset) reset.addEventListener("click", function(){
+    SIM.preco = SIM_PADRAO.preco; SIM.juros = SIM_PADRAO.juros;
+    SIM.prazo = SIM_PADRAO.prazo; SIM.residual = SIM_PADRAO.residual;
+    simMostra();
+    if(window.replayIdade) window.replayIdade();
+  });
+
+  simMostra();
 }
 
 // ============================================================
@@ -2769,6 +3089,8 @@ window.ReportSections.renderIdadeUnidade = renderIdadeUnidade;
 window.ReportSections.renderIdadeFrota = renderIdadeFrota;
 window.ReportSections.renderPontoTroca = renderPontoTroca;
 window.ReportSections.initTrocaUI = initTrocaUI;
+window.ReportSections.renderTrocaDinamica = renderTrocaDinamica;
+window.ReportSections.initTrocaDinUI = initTrocaDinUI;
 window.ReportSections.initIdadeFiltroUI = initIdadeFiltroUI;
 window.ReportSections.renderProdutos = renderProdutos;
 window.ReportSections.initProdutosUI = initProdutosUI;
@@ -3206,6 +3528,7 @@ function initFilter(){
   ate.addEventListener("change", onChange);
   initPanoramaUI();
   S.initTrocaUI();
+  S.initTrocaDinUI();
   S.initIdadeFiltroUI();
   S.initProdutosUI();
   S.initRankUI();
